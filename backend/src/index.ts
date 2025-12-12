@@ -112,7 +112,7 @@ const startServer = async () => {
   try {
     await connectDB();
     console.log("Database connected");
-
+    await initBlogsTable();
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
