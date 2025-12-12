@@ -101,4 +101,3 @@ export const connectDB = async () => {
   }
 };
 
-
