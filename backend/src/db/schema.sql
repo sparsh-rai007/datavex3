@@ -6,7 +6,12 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 
 -- Roles enum
-CREATE TYPE user_role AS ENUM ('admin', 'editor', 'recruiter', 'viewer');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+        CREATE TYPE user_role AS ENUM ('admin', 'editor', 'recruiter', 'viewer');
+    END IF;
+END $$;
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
