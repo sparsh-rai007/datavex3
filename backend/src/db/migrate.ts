@@ -17,7 +17,9 @@ async function migrate() {
     const schema = readFileSync(schemaPath, 'utf-8');
     
     // Execute schema
-    await client.query(schema);
+    await pool.query(schema);  
+
+
     
     console.log('✅ Database migrations completed successfully');
     await pool.query(`
