@@ -25,16 +25,20 @@ CREATE TABLE IF NOT EXISTS blogs (
 
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) UNIQUE NOT NULL,
+
     excerpt TEXT,
     content TEXT,
 
-    banner_image TEXT,          -- URL for uploaded image
-    external_url TEXT,          -- If linking to external article
+    featured_image TEXT,          -- main blog image URL
+    meta_title VARCHAR(255),
+    meta_description TEXT,
+    meta_keywords TEXT,
+
+    status VARCHAR(20) DEFAULT 'draft',   -- draft | published
 
     author_id UUID REFERENCES users(id) ON DELETE SET NULL,
-    
-    status VARCHAR(20) NOT NULL DEFAULT 'draft',  
-    -- draft | published
+
+    external_url TEXT,             -- If linking to external article
 
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
