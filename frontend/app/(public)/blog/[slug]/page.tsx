@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { apiClient } from '@/lib/api';
 import PublicWrapper from '../../wrapper';
 import { redirect } from 'next/navigation';  // <-- ADD THIS
