@@ -20,6 +20,26 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS blogs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    excerpt TEXT,
+    content TEXT,
+
+    banner_image TEXT,          -- URL for uploaded image
+    external_url TEXT,          -- If linking to external article
+
+    author_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    
+    status VARCHAR(20) NOT NULL DEFAULT 'draft',  
+    -- draft | published
+
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
 
 -- Refresh tokens table
 CREATE TABLE IF NOT EXISTS refresh_tokens (
