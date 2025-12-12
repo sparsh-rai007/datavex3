@@ -31,6 +31,9 @@ import socialRoutes from "./routes/social";
 import path from 'path';
 import adminUsersRoutes from "./routes/admin-users";
 
+import { initBlogsTable } from "./db/initBlogsTable";
+
+
 
 
 dotenv.config();
@@ -112,6 +115,7 @@ const startServer = async () => {
   try {
     await connectDB();
     console.log("Database connected");
+    await connectDB();
     await initBlogsTable();
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
