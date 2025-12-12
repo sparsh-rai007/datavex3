@@ -2,14 +2,16 @@
 -- Phase 1: Foundation tables
 
 -- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 
 -- Roles enum
 CREATE TYPE user_role AS ENUM ('admin', 'editor', 'recruiter', 'viewer');
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+,
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   first_name VARCHAR(100),
@@ -47,7 +49,8 @@ CREATE TABLE IF NOT EXISTS blogs (
 
 -- Refresh tokens table
 CREATE TABLE IF NOT EXISTS refresh_tokens (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token VARCHAR(500) NOT NULL,
   expires_at TIMESTAMP NOT NULL,
@@ -59,7 +62,8 @@ CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);
 
 -- Posts table (CMS content)
 CREATE TABLE IF NOT EXISTS posts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+,
   title VARCHAR(255) NOT NULL,
   slug VARCHAR(255) UNIQUE NOT NULL,
   content TEXT,
@@ -79,7 +83,8 @@ CREATE TABLE IF NOT EXISTS posts (
 
 -- Post revisions table
 CREATE TABLE IF NOT EXISTS post_revisions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+,
   post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
   content TEXT,
@@ -90,7 +95,8 @@ CREATE TABLE IF NOT EXISTS post_revisions (
 
 -- Leads table
 CREATE TABLE IF NOT EXISTS leads (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+,
   email VARCHAR(255) NOT NULL,
   first_name VARCHAR(100),
   last_name VARCHAR(100),
@@ -108,7 +114,7 @@ CREATE TABLE IF NOT EXISTS leads (
 
 -- Jobs table
 CREATE TABLE IF NOT EXISTS jobs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title VARCHAR(255) NOT NULL,
   slug VARCHAR(255) UNIQUE NOT NULL,
   description TEXT NOT NULL,
@@ -126,7 +132,7 @@ CREATE TABLE IF NOT EXISTS jobs (
 
 -- Job applications table
 CREATE TABLE IF NOT EXISTS job_applications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   job_id UUID NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
@@ -145,7 +151,7 @@ CREATE TABLE IF NOT EXISTS job_applications (
 
 -- Audit logs table
 CREATE TABLE IF NOT EXISTS audit_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id),
   action VARCHAR(100) NOT NULL,
   resource_type VARCHAR(50), -- post, lead, job, user, etc.
