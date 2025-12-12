@@ -32,6 +32,7 @@ import path from 'path';
 import adminUsersRoutes from "./routes/admin-users";
 
 import { initBlogsTable } from "./db/initBlogsTable";
+import { migrate } from './db/migrate';
 
 
 
@@ -115,7 +116,8 @@ const startServer = async () => {
   try {
     await connectDB();
     console.log("Database connected");
-    await connectDB();
+    await migrate();
+    
     await initBlogsTable();
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
