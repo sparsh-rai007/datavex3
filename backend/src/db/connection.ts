@@ -55,9 +55,10 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// Detect production mode
 const isProduction = process.env.NODE_ENV === "production";
 
-// Base config (used for local development)
+// Base config (local development defaults)
 const poolConfig: PoolConfig = {
   user: process.env.POSTGRES_USER || "postgres",
   password: process.env.POSTGRES_PASSWORD || "sparsh@123",
@@ -69,20 +70,18 @@ const poolConfig: PoolConfig = {
   connectionTimeoutMillis: 5000,
 };
 
-// If DATABASE_URL exists → use it (production)
+// If DATABASE_URL exists → use it (production on Render)
 if (process.env.DATABASE_URL) {
   poolConfig.connectionString = process.env.DATABASE_URL;
 
-  // Render requires SSL
-  poolConfig.ssl = {
-    rejectUnauthorized: false,
-  };
+  // Render PostgreSQL **requires** SSL
+  poolConfig.ssl = { rejectUnauthorized: false };
 } else {
   // Local development → no SSL
   poolConfig.ssl = false;
 }
 
-// Create the pool
+// Create PostgreSQL pool
 export const pool = new Pool(poolConfig);
 
 pool.on("error", (err) => {
@@ -90,6 +89,7 @@ pool.on("error", (err) => {
   process.exit(-1);
 });
 
+// Connect & verify
 export const connectDB = async () => {
   try {
     const client = await pool.connect();
