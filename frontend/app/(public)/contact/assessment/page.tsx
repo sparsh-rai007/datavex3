@@ -1,35 +1,22 @@
 import { Suspense } from 'react';
-import dynamicImport from 'next/dynamic';
+import dynamicImport from 'next/dynamic'; // ✅ RENAMED
 
-// Dynamically import the assessment form with ssr: false
-// This completely prevents Next.js from analyzing it during build
 const AssessmentForm = dynamicImport(() => import('./AssessmentForm'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading assessment...</p>
-      </div>
+      <p>Loading assessment…</p>
     </div>
   ),
 });
 
-// Force dynamic rendering - these MUST be in a server component
+// ✅ These are Next.js route configs — KEEP THEM
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-export const fetchCache = 'force-no-store';
 
 export default function Page() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading assessment...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<div>Loading…</div>}>
       <AssessmentForm />
     </Suspense>
   );

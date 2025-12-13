@@ -49,13 +49,17 @@ const PORT = process.env.PORT || 5000;
 // ---------------------------
 app.use(cors({
   origin: [
-    "http://localhost:3000",                // local dev
-    "https://datavex.ai",                   // production frontend
-    "https://www.datavex.ai",               // if using www
-    "https://datavex-frontend.pages.dev"    // Cloudflare build URL
+    "http://localhost:3000",
+    "https://datavex.ai",
+    "https://www.datavex.ai",
+    "https://datavex-frontend.pages.dev",
+    "https://datavex3-3.onrender.com" // ✅ ADD THIS
   ],
-  credentials: true
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
 
 
 app.use(helmet());
