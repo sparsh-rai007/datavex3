@@ -1,7 +1,9 @@
-export const dynamic = "force-dynamic";
+
+'use client';
 
 import Link from 'next/link';
 import PublicWrapper from './wrapper'; // ✅ added wrapper import
+import { useEffect, useState } from 'react';
 async function getLatestArticles() {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/api/blogs/latest`;
@@ -30,9 +32,16 @@ export const metadata = {
     'Transform your business with AI-powered lead generation, marketing automation, and intelligent analytics.',
 };
 
-export default async function Home() {
-  const articles = await getLatestArticles();
-    // Fetch posts from backend
+export default function Home() {
+  const [articles, setArticles] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs/latest`)
+      .then(res => res.json())
+      .then(setArticles)
+      .catch(() => setArticles([]));
+  }, []);
+
   return (
     <PublicWrapper> 
 

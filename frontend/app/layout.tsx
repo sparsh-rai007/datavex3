@@ -6,9 +6,9 @@ import ClientProviders from './client-providers';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata: Metadata = {
-  title: 'DATAVEX.ai Platform',
-  description: 'AI-powered lead generation and marketing platform',
+export const metadata = {
+  title: 'DATAVEX.ai - AI-Powered Lead Generation Platform',
+  description: 'Transform your business with AI-powered lead generation...'
 };
 
 export default function RootLayout({

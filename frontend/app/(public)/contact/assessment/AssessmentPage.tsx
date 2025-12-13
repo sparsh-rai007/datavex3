@@ -1,12 +1,13 @@
 'use client';
-export const dynamic = "force-dynamic";
-import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
 import { apiClient } from '@/lib/api';
 
 export default function AssessmentPage() {
-  const params = useSearchParams();
-  const email = params.get('email');
+
+  const [email, setEmail] = useState<string | null>(null);
+
+
 
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,6 +21,10 @@ export default function AssessmentPage() {
     employees: '',
     experience: ''
   });
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  setEmail(params.get('email'));
+}, []);
 
   const updateField = (field: string, value: any) => {
     setAnswers(prev => ({ ...prev, [field]: value }));
