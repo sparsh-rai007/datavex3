@@ -4,19 +4,23 @@ import Link from 'next/link';
 import PublicWrapper from './wrapper'; // ✅ added wrapper import
 import { useEffect, useState } from 'react';
 
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   const [articles, setArticles] = useState<any[]>([]);
 
   useEffect(() => {
+    // Only fetch on client side
+    if (typeof window === 'undefined') return;
+    
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     if (!apiUrl) {
       console.warn('NEXT_PUBLIC_API_URL not configured');
       return;
     }
     
-    fetch(`${apiUrl}/api/blogs/latest`, {
-      cache: 'no-store', // Client-side fetch, no caching needed
-    })
+    // Client-side only fetch
+    fetch(`${apiUrl}/api/blogs/latest`)
       .then(res => {
         if (!res.ok) {
           throw new Error('Failed to fetch articles');

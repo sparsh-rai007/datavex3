@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import AssessmentPage from './AssessmentPage';
+import AssessmentForm from './AssessmentForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +13,7 @@ export default function Page() {
         </div>
       </div>
     }>
-      <AssessmentPage />
+      <AssessmentForm />
     </Suspense>
   );
 }

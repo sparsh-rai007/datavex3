@@ -1,13 +1,10 @@
 'use client';
 
-
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-
 import { apiClient } from '@/lib/api';
 
-// Component that uses useSearchParams - must be wrapped in Suspense
-function AssessmentForm() {
+export default function AssessmentForm() {
   const searchParams = useSearchParams();
   const email = searchParams.get('email');
 
@@ -133,24 +130,20 @@ function AssessmentForm() {
           </div>
 
           {/* 3 */}
-          {/* 3. AI Tools (Yes/No) */}
-<div>
-  <label className="block font-semibold text-gray-800 mb-2">
-    3. Do you use any AI tools currently?
-  </label>
-
-  <select
-    className="w-full border border-gray-300 rounded-xl p-3 bg-gray-50
-               focus:ring-2 focus:ring-primary-500 focus:outline-none"
-    value={answers.aiTools}
-    onChange={e => updateField('aiTools', e.target.value)}
-  >
-    <option value="">Select...</option>
-    <option value="Yes">Yes</option>
-    <option value="No">No</option>
-  </select>
-</div>
-
+          <div>
+            <label className="block font-semibold text-gray-800 mb-2">
+              3. Do you use any AI tools currently?
+            </label>
+            <select
+              className="w-full border border-gray-300 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+              value={answers.aiTools}
+              onChange={e => updateField('aiTools', e.target.value)}
+            >
+              <option value="">Select...</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
 
           {/* 4 */}
           <div>
@@ -221,7 +214,3 @@ function AssessmentForm() {
   );
 }
 
-// Main component that wraps the form
-export default function AssessmentPage() {
-  return <AssessmentForm />;
-}
