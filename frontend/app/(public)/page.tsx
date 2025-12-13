@@ -1,45 +1,33 @@
-
 'use client';
 
 import Link from 'next/link';
 import PublicWrapper from './wrapper'; // ✅ added wrapper import
 import { useEffect, useState } from 'react';
-async function getLatestArticles() {
-  try {
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/blogs/latest`;
-    console.log("Fetching blogs from:", url);
-
-    const res = await fetch(url, { next: { revalidate: 60 } });
-
-
-    if (!res.ok) {
-      console.error("Blog fetch failed:", res.status);
-      return [];
-    }
-
-    return await res.json();
-  } catch (error) {
-    console.error("Failed to load latest articles:", error);
-    return [];
-  }
-}
-
-
-
-export const metadata = {
-  title: 'DATAVEX.ai - AI-Powered Lead Generation Platform',
-  description:
-    'Transform your business with AI-powered lead generation, marketing automation, and intelligent analytics.',
-};
 
 export default function Home() {
   const [articles, setArticles] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blogs/latest`)
-      .then(res => res.json())
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+      console.warn('NEXT_PUBLIC_API_URL not configured');
+      return;
+    }
+    
+    fetch(`${apiUrl}/api/blogs/latest`, {
+      cache: 'no-store', // Client-side fetch, no caching needed
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch articles');
+        }
+        return res.json();
+      })
       .then(setArticles)
-      .catch(() => setArticles([]));
+      .catch((error) => {
+        console.error('Failed to load latest articles:', error);
+        setArticles([]);
+      });
   }, []);
 
   return (
@@ -173,45 +161,33 @@ export default function Home() {
             </div>
           </div>
         </section>
-        {/* Features Section */}
-<section className="py-20 bg-white">
-  ...
-</section>
 
-{/* 📚 Recent Articles Section — INSERT HERE */}
-<section className="pt-4 pb-16 bg-gray-50">
+        {/* Recent Articles Section */}
+        <section className="pt-4 pb-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-6">
+            <h2 className="text-3xl font-bold text-center mb-10 bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent tracking-tight">
+              Recent Articles
+            </h2>
 
-  <div className="max-w-7xl mx-auto px-6">
-   <h2 className="text-3xl font-bold text-center mb-10 bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent tracking-tight">
-  Recent Articles
-</h2>
-
-
-    {articles.length === 0 ? (
-      <p className="text-center text-gray-500">No articles available yet.</p>
-    ) : (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {articles.map((article: any) => (
-          <a
-            key={article.slug}
-            href={`/blog/${article.slug}`}
-            className="bg-white rounded-xl shadow-md hover:shadow-lg transition p-5"
-          >
-            <h3 className="text-xl font-semibold mb-2">{article.title}</h3>
-            <p className="text-gray-600 mb-4">{article.excerpt}</p>
-            <span className="text-primary-600 font-medium">Read More →</span>
-          </a>
-        ))}
-      </div>
-    )}
-  </div>
-</section>
-
-
-{/* CTA Section */}
-<section className="py-20 bg-primary-600">
-  ...
-</section>
+            {articles.length === 0 ? (
+              <p className="text-center text-gray-500">No articles available yet.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {articles.map((article: any) => (
+                  <a
+                    key={article.slug}
+                    href={`/blog/${article.slug}`}
+                    className="bg-white rounded-xl shadow-md hover:shadow-lg transition p-5"
+                  >
+                    <h3 className="text-xl font-semibold mb-2">{article.title}</h3>
+                    <p className="text-gray-600 mb-4">{article.excerpt}</p>
+                    <span className="text-primary-600 font-medium">Read More →</span>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* CTA Section */}
         <section className="py-20 bg-primary-600">
@@ -237,3 +213,4 @@ export default function Home() {
     </PublicWrapper> 
   );
 }
+

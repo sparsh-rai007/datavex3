@@ -1,16 +1,15 @@
 'use client';
 
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 import { apiClient } from '@/lib/api';
 
 
 export default function AssessmentPage() {
-
-  const [email, setEmail] = useState<string | null>(null);
-
-
+  const searchParams = useSearchParams();
+  const email = searchParams.get('email');
 
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -24,10 +23,6 @@ export default function AssessmentPage() {
     employees: '',
     experience: ''
   });
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  setEmail(params.get('email'));
-}, []);
 
   const updateField = (field: string, value: any) => {
     setAnswers(prev => ({ ...prev, [field]: value }));
