@@ -7,7 +7,8 @@ async function getLatestArticles() {
     const url = `${process.env.NEXT_PUBLIC_API_URL}/api/blogs/latest`;
     console.log("Fetching blogs from:", url);
 
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url, { next: { revalidate: 60 } });
+
 
     if (!res.ok) {
       console.error("Blog fetch failed:", res.status);
