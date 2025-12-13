@@ -8,21 +8,26 @@ import { usePathname } from "next/navigation";
 export default function PublicWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const disableChatbot = pathname.startsWith("/consultation");
+  const isConsultation = pathname.startsWith("/consultation");
+  const disableChatbot = isConsultation;
 
   return (
     <>
-      {/* ✅ Sticky Navbar */}
+      {/* Navbar always visible */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b">
         <Navigation />
       </header>
 
-      {/* ✅ Page Content (prevents overlap with navbar) */}
-      <main className="pt-20 min-h-screen">
+      {/* Main content */}
+      <main
+        className={`min-h-screen ${
+          isConsultation ? "pt-16" : "pt-20"
+        }`}
+      >
         {children}
       </main>
 
-      {/* ✅ Chatbot logic untouched */}
+      {/* Chatbot disabled only for consultation */}
       {!disableChatbot && <Chatbot />}
 
       <Analytics />
