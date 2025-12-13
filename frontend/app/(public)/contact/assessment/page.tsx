@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import dynamicImport from 'next/dynamic';
 
-// Dynamically import the assessment form to prevent static generation
-// Using ssr: false ensures it never runs on the server
+// Dynamically import the assessment form with ssr: false
+// This completely prevents Next.js from analyzing it during build
 const AssessmentForm = dynamicImport(() => import('./AssessmentForm'), {
   ssr: false,
   loading: () => (
@@ -15,12 +15,10 @@ const AssessmentForm = dynamicImport(() => import('./AssessmentForm'), {
   ),
 });
 
-// Force dynamic rendering - prevent static generation
-// These configs tell Next.js to never statically generate this page
+// Force dynamic rendering - these MUST be in a server component
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
-export const runtime = 'nodejs'; // Use Node.js runtime
 
 export default function Page() {
   return (

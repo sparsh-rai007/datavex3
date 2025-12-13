@@ -14,29 +14,31 @@ export default function RecentArticles() {
     
     setMounted(true);
     
-    // Use setTimeout to ensure this runs only after component is fully mounted
-    // This prevents Next.js from detecting the fetch during static generation
-    const timer = setTimeout(() => {
-      const loadArticles = async () => {
-        try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-          if (!apiUrl) return;
-          
-          const response = await fetch(`${apiUrl}/api/blogs/latest`);
-          if (response.ok) {
-            const data = await response.json();
-            setArticles(data);
+    // Use requestAnimationFrame to ensure this runs only in the browser
+    // This completely prevents Next.js from detecting the fetch during static generation
+    const rafId = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const loadArticles = async () => {
+          try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+            if (!apiUrl) return;
+            
+            const response = await fetch(`${apiUrl}/api/blogs/latest`);
+            if (response.ok) {
+              const data = await response.json();
+              setArticles(data);
+            }
+          } catch (error) {
+            console.error('Failed to load latest articles:', error);
+            setArticles([]);
           }
-        } catch (error) {
-          console.error('Failed to load latest articles:', error);
-          setArticles([]);
-        }
-      };
-      
-      loadArticles();
-    }, 0);
+        };
+        
+        loadArticles();
+      });
+    });
     
-    return () => clearTimeout(timer);
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
   if (!mounted) {
