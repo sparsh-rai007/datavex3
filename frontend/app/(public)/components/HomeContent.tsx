@@ -10,7 +10,8 @@ export default function HomeContent() {
       <div className="pt-20"> {/* ✅ OFFSET FOR NAVBAR */}
 
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-primary-50 via-white to-primary-100 pb-20">
+       <section className="bg-gradient-to-br from-primary-50 via-white to-primary-100 min-h-screen flex items-center">
+
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
               AI-Powered Lead Generation
