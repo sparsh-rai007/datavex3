@@ -7,29 +7,36 @@ export default function RecentArticles() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Only run on client
-    if (typeof window === 'undefined') return;
+    // Only run on client - this prevents Next.js from detecting the fetch during build
+    if (typeof window === 'undefined') {
+      return;
+    }
     
     setMounted(true);
     
-    // Fetch articles after mount
-    const loadArticles = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        if (!apiUrl) return;
-        
-        const response = await fetch(`${apiUrl}/api/blogs/latest`);
-        if (response.ok) {
-          const data = await response.json();
-          setArticles(data);
+    // Use setTimeout to ensure this runs only after component is fully mounted
+    // This prevents Next.js from detecting the fetch during static generation
+    const timer = setTimeout(() => {
+      const loadArticles = async () => {
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          if (!apiUrl) return;
+          
+          const response = await fetch(`${apiUrl}/api/blogs/latest`);
+          if (response.ok) {
+            const data = await response.json();
+            setArticles(data);
+          }
+        } catch (error) {
+          console.error('Failed to load latest articles:', error);
+          setArticles([]);
         }
-      } catch (error) {
-        console.error('Failed to load latest articles:', error);
-        setArticles([]);
-      }
-    };
+      };
+      
+      loadArticles();
+    }, 0);
     
-    loadArticles();
+    return () => clearTimeout(timer);
   }, []);
 
   if (!mounted) {
