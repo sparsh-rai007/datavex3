@@ -51,7 +51,8 @@ const coreServices = [
 export default function AboutPage() {
   return (
     <PublicWrapper>
-      <div className="pb-20">
+      <div className="pt-20 pb-20"> {/* ✅ GLOBAL OFFSET */}
+
 
         {/* HERO */}
         <section className="pt-28 pb-24 bg-gradient-to-b from-gray-50 via-white to-gray-100">
