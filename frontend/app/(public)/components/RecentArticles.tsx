@@ -7,30 +7,30 @@ export default function RecentArticles() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Only run on client
+    if (typeof window === 'undefined') return;
+    
     setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
     
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!apiUrl) {
-      return;
-    }
-    
-    fetch(`${apiUrl}/api/blogs/latest`)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Failed to fetch articles');
+    // Fetch articles after mount
+    const loadArticles = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        if (!apiUrl) return;
+        
+        const response = await fetch(`${apiUrl}/api/blogs/latest`);
+        if (response.ok) {
+          const data = await response.json();
+          setArticles(data);
         }
-        return res.json();
-      })
-      .then(setArticles)
-      .catch((error) => {
+      } catch (error) {
         console.error('Failed to load latest articles:', error);
         setArticles([]);
-      });
-  }, [mounted]);
+      }
+    };
+    
+    loadArticles();
+  }, []);
 
   if (!mounted) {
     return (
