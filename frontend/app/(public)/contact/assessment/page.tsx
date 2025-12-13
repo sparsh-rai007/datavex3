@@ -1,5 +1,11 @@
-import AssessmentPage from "./AssessmentPage";
+import { Suspense } from 'react';
+import AssessmentClient from './AssessmentPage';
+import AssessmentPage from './AssessmentPage';
 
 export default function Page() {
-  return <AssessmentPage />;
+  return (
+    <Suspense fallback={<div>Loading…</div>}>
+      <AssessmentPage />
+    </Suspense>
+  );
 }
