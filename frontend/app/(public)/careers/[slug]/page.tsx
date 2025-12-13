@@ -140,7 +140,7 @@ export default function JobDetailPage() {
   // Main Page
   return (
     <PublicWrapper>
-      <div className="py-20">
+  <div className="min-h-screen bg-gray-50 py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link href="/careers" className="text-primary-600 hover:text-primary-700 mb-4 inline-block">
             ← Back to Careers

@@ -36,7 +36,8 @@ export default function CareersPage() {
 
   return (
     <PublicWrapper>
-      <div className="py-20">
+  <div className="min-h-screen bg-gradient-to-b from-gray-100 via-gray-300 to-gray-900 py-20">
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h1 className="text-5xl font-bold text-gray-900 mb-4">Join Our Team</h1>
