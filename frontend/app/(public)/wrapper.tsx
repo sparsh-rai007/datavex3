@@ -19,7 +19,8 @@ export default function PublicWrapper({
       <Navigation />
 
       {/* 🔑 SINGLE SOURCE OF TRUTH FOR NAV OFFSET */}
-      <main className="pt-20 min-h-screen">
+      <main className="pt-20">
+
         {children}
       </main>
 
