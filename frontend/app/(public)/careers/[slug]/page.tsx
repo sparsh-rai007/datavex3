@@ -140,7 +140,8 @@ export default function JobDetailPage() {
   // Main Page
   return (
     <PublicWrapper>
-  <section className="bg-gray-50 pt-12 pb-20">
+ <section className="bg-gray-50 pt-6 pb-20">
+
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link href="/careers" className="text-primary-600 hover:text-primary-700 mb-4 inline-block">
