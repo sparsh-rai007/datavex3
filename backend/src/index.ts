@@ -47,21 +47,64 @@ const PORT = process.env.PORT || 5000;
 // ---------------------------
 // CORS + Security
 // ---------------------------
+//app.use(cors({
+//  origin: [
+//    "http://localhost:3000",
+//    "http://192.168.122.197:3000",
+//    "https://datavex.ai",
+//    "https://www.datavex.ai",
+//    "https://datavex-frontend.pages.dev",
+//    "https://datavex3-3.onrender.com" // ✅ ADD THIS
+//  ],
+//  credentials: true,
+//  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//  allowedHeaders: ["Content-Type", "Authorization"]
+//}));
+
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://datavex.ai",
-    "https://www.datavex.ai",
-    "https://datavex-frontend.pages.dev",
-    "https://datavex3-3.onrender.com" // ✅ ADD THIS
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (curl, Postman)
+    if (!origin) return callback(null, true);
+
+    //const allowedOrigins = [
+    //  "http://localhost:3000",
+    //  "http://192.168.122.197:3000",
+    //  "https://datavex.ai",
+    //  "https://www.datavex.ai",
+    // "http://161.248.22.228:3000",
+    //  "https://datavex-frontend.pages.dev",
+    //  "https://datavex3-3.onrender.com",
+    //];
+
+    const allowedOrigins = [
+      "http://localhost:3000",
+      "http://192.168.122.197:3000",
+      "http://161.248.22.228:3000",
+
+      "http://datavex.in:3000",
+      "http://www.datavex.in:3000",
+
+      "https://datavex.ai",
+      "https://www.datavex.ai",
+
+      "https://datavex-frontend.pages.dev",
+      "https://datavex3-3.onrender.com",
+    ];
+
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    //return callback(new Error("CORS not allowed for origin: " + origin));
+     return callback(null,false);
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-
-
+app.options("*",cors());
 app.use(helmet());
 app.use(morgan('dev'));
 

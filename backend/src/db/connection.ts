@@ -73,13 +73,10 @@ const poolConfig: PoolConfig = {
 // If DATABASE_URL exists → use it (production on Render)
 if (process.env.DATABASE_URL) {
   poolConfig.connectionString = process.env.DATABASE_URL;
-
-  // Render PostgreSQL **requires** SSL
-  poolConfig.ssl = { rejectUnauthorized: false };
-} else {
-  // Local development → no SSL
-  poolConfig.ssl = false;
 }
+  // Render PostgreSQL **requires** SSL
+  poolConfig.ssl = isProduction ? {rejectUnauthorized: false} : false;
+
 
 // Create PostgreSQL pool
 export const pool = new Pool(poolConfig);
@@ -101,3 +98,14 @@ export const connectDB = async () => {
   }
 };
 
+
+// Simple DB health check
+export const testConnection = async (): Promise<boolean> => {
+  try {
+    await pool.query("SELECT 1");
+    return true;
+  } catch (error) {
+    console.error("Database test failed:", error);
+    return false;
+  }
+};
