@@ -69,7 +69,7 @@ export default function JobDetailPage() {
 
       const axios = require('axios');
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/applications`,
+        `/api/applications`,
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );

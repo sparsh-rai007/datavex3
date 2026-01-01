@@ -1,119 +1,78 @@
-import express from 'express';
-import registerRoutes from './routes/register';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
-import { errorHandler } from './middleware/errorHandler';
-import { rateLimiter } from './middleware/rateLimiter';
-import { connectDB } from './db/connection';
-import authRoutes from './routes/auth';
-import adminRoutes from './routes/admin';
-import healthRoutes from './routes/health';
-import leadsRoutes from './routes/leads';
-import postsRoutes from './routes/posts';
-import jobsRoutes from './routes/jobs';
-import jobApplicationsRoutes from './routes/job-applications';
-import aiRoutes from './routes/ai';
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
+import path from "path";
 
+import { errorHandler } from "./middleware/errorHandler";
+import { rateLimiter } from "./middleware/rateLimiter";
+import { connectDB } from "./db/connection";
 import { authenticateToken, requireRole } from "./middleware/auth";
 
-import calRouter from "./routes/cal";
-import calWebhookRoute from "./routes/cal-webhook";
-
+// Routes
+import healthRoutes from "./routes/health";
+import authRoutes from "./routes/auth";
+import registerRoutes from "./routes/register";
+import leadsRoutes from "./routes/leads";
+import postsRoutes from "./routes/posts";
+import jobsRoutes from "./routes/jobs";
+import jobApplicationsRoutes from "./routes/job-applications";
+import aiRoutes from "./routes/ai";
+import adminRoutes from "./routes/admin";
+import adminUsersRoutes from "./routes/admin-users";
 import bookingsRouter from "./routes/bookings";
 import adminBookingsRoute from "./routes/admin-bookings";
-
-import blogRoutes from './routes/blogs';
+import blogRoutes from "./routes/blogs";
 import socialRoutes from "./routes/social";
-
-import path from 'path';
-import adminUsersRoutes from "./routes/admin-users";
-
-import { initBlogsTable } from "./db/initBlogsTable";
-import { migrate } from './db/migrate';
-
-
-
+import calRouter from "./routes/cal";
+import calWebhookRoute from "./routes/cal-webhook";
 
 dotenv.config();
 
 const app = express();
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT) || 5000;
 
-// ---------------------------
-// CORS + Security
-// ---------------------------
-//app.use(cors({
-//  origin: [
-//    "http://localhost:3000",
-//    "http://192.168.122.197:3000",
-//    "https://datavex.ai",
-//    "https://www.datavex.ai",
-//    "https://datavex-frontend.pages.dev",
-//    "https://datavex3-3.onrender.com" // ✅ ADD THIS
-//  ],
-//  credentials: true,
-//  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-//  allowedHeaders: ["Content-Type", "Authorization"]
-//}));
+//
+// ---------------------------------------------
+// Security & Middleware
+// ---------------------------------------------
+//
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (curl, Postman)
-    if (!origin) return callback(null, true);
+// ? Minimal, correct CORS
+// Because nginx makes this SAME ORIGIN
+app.use(
+  cors({
+    origin: true, // reflect request origin
+    credentials: true,
+  })
+);
 
-    //const allowedOrigins = [
-    //  "http://localhost:3000",
-    //  "http://192.168.122.197:3000",
-    //  "https://datavex.ai",
-    //  "https://www.datavex.ai",
-    // "http://161.248.22.228:3000",
-    //  "https://datavex-frontend.pages.dev",
-    //  "https://datavex3-3.onrender.com",
-    //];
+//app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:"],
+        fontSrc: ["'self'", "data:"],
+        connectSrc: ["'self'"],
+      },
+    },
+  })
+);
 
-    const allowedOrigins = [
-      "http://localhost:3000",
-      "http://192.168.122.197:3000",
-      "http://161.248.22.228:3000",
+app.use(morgan("dev"));
 
-      "http://datavex.in:3000",
-      "http://www.datavex.in:3000",
-
-      "https://datavex.ai",
-      "https://www.datavex.ai",
-
-      "https://datavex-frontend.pages.dev",
-      "https://datavex3-3.onrender.com",
-    ];
-
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    //return callback(new Error("CORS not allowed for origin: " + origin));
-     return callback(null,false);
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
-
-app.options("*",cors());
-app.use(helmet());
-app.use(morgan('dev'));
-
-// ---------------------------
-// RAW body parser BEFORE express.json()
-// ---------------------------
+// Cal.com webhook needs raw body
 app.use("/api/cal/webhook", express.raw({ type: "application/json" }));
 
-// Standard body parsers
+// Standard parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -121,58 +80,61 @@ app.use(cookieParser());
 // Rate limiting
 app.use(rateLimiter);
 
-// ---------------------------
+//
+// ---------------------------------------------
 // Routes
-// ---------------------------
-app.use('/api/health', healthRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/auth/register', registerRoutes);
+// ---------------------------------------------
+//
 
-app.use('/api/leads', leadsRoutes);
-app.use('/api/posts', postsRoutes);
-app.use('/api/jobs', jobsRoutes);
-app.use('/api/applications', jobApplicationsRoutes);
-app.use('/api/ai', aiRoutes);
+app.use("/api/health", healthRoutes);
 
-app.use('/api/admin', authenticateToken, adminRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/auth/register", registerRoutes);
 
-// Cal.com webhooks & API
+app.use("/api/leads", leadsRoutes);
+app.use("/api/posts", postsRoutes);
+app.use("/api/jobs", jobsRoutes);
+app.use("/api/applications", jobApplicationsRoutes);
+app.use("/api/ai", aiRoutes);
+
+app.use("/api/admin", authenticateToken, adminRoutes);
+app.use("/api/admin/users", authenticateToken, requireRole("admin"), adminUsersRoutes);
+
+app.use("/api/bookings", bookingsRouter);
+app.use("/api/admin/bookings", adminBookingsRoute);
+
+app.use("/api/blogs", blogRoutes);
+app.use("/api/social", socialRoutes);
+
+// Cal.com
 app.use("/api/cal", calWebhookRoute);
 app.use("/api/cal", calRouter);
 
-// Bookings
-app.use("/api/bookings", bookingsRouter);   // Fetch bookings
-app.use("/api/admin/bookings", adminBookingsRoute); // Approve / Reject
+// Static uploads
+app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
-// Blogs
-app.use('/api/blogs', blogRoutes);
-
-// Social
-app.use("/api/social", socialRoutes);
-
-// File uploads
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
-app.use("/api/admin/users", authenticateToken, requireRole("admin"), adminUsersRoutes);
-// Error handler
+// Error handler LAST
 app.use(errorHandler);
 
-// ---------------------------
-// Start Server
-// ---------------------------
+//
+// ---------------------------------------------
+// Start server
+// ---------------------------------------------
+//
+
 const startServer = async () => {
   try {
     await connectDB();
-    console.log("Database connected");
-   
- 
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-    });
+    console.log("? Database connected");
 
+    app.listen(Number(PORT), "0.0.0.0", () => {
+      console.log(`?? Backend listening on http://0.0.0.0:${PORT}`);
+    });
   } catch (err) {
-    console.error("Failed to start server:", err);
+    console.error("? Failed to start server:", err);
     process.exit(1);
   }
 };
 
 startServer();
+

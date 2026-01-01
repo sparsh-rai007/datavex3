@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import Cookies from 'js-cookie';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 if (!API_URL) {
   throw new Error("❌ NEXT_PUBLIC_API_URL is missing. Define it in your environment variables.");
@@ -12,7 +12,7 @@ class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: `${API_URL}/api`,
+      baseURL: API_URL,
       withCredentials: true,
       headers: { "Content-Type": "application/json" },
     });
