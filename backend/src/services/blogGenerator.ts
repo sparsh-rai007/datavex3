@@ -2,8 +2,8 @@
  * Blog Generator Service
  *
  * Lightweight AI blog generation pipeline:
- * - Jina Reader (r.jina.ai) for zero-RAM markdown extraction
- * - Jina Search (s.jina.ai) for keyword-based search
+ * - Jina Reader (r.jina.ai) for zero-RAM markdown extraction (preserves code + images)
+ * - Jina Search (s.jina.ai) for keyword-based discovery
  * - Groq API for ultra-fast LLM inference
  */
 
@@ -18,16 +18,16 @@ dotenv.config();
 // ---------------------------------------------------------------------------
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
-const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+const GROQ_MODEL   = process.env.GROQ_MODEL   || "llama-3.3-70b-versatile";
 const JINA_API_KEY = process.env.JINA_API_KEY || "";
 
 const JINA_READER_PREFIX = "https://r.jina.ai/";
 const JINA_SEARCH_PREFIX = "https://s.jina.ai/";
 
-/** Hard limits to stay within Groq context window */
-const URL_CONTENT_LIMIT = 8_000; // single URL mode
-const KEYWORD_PER_SOURCE_LIMIT = 3_000; // per source in keyword mode
-const KEYWORD_MAX_SOURCES = 3;
+/** Context limits — generous enough to capture images + code, but safe for 128K ctx */
+const URL_CONTENT_LIMIT        = 12_000; // single URL mode
+const KEYWORD_PER_SOURCE_LIMIT =  4_000; // per source in keyword mode
+const KEYWORD_MAX_SOURCES      = 5;      // search up to 5, use what responds
 
 // ---------------------------------------------------------------------------
 // Groq client (lazy singleton)
@@ -51,7 +51,7 @@ function getGroqClient(): Groq {
 
 /**
  * Fetch a URL's content as clean Markdown via Jina Reader.
- * Returns the markdown string, or throws on failure.
+ * Jina automatically extracts code blocks and images into Markdown format.
  */
 async function fetchMarkdownFromUrl(url: string): Promise<string> {
   const headers: Record<string, string> = {
@@ -71,7 +71,6 @@ async function fetchMarkdownFromUrl(url: string): Promise<string> {
 
 /**
  * Search for relevant URLs via Jina Search.
- * Returns an array of URLs extracted from the search results.
  */
 async function searchWithJina(query: string): Promise<string[]> {
   const headers: Record<string, string> = {
@@ -84,10 +83,7 @@ async function searchWithJina(query: string): Promise<string[]> {
 
   const response = await axios.get(
     `${JINA_SEARCH_PREFIX}${encodeURIComponent(query)}`,
-    {
-      headers,
-      timeout: 30_000,
-    }
+    { headers, timeout: 30_000 }
   );
 
   const data = response.data;
@@ -100,11 +96,10 @@ async function searchWithJina(query: string): Promise<string[]> {
       .filter(Boolean) as string[];
   }
 
-  // Fallback: if response is text, try to extract URLs with regex
+  // Fallback: parse URLs from raw text response
   if (typeof data === "string") {
     const urlRegex = /https?:\/\/[^\s)>\]"']+/g;
     const matches = data.match(urlRegex) || [];
-    // Filter out Jina's own URLs
     return matches
       .filter((u: string) => !u.includes("jina.ai"))
       .slice(0, KEYWORD_MAX_SOURCES);
@@ -114,26 +109,35 @@ async function searchWithJina(query: string): Promise<string[]> {
 }
 
 // ---------------------------------------------------------------------------
-// Groq generation helpers
+// Groq generation
 // ---------------------------------------------------------------------------
 
 async function generateWithGroq(
   systemPrompt: string,
   userPrompt: string
 ): Promise<string> {
+  console.log(`🤖 [Groq] Starting generation with model: ${GROQ_MODEL}...`);
+  const startTime = Date.now();
   const groq = getGroqClient();
 
-  const completion = await groq.chat.completions.create({
-    model: GROQ_MODEL,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    temperature: 0.7,
-    max_tokens: 4096,
-  });
+  try {
+    const completion = await groq.chat.completions.create({
+      model: GROQ_MODEL,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user",   content: userPrompt   },
+      ],
+      temperature: 0.7,
+      max_tokens: 4096,
+    });
 
-  return completion.choices?.[0]?.message?.content || "";
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`✨ [Groq] Generation complete in ${duration}s`);
+    return completion.choices?.[0]?.message?.content || "";
+  } catch (err: any) {
+    console.error(`❌ [Groq] API Error: ${err.message}`);
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -147,46 +151,63 @@ export interface BlogGenerationResult {
   sourceReference: string;
 }
 
-/**
- * Scenario A: Generate a blog post from a single URL.
- *
- * 1. Fetch markdown via Jina Reader
- * 2. Slice to URL_CONTENT_LIMIT characters
- * 3. Send to Groq for rewriting
- */
+// ---------------------------------------------------------------------------
+// Scenario A: URL Mode
+// ---------------------------------------------------------------------------
+
 export async function generateFromUrl(
   url: string
 ): Promise<BlogGenerationResult> {
-  // Step 1: Fetch markdown
+  console.log("\n" + "=".repeat(60));
+  console.log(`🚀 [URL Mode] ${url}`);
+  console.log("=".repeat(60));
+
+  // Step 1: Scrape
+  console.log(`🌐 [Step 1] Scraping via Jina Reader...`);
   let markdown: string;
   try {
     markdown = await fetchMarkdownFromUrl(url);
+    console.log(`✅ [Step 1] ${markdown.length.toLocaleString()} chars received`);
   } catch (err: any) {
-    throw new Error(
-      `Failed to retrieve article content from URL: ${err.message}`
-    );
+    console.error(`❌ [Step 1] Scrape failed: ${err.message}`);
+    throw new Error(`Failed to retrieve article content from URL: ${err.message}`);
   }
 
   if (!markdown || markdown.trim().length < 50) {
-    throw new Error(
-      "The URL returned insufficient content to generate a blog post"
-    );
+    throw new Error("The URL returned insufficient content to generate a blog post");
   }
 
-  // Step 2: Slice to fit context
+  // Step 2: Slice
+  console.log(`✂️  [Step 2] Slicing to ${URL_CONTENT_LIMIT.toLocaleString()} chars...`);
   const sliced = markdown.slice(0, URL_CONTENT_LIMIT);
 
-  // Step 3: Generate via Groq
-  const systemPrompt = `You are an expert tech blog writer. Your task is to rewrite and synthesize provided markdown into a highly engaging, SEO-friendly blog post. Always output in clean Markdown format.`;
+  // Step 3: Generate
+  console.log(`🤖 [Step 3] Sending to Groq...`);
 
-  const userPrompt = `Rewrite and synthesize the following markdown into a highly engaging, SEO-friendly blog post. Include a catchy title on the first line as a Markdown H1 (# Title), followed by structured headings (##, ###), and well-organized content paragraphs.
+  const systemPrompt = `You are an expert tech blog writer. Write a structured, polished tech blog post based on the provided scraped Markdown content.
 
-Content:
+Rules you MUST follow:
+1. Output clean Markdown only.
+2. Start with a compelling H1 title (# Title) on the very first line.
+3. Use clear H2 (##) and H3 (###) headings to organize sections.
+4. Keep ALL code blocks exactly as they appear — do not modify or paraphrase code.
+5. Keep markdown image tags \`![alt](url)\` when they are relevant to the topic.
+6. Write in a clear, engaging, authoritative tone for a technical audience.
+7. CRUCIAL FORMATTING RULE: At the end of EVERY main H2 section, you MUST add a reference line on its own line, formatted exactly like this:
+   \`*Reference: [Original Article](SOURCE_URL)*\`
+   Replace SOURCE_URL with the actual source URL provided. Do this for every single section without exception.`;
+
+  const userPrompt = `Transform the following scraped content into a complete, polished tech blog post.
+
+IMPORTANT: After every H2 section, add a reference line formatted exactly as:
+*Reference: [Original Article](${url})*
+
+Original Source URL: ${url}
+
+Scraped Content:
 ${sliced}`;
 
   const generated = await generateWithGroq(systemPrompt, userPrompt);
-
-  // Extract title from the first H1 line
   const { title, body } = extractTitleAndBody(generated);
 
   return {
@@ -197,22 +218,26 @@ ${sliced}`;
   };
 }
 
-/**
- * Scenario B: Generate a blog post from a keyword search.
- *
- * 1. Search via Jina Search for relevant URLs
- * 2. Fetch markdown for each URL via Jina Reader
- * 3. Slice + concatenate
- * 4. Send to Groq for original synthesis
- */
+// ---------------------------------------------------------------------------
+// Scenario B: Keyword Mode
+// ---------------------------------------------------------------------------
+
 export async function generateFromKeyword(
   keyword: string
 ): Promise<BlogGenerationResult> {
-  // Step 1: Search for URLs
+  console.log("\n" + "=".repeat(60));
+  console.log(`🚀 [Keyword Mode] "${keyword}"`);
+  console.log("=".repeat(60));
+
+  // Step 1: Search
+  console.log(`🔍 [Step 1] Searching with Jina Search...`);
   let urls: string[];
   try {
     urls = await searchWithJina(keyword);
+    console.log(`🔗 [Step 1] Found ${urls.length} candidate URLs:`);
+    urls.forEach((u, i) => console.log(`   ${i + 1}. ${u}`));
   } catch (err: any) {
+    console.error(`❌ [Step 1] Search failed: ${err.message}`);
     throw new Error(`Search failed for keyword "${keyword}": ${err.message}`);
   }
 
@@ -222,49 +247,64 @@ export async function generateFromKeyword(
     );
   }
 
-  // Step 2 & 3: Fetch + slice each source
-  const sourceParts: string[] = [];
-  const successfulUrls: string[] = [];
+  // Step 2: Scrape each source
+  console.log(`📝 [Step 2] Scraping ${urls.length} sources...`);
+  const sources: Array<{ url: string; content: string }> = [];
 
   for (const url of urls) {
     try {
-      const markdown = await fetchMarkdownFromUrl(url);
-      if (markdown && markdown.trim().length > 50) {
-        sourceParts.push(
-          `--- Source: ${url} ---\n${markdown.slice(0, KEYWORD_PER_SOURCE_LIMIT)}`
-        );
-        successfulUrls.push(url);
+      console.log(`   🌐 Scraping: ${url}...`);
+      const md = await fetchMarkdownFromUrl(url);
+      if (md && md.trim().length > 50) {
+        console.log(`   ✅ ${md.length.toLocaleString()} chars received`);
+        sources.push({ url, content: md.slice(0, KEYWORD_PER_SOURCE_LIMIT) });
+      } else {
+        console.warn(`   ⚠️  Skipped — content too short`);
       }
-    } catch (err) {
-      // Skip failed URLs silently — we have others
-      console.warn(`⚠️ Jina Reader failed for ${url}, skipping.`);
+    } catch {
+      console.warn(`   ⚠️  Failed to scrape, skipping.`);
     }
   }
 
-  if (sourceParts.length === 0) {
+  console.log(`📊 [Step 2] Using ${sources.length}/${urls.length} sources`);
+
+  if (sources.length === 0) {
     throw new Error(
-      "Failed to retrieve content from any of the search results. Try a different keyword."
+      "Failed to retrieve content from any search results. Try a different keyword."
     );
   }
 
-  const concatenated = sourceParts.join("\n\n");
+  const systemPrompt = `You are an expert tech blog writer. Write a comprehensive, original tech blog post based on multiple provided research sources.
 
-  // Step 4: Generate via Groq
-  const systemPrompt = `You are an expert tech blog writer. Your task is to write a comprehensive, engaging, and original blog post based on provided research context. Always output in clean Markdown format. Do NOT copy content verbatim — synthesize and add original insight.`;
+Rules you MUST follow:
+1. Output clean Markdown only.
+2. Start with a compelling H1 title (# Title) on the very first line.
+3. Organize the content into clear H2 (##) sections — one per major concept or subtopic.
+4. Keep useful code blocks exactly as they appear — do not alter code.
+5. Keep relevant markdown image tags \`![alt](url)\` when they illustrate the topic.
+6. DO NOT copy content verbatim. Synthesize, clarify, and add editorial insight.
+7. CRUCIAL FORMATTING RULE: At the end of EVERY H2 section, you MUST add a reference line on its own line stating exactly which source(s) that section was built from. Format it like this:
+   \`*Reference: [Title of that source](URL of that source)*\`
+   If a section uses multiple sources, list them all on separate lines:
+   \`*Reference: [Source One Title](url1)*\`
+   \`*Reference: [Source Two Title](url2)*\`
+   Do this for EVERY section. Never skip it.`;
 
-  const userPrompt = `Based on the following gathered context, write a comprehensive, engaging, and original blog post about "${keyword}".
+  // Build numbered source blocks with clear labels
+  const sourceBlocks = sources
+    .map((s, i) => `Source ${i + 1}: ${s.url}\nContent ${i + 1}:\n${s.content}`)
+    .join("\n\n---\n\n");
 
-Include:
-- A catchy title on the first line as a Markdown H1 (# Title)
-- Structured headings (##, ###)
-- An introduction, main sections, and a conclusion
-- Key takeaways or actionable insights
+  const userPrompt = `Write a comprehensive, original tech blog post about: "${keyword}".
 
-Research Context:
-${concatenated}`;
+Use the sources below as your research. After EVERY H2 section, add a reference line:
+*Reference: [Title of the source you used](URL of that source)*
+
+Do NOT wait until the end of the blog — put the reference immediately after the section text.
+
+${sourceBlocks}`;
 
   const generated = await generateWithGroq(systemPrompt, userPrompt);
-
   const { title, body } = extractTitleAndBody(generated);
 
   return {
@@ -279,10 +319,7 @@ ${concatenated}`;
 // Utility
 // ---------------------------------------------------------------------------
 
-function extractTitleAndBody(markdown: string): {
-  title: string;
-  body: string;
-} {
+function extractTitleAndBody(markdown: string): { title: string; body: string } {
   const lines = markdown.split("\n");
   let title = "Untitled Blog Post";
   let bodyStartIndex = 0;

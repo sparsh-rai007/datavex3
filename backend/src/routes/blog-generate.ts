@@ -63,19 +63,25 @@ router.post(
       );
 
       let result;
+      console.log("type", type);
 
       if (type === "url") {
         // Validate it looks like a URL
         try {
+          console.log("urll one")
           new URL(query);
         } catch {
           return res.status(400).json({
             error: "Invalid URL format. Please provide a valid URL.",
           });
         }
+        console.log("url one")
         result = await generateFromUrl(query);
+
       } else {
+        console.log("keyword one")
         result = await generateFromKeyword(query);
+
       }
 
       console.log(`✅ Blog generated: "${result.title}"`);

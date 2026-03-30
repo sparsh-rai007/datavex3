@@ -12,6 +12,13 @@ export default function EditBlogPage() {
   const blogId = params.id as string;
 
   const [content, setContent] = useState('');
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [review, setReview] = useState<{
+    score: number;
+    factual_warnings: string[];
+    formatting_errors: string[];
+    general_feedback: string;
+  } | null>(null);
 
   const { register, setValue, handleSubmit, watch } = useForm();
 
@@ -60,6 +67,23 @@ export default function EditBlogPage() {
   const onSubmit = async (data: any) => {
     await apiClient.updateBlog(blogId, { ...data, content });
     router.push('/admin/blogs');
+  };
+
+  const handleReview = async () => {
+    if (!content || content.trim().length < 50) {
+      alert('Add some content before reviewing.');
+      return;
+    }
+    setIsReviewing(true);
+    setReview(null);
+    try {
+      const result = await apiClient.reviewBlog(content);
+      setReview(result);
+    } catch (err: any) {
+      alert(err?.response?.data?.error || 'Review failed. Please try again.');
+    } finally {
+      setIsReviewing(false);
+    }
   };
 
   return (
@@ -152,9 +176,66 @@ export default function EditBlogPage() {
   </div>
 </div>
 
-        <button className="px-6 py-2 bg-primary-600 text-white rounded-lg">
-          Save Changes
-        </button>
+        {/* AI REVIEW PANEL */}
+        {review && (
+          <div className="bg-white border rounded-xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">🔍 AI Review Report</h2>
+              <span className={`text-2xl font-bold ${
+                review.score >= 80 ? 'text-green-600' :
+                review.score >= 50 ? 'text-yellow-500' : 'text-red-600'
+              }`}>{review.score}/100</span>
+            </div>
+
+            <p className="text-gray-700 text-sm bg-gray-50 p-3 rounded-lg italic">
+              {review.general_feedback}
+            </p>
+
+            {review.factual_warnings.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-orange-700 mb-2">⚠️ Factual Warnings</h3>
+                <ul className="space-y-1">
+                  {review.factual_warnings.map((w, i) => (
+                    <li key={i} className="text-sm text-orange-800 bg-orange-50 px-3 py-2 rounded-lg">• {w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {review.formatting_errors.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-red-700 mb-2">❌ Formatting / Citation Errors</h3>
+                <ul className="space-y-1">
+                  {review.formatting_errors.map((e, i) => (
+                    <li key={i} className="text-sm text-red-800 bg-red-50 px-3 py-2 rounded-lg">• {e}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {review.factual_warnings.length === 0 && review.formatting_errors.length === 0 && (
+              <p className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">✅ No issues found — looks great!</p>
+            )}
+          </div>
+        )}
+
+        <div className="pt-4 border-t flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={handleReview}
+            disabled={isReviewing}
+            className="px-6 py-3 bg-gray-800 text-white rounded-lg font-semibold hover:bg-gray-900 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+          >
+            {isReviewing ? (
+              <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>
+              Reviewing...</>
+            ) : '🔍 AI Review'}
+          </button>
+
+          <button className="px-6 py-2 bg-primary-600 text-white rounded-lg">
+            Save Changes
+          </button>
+        </div>
 
       </form>
     </div>

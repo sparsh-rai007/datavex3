@@ -134,6 +134,16 @@ async generateBlog(type: 'keyword' | 'url', query: string) {
   return response.data;
 }
 
+async reviewBlog(content: string) {
+  const response = await this.client.post('/blog/review', { content });
+  return response.data as {
+    score: number;
+    factual_warnings: string[];
+    formatting_errors: string[];
+    general_feedback: string;
+  };
+}
+
 async getPublicBlogs() {
   const response = await this.client.get('/blogs/public/all', {
     withCredentials: false,
