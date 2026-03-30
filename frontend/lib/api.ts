@@ -129,6 +129,11 @@ async deleteBlog(id: string) {
   return response.data;
 }
 
+async generateBlog(type: 'keyword' | 'url', query: string) {
+  const response = await this.client.post('/blog/generate', { type, query });
+  return response.data;
+}
+
 async getPublicBlogs() {
   const response = await this.client.get('/blogs/public/all', {
     withCredentials: false,
