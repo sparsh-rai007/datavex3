@@ -15,6 +15,8 @@ export async function initBlogsTable() {
       meta_description TEXT,
       meta_keywords TEXT,
       status VARCHAR(20) DEFAULT 'draft',
+      generation_method VARCHAR(20) DEFAULT 'manual',
+      source_reference TEXT,
       author_id UUID REFERENCES users(id) ON DELETE SET NULL,
       external_url TEXT,
       created_at TIMESTAMP DEFAULT NOW(),

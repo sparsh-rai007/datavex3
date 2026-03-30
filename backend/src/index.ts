@@ -25,6 +25,7 @@ import adminUsersRoutes from "./routes/admin-users";
 import bookingsRouter from "./routes/bookings";
 import adminBookingsRoute from "./routes/admin-bookings";
 import blogRoutes from "./routes/blogs";
+import blogGenerateRoutes from "./routes/blog-generate";
 import socialRoutes from "./routes/social";
 import calRouter from "./routes/cal";
 import calWebhookRoute from "./routes/cal-webhook";
@@ -104,6 +105,7 @@ app.use("/api/bookings", bookingsRouter);
 app.use("/api/admin/bookings", adminBookingsRoute);
 
 app.use("/api/blogs", blogRoutes);
+app.use("/api/blog", blogGenerateRoutes);
 app.use("/api/social", socialRoutes);
 
 // Cal.com

@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS blogs (
     meta_keywords TEXT,
 
     status VARCHAR(20) DEFAULT 'draft',   -- draft | published
+    generation_method VARCHAR(20) DEFAULT 'manual',  -- manual | ai_keyword | ai_url
+    source_reference TEXT,                            -- URL or keyword used for AI generation
 
     author_id UUID REFERENCES users(id) ON DELETE SET NULL,
 
@@ -154,6 +156,23 @@ CREATE TABLE IF NOT EXISTS job_applications (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Bookings table (Cal.com webhook integration)
+CREATE TABLE IF NOT EXISTS bookings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_id VARCHAR(255) UNIQUE NOT NULL,
+  name VARCHAR(255) NOT NULL DEFAULT 'Unknown',
+  email VARCHAR(255),
+  start_time TIMESTAMP,
+  end_time TIMESTAMP,
+  timezone VARCHAR(100) DEFAULT 'UTC',
+  cancelled BOOLEAN DEFAULT false,
+  approved BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_bookings_booking_id ON bookings(booking_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_email ON bookings(email);
+
 -- Audit logs table
 CREATE TABLE IF NOT EXISTS audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -193,19 +212,24 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Triggers for updated_at
+-- Triggers for updated_at (idempotent)
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_posts_updated_at ON posts;
 CREATE TRIGGER update_posts_updated_at BEFORE UPDATE ON posts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_leads_updated_at ON leads;
 CREATE TRIGGER update_leads_updated_at BEFORE UPDATE ON leads
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_jobs_updated_at ON jobs;
 CREATE TRIGGER update_jobs_updated_at BEFORE UPDATE ON jobs
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_job_applications_updated_at ON job_applications;
 CREATE TRIGGER update_job_applications_updated_at BEFORE UPDATE ON job_applications
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
