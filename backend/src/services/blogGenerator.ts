@@ -18,16 +18,16 @@ dotenv.config();
 // ---------------------------------------------------------------------------
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
-const GROQ_MODEL   = process.env.GROQ_MODEL   || "llama-3.3-70b-versatile";
+const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 const JINA_API_KEY = process.env.JINA_API_KEY || "";
 
 const JINA_READER_PREFIX = "https://r.jina.ai/";
 const JINA_SEARCH_PREFIX = "https://s.jina.ai/";
 
 /** Context limits — generous enough to capture images + code, but safe for 128K ctx */
-const URL_CONTENT_LIMIT        = 12_000; // single URL mode
-const KEYWORD_PER_SOURCE_LIMIT =  4_000; // per source in keyword mode
-const KEYWORD_MAX_SOURCES      = 5;      // search up to 5, use what responds
+const URL_CONTENT_LIMIT = 12_000; // single URL mode
+const KEYWORD_PER_SOURCE_LIMIT = 4_000; // per source in keyword mode
+const KEYWORD_MAX_SOURCES = 5;      // search up to 5, use what responds
 
 // ---------------------------------------------------------------------------
 // Groq client (lazy singleton)
@@ -125,7 +125,7 @@ async function generateWithGroq(
       model: GROQ_MODEL,
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user",   content: userPrompt   },
+        { role: "user", content: userPrompt },
       ],
       temperature: 0.7,
       max_tokens: 4096,

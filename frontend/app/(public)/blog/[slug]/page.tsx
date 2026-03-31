@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Share2, 
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import {
+  ArrowLeft,
+  Share2,
   Bookmark,
   Calendar,
   Clock,
@@ -14,47 +16,13 @@ import { useRouter, useParams } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import PublicWrapper from '../../wrapper';
 
-interface BlogDetailProps {
-  post: {
-    id: string;
-    title: string;
-    slug: string;
-    excerpt: string;
-    category: string;
-    author_name: string;
-    created_at: string;
-    featured_image?: string;
-    read_time?: string;
-    content?: string;
-    external_url?: string;
-  };
-}
-
-function formatBlog(text: string) {
-  if (!text) return '';
-
-  return text
-    .replace(/##\s+/g, '\n\n## ')
-    .replace(/###\s+/g, '\n\n### ')
-    .replace(/(\d+\.)\s+/g, '\n$1 ')
-    .replace(/\*\s+/g, '\n* ')
-    .replace(/^## (.*$)/gim, '<h2 class="text-3xl font-black text-slate-900 mt-12 mb-6">$1</h2>')
-    .replace(/^### (.*$)/gim, '<h3 class="text-2xl font-black text-slate-900 mt-10 mb-4">$1</h3>')
-    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-    .replace(/^\* (.*$)/gim, '<li class="ml-6 mb-3 list-disc text-slate-600">$1</li>')
-    .replace(/^\d+\.\s+(.*$)/gim, '<li class="ml-6 mb-3 list-decimal text-slate-600">$1</li>')
-    .replace(/`(.*?)`/gim, '<code class="bg-slate-100 px-2 py-0.5 rounded text-primary-700 font-mono text-sm">$1</code>')
-    .replace(/\n\n+/gim, '</p><p class="mb-6 leading-relaxed text-slate-600">')
-    .replace(/^(?!<h|<li)(.+)$/gim, '<p class="mb-6 leading-relaxed text-slate-600">$1</p>');
-}
-
 export default function BlogDetailPage() {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
   
-  const [blog, setBlog] = React.useState<any>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [blog, setBlog] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -89,8 +57,8 @@ export default function BlogDetailPage() {
     return (
       <PublicWrapper>
         <div className="py-40 text-center animate-pulse">
-           <div className="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Initializing Retrieval Matrix...</p>
+          <div className="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Initializing Retrieval Matrix...</p>
         </div>
       </PublicWrapper>
     );
@@ -108,7 +76,39 @@ export default function BlogDetailPage() {
     );
   }
 
-  const formattedContent = formatBlog(blog.content || '');
+  // Pre-process content to handle citations and clean up Reference prefixes
+  const renderMarkdown = (rawContent: string) => {
+    // Clean up "Reference: " or "*Reference: " prefixes and join to previous paragraph
+    const cleanedContent = (rawContent || '')
+      .replace(/[\s\n]*\*?Reference:\s*/gim, ' ') 
+      .replace(/\)\*/g, ')'); 
+    
+    return (
+      <ReactMarkdown 
+        remarkPlugins={[remarkGfm]}
+        components={{
+          h2: ({node, ...props}) => <h2 className="text-3xl font-black text-slate-900 mt-12 mb-6" {...props} />,
+          h3: ({node, ...props}) => <h3 className="text-2xl font-black text-slate-900 mt-10 mb-4" {...props} />,
+          p: ({node, ...props}) => <p className="mb-6 leading-relaxed text-slate-600 text-lg" {...props} />,
+          ul: ({node, ...props}) => <ul className="mb-8 space-y-3" {...props} />,
+          li: ({node, ...props}) => <li className="ml-6 list-disc text-slate-600 text-lg" {...props} />,
+          a: ({node, ...props}) => (
+            <a 
+              className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[9px] font-black uppercase tracking-wider hover:bg-slate-200 hover:text-slate-900 transition-all ml-1.5 align-middle border border-slate-200/50 shadow-sm" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              {...props} 
+            />
+          ),
+          strong: ({node, ...props}) => <strong className="font-black text-slate-900" {...props} />,
+          code: ({node, ...props}) => <code className="bg-slate-100 px-2 py-0.5 rounded text-primary-700 font-mono text-sm" {...props} />,
+          img: ({node, ...props}) => <img referrerPolicy="no-referrer" className="rounded-[2rem] shadow-xl my-10" {...props} />
+        }}
+      >
+        {cleanedContent}
+      </ReactMarkdown>
+    );
+  };
 
   return (
     <PublicWrapper>
@@ -122,14 +122,14 @@ export default function BlogDetailPage() {
         {/* Detail Header / Nav */}
         <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <button 
+            <button
               onClick={() => router.back()}
               className="group flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors font-black uppercase tracking-widest text-[10px]"
             >
               <ArrowLeft size={14} />
               Return to Feed
             </button>
-            
+
             <div className="flex items-center gap-4">
               <button className="p-2 text-slate-400 hover:text-primary-600 transition-colors">
                 <Share2 size={18} />
@@ -181,10 +181,9 @@ export default function BlogDetailPage() {
           )}
 
           {/* Rendered Intelligence Matrix */}
-          <article
-            className="prose prose-slate prose-xl max-w-none prose-headings:font-black prose-strong:text-slate-900"
-            dangerouslySetInnerHTML={{ __html: formattedContent }}
-          />
+          <div className="prose prose-slate prose-xl max-w-none prose-headings:font-black prose-strong:text-slate-900 markdown-body">
+            {renderMarkdown(blog.content || '')}
+          </div>
 
           {/* Global Footer Context */}
           <div className="mt-40 pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">

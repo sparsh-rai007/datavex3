@@ -56,7 +56,7 @@ export default function NewBlogPage() {
 
     try {
       const type = mode as 'keyword' | 'url';
-      
+
       // CALL AI API (Backend returns Markdown)
       const response = await apiClient.generateBlog(type, aiQuery.trim());
       const blog = response.blog;
@@ -70,7 +70,7 @@ export default function NewBlogPage() {
       // Switch to manual mode so user can review/edit the draft
       setMode('manual');
       setAiQuery('');
-      
+
     } catch (error: any) {
       console.error('AI Generation Error:', error);
       alert(error?.response?.data?.error || 'Intelligence Generation Error. Please try again.');
@@ -99,12 +99,12 @@ export default function NewBlogPage() {
           <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">Intelligence Synthesis Matrix</p>
         </div>
         <div className="flex items-center gap-4">
-           <button 
-             onClick={() => router.back()}
-             className="w-12 h-12 rounded-2xl border border-slate-100 flex items-center justify-center text-slate-400 hover:text-primary-600 hover:bg-white hover:border-primary-100 transition-all shadow-sm"
-           >
-             <ArrowLeft size={18} />
-           </button>
+          <button
+            onClick={() => router.back()}
+            className="w-12 h-12 rounded-2xl border border-slate-100 flex items-center justify-center text-slate-400 hover:text-primary-600 hover:bg-white hover:border-primary-100 transition-all shadow-sm"
+          >
+            <ArrowLeft size={18} />
+          </button>
         </div>
       </div>
 
@@ -114,17 +114,16 @@ export default function NewBlogPage() {
           <button
             key={m}
             onClick={() => setMode(m)}
-            className={`px-8 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all relative ${
-              mode === m ? 'text-white' : 'text-slate-400 hover:text-slate-600'
-            }`}
+            className={`px-8 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all relative ${mode === m ? 'text-white' : 'text-slate-400 hover:text-slate-600'
+              }`}
           >
             <span className="relative z-10 flex items-center gap-2">
-              {m === 'manual' ? <Edit3 size={14}/> : m === 'keyword' ? <Sparkles size={14}/> : <Terminal size={14}/>}
+              {m === 'manual' ? <Edit3 size={14} /> : m === 'keyword' ? <Sparkles size={14} /> : <Terminal size={14} />}
               {m === 'manual' ? 'Manual Craft' : m === 'keyword' ? 'AI Keyword' : 'AI URL Redraft'}
             </span>
             {mode === m && (
-              <motion.div 
-                layoutId="activeTabBgGenMarkdown" 
+              <motion.div
+                layoutId="activeTabBgGenMarkdown"
                 className="absolute inset-0 bg-slate-900 rounded-xl shadow-xl shadow-slate-900/20"
               />
             )}
@@ -135,60 +134,60 @@ export default function NewBlogPage() {
       {/* AI Intelligence Terminal */}
       <AnimatePresence mode="wait">
         {mode !== 'manual' && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
             className="bg-slate-900 p-10 rounded-[3rem] mb-16 relative overflow-hidden group shadow-2xl shadow-primary-900/20"
           >
             <div className="absolute top-0 right-0 w-[50%] h-full bg-primary-600/10 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
-            
+
             {isGenerating && (
               <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center z-20">
-                 <div className="flex gap-2.5 mb-6">
-                   {[1,2,3].map(i => (
-                      <motion.div 
-                        key={i}
-                        animate={{ scale: [1, 1.4, 1], opacity: [0.3, 1, 0.3] }}
-                        transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
-                        className="w-3.5 h-3.5 bg-primary-500 rounded-full"
-                      />
-                   ))}
-                 </div>
-                 <p className="text-white font-black uppercase tracking-[0.4em] text-[11px]">Processing Neural Architecture</p>
+                <div className="flex gap-2.5 mb-6">
+                  {[1, 2, 3].map(i => (
+                    <motion.div
+                      key={i}
+                      animate={{ scale: [1, 1.4, 1], opacity: [0.3, 1, 0.3] }}
+                      transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                      className="w-3.5 h-3.5 bg-primary-500 rounded-full"
+                    />
+                  ))}
+                </div>
+                <p className="text-white font-black uppercase tracking-[0.4em] text-[11px]">Processing Neural Architecture</p>
               </div>
             )}
-            
+
             <div className="flex items-start gap-4 mb-10 relative z-10">
               <div className="w-12 h-12 rounded-2xl bg-primary-600 flex items-center justify-center text-white shadow-xl shadow-primary-600/30">
-                 {mode === 'keyword' ? <Sparkles size={22} /> : <Terminal size={22} />}
+                {mode === 'keyword' ? <Sparkles size={22} /> : <Terminal size={22} />}
               </div>
               <div>
                 <h2 className="text-2xl font-black text-white tracking-tight mb-2">Neural Generation Pipeline</h2>
                 <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-lg">
-                  {mode === 'keyword' 
-                    ? 'Enter deep topic references to initiate cross-platform semantic synthesis. Our architecture handles formatting.' 
+                  {mode === 'keyword'
+                    ? 'Enter deep topic references to initiate cross-platform semantic synthesis. Our architecture handles formatting.'
                     : 'Analyze and redraft source authority intelligence using URL references for unique narrative retrieval.'}
                 </p>
               </div>
             </div>
 
             <div className="flex flex-col md:flex-row gap-4 relative z-10">
-               <input
-                 type="text"
-                 value={aiQuery}
-                 onChange={(e) => setAiQuery(e.target.value)}
-                 placeholder={mode === 'keyword' ? "Topic: Future of Neural Architecture..." : "Authority Source: https://..."}
-                 className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary-600 outline-none transition-all font-medium"
-                 disabled={isGenerating}
-               />
-               <button
-                 onClick={handleGenerateAI}
-                 disabled={isGenerating}
-                 className="bg-primary-600 text-white px-12 py-5 rounded-3xl font-black uppercase tracking-widest text-[11px] hover:bg-white hover:text-slate-900 transition-all shadow-[0_20px_40px_-5px_rgba(37,99,235,0.4)] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 min-w-[240px]"
-               >
-                 {isGenerating ? <Loader2 className="animate-spin" size={20} /> : 'Execute Sequence'}
-               </button>
+              <input
+                type="text"
+                value={aiQuery}
+                onChange={(e) => setAiQuery(e.target.value)}
+                placeholder={mode === 'keyword' ? "Topic: Future of Neural Architecture..." : "Authority Source: https://..."}
+                className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary-600 outline-none transition-all font-medium"
+                disabled={isGenerating}
+              />
+              <button
+                onClick={handleGenerateAI}
+                disabled={isGenerating}
+                className="bg-primary-600 text-white px-12 py-5 rounded-3xl font-black uppercase tracking-widest text-[11px] hover:bg-white hover:text-slate-900 transition-all shadow-[0_20px_40px_-5px_rgba(37,99,235,0.4)] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 min-w-[240px]"
+              >
+                {isGenerating ? <Loader2 className="animate-spin" size={20} /> : 'Execute Sequence'}
+              </button>
             </div>
           </motion.div>
         )}
@@ -196,118 +195,118 @@ export default function NewBlogPage() {
 
       {/* Core Narrative Environment */}
       <form onSubmit={handleSubmit(onSubmit)} className={`space-y-12 ${isGenerating ? 'opacity-30 pointer-events-none' : 'transition-opacity duration-1000'}`}>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-           <div className="space-y-4">
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all focus-within:shadow-xl focus-within:border-primary-100">
-                 <label className="block text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Strategic Label</label>
-                 <input 
-                   {...register('title')} 
-                   onChange={handleTitleChange}
-                   className="w-full bg-transparent border-none p-0 text-2xl font-black text-slate-900 placeholder:text-slate-200 outline-none" 
-                   placeholder="Enter Publication Title..."
-                 />
-              </div>
-           </div>
 
-           <div className="space-y-4">
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all focus-within:shadow-xl focus-within:border-primary-100">
-                 <label className="block text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Navigation Slug</label>
-                 <div className="flex items-center gap-2">
-                    <span className="text-slate-200 font-bold">/</span>
-                    <input 
-                      {...register('slug')} 
-                      className="flex-1 bg-transparent border-none p-0 text-lg font-bold text-slate-500 outline-none" 
-                    />
-                 </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <div className="space-y-4">
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all focus-within:shadow-xl focus-within:border-primary-100">
+              <label className="block text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Strategic Label</label>
+              <input
+                {...register('title')}
+                onChange={handleTitleChange}
+                className="w-full bg-transparent border-none p-0 text-2xl font-black text-slate-900 placeholder:text-slate-200 outline-none"
+                placeholder="Enter Publication Title..."
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all focus-within:shadow-xl focus-within:border-primary-100">
+              <label className="block text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Navigation Slug</label>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-200 font-bold">/</span>
+                <input
+                  {...register('slug')}
+                  className="flex-1 bg-transparent border-none p-0 text-lg font-bold text-slate-500 outline-none"
+                />
               </div>
-           </div>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-8">
-           <div className="flex items-center justify-between px-4">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 flex items-center gap-3">
-                 <div className="w-1.5 h-1.5 bg-primary-600 rounded-full" /> Narrative Intelligence
-              </span>
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Marked Rendering Active</span>
-           </div>
-           <div className="rounded-[3rem] overflow-hidden border border-slate-100 bg-white shadow-2xl shadow-slate-200/20">
-              <TipTapEditor content={content} onChange={setContent} />
-           </div>
+          <div className="flex items-center justify-between px-4">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 flex items-center gap-3">
+              <div className="w-1.5 h-1.5 bg-primary-600 rounded-full" /> Narrative Intelligence
+            </span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Marked Rendering Active</span>
+          </div>
+          <div className="rounded-[3rem] overflow-hidden border border-slate-100 bg-white shadow-2xl shadow-slate-200/20">
+            <TipTapEditor content={content} onChange={setContent} />
+          </div>
         </div>
 
         {/* Global Architecture Configuration */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 pt-16 border-t border-slate-200">
-           <div className="lg:col-span-1 space-y-10">
+          <div className="lg:col-span-1 space-y-10">
+            <div>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">System Controls</h3>
+              <p className="text-sm text-slate-400 font-medium leading-relaxed mt-2">
+                Define the visibility and metadata parameters for this architectural release.
+              </p>
+            </div>
+
+            <div className="space-y-6">
               <div>
-                 <h3 className="text-xl font-black text-slate-900 tracking-tight">System Controls</h3>
-                 <p className="text-sm text-slate-400 font-medium leading-relaxed mt-2">
-                    Define the visibility and metadata parameters for this architectural release.
-                 </p>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Visibility Matrix</label>
+                <select {...register('status')} className="w-full bg-white border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:ring-2 focus:ring-primary-600 outline-none appearance-none shadow-sm cursor-pointer">
+                  <option value="draft">System Draft</option>
+                  <option value="published">Global Release</option>
+                </select>
               </div>
-              
-              <div className="space-y-6">
-                 <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Visibility Matrix</label>
-                    <select {...register('status')} className="w-full bg-white border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold focus:ring-2 focus:ring-primary-600 outline-none appearance-none shadow-sm cursor-pointer">
-                      <option value="draft">System Draft</option>
-                      <option value="published">Global Release</option>
-                    </select>
-                 </div>
-                 <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Redirect Authority</label>
-                    <input
-                      {...register("external_url")}
-                      className="w-full bg-white border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-medium focus:ring-2 focus:ring-primary-600 outline-none shadow-sm"
-                      placeholder="https://..."
-                    />
-                 </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Redirect Authority</label>
+                <input
+                  {...register("external_url")}
+                  className="w-full bg-white border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-medium focus:ring-2 focus:ring-primary-600 outline-none shadow-sm"
+                  placeholder="https://..."
+                />
               </div>
-           </div>
+            </div>
+          </div>
 
-           <div className="lg:col-span-2 bg-slate-900 p-10 rounded-[3rem] text-white shadow-2xl shadow-slate-900/10">
-              <div className="flex items-center gap-4 mb-10">
-                 <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-primary-400"><Save size={18} /></div>
-                 <h3 className="text-xl font-black tracking-tight tracking-tight">SEO Neural Optimization</h3>
-              </div>
+          <div className="lg:col-span-2 bg-slate-900 p-10 rounded-[3rem] text-white shadow-2xl shadow-slate-900/10">
+            <div className="flex items-center gap-4 mb-10">
+              <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-primary-400"><Save size={18} /></div>
+              <h3 className="text-xl font-black tracking-tight tracking-tight">SEO Neural Optimization</h3>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                 <div>
-                    <label className="block text-[10px] font-black text-slate-700 uppercase tracking-widest mb-4 ml-2">Meta Title Trace</label>
-                    <input
-                      {...register("meta_title")}
-                      className="w-full bg-white/5 border border-white/10 rounded-[1.2rem] px-6 py-4 text-white font-medium focus:ring-2 focus:ring-primary-600 outline-none transition-all shadow-inner"
-                      maxLength={60}
-                    />
-                 </div>
-                 <div>
-                    <label className="block text-[10px] font-black text-slate-700 uppercase tracking-widest mb-4 ml-2">Strategic Keywords</label>
-                    <input
-                      {...register("meta_keywords")}
-                      className="w-full bg-white/5 border border-white/10 rounded-[1.2rem] px-6 py-4 text-white font-medium focus:ring-2 focus:ring-primary-600 outline-none transition-all shadow-inner"
-                      placeholder="AI, Future, SaaS"
-                    />
-                 </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <label className="block text-[10px] font-black text-slate-700 uppercase tracking-widest mb-4 ml-2">Meta Title Trace</label>
+                <input
+                  {...register("meta_title")}
+                  className="w-full bg-white/5 border border-white/10 rounded-[1.2rem] px-6 py-4 text-white font-medium focus:ring-2 focus:ring-primary-600 outline-none transition-all shadow-inner"
+                  maxLength={60}
+                />
               </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-700 uppercase tracking-widest mb-4 ml-2">Strategic Keywords</label>
+                <input
+                  {...register("meta_keywords")}
+                  className="w-full bg-white/5 border border-white/10 rounded-[1.2rem] px-6 py-4 text-white font-medium focus:ring-2 focus:ring-primary-600 outline-none transition-all shadow-inner"
+                  placeholder="AI, Future, SaaS"
+                />
+              </div>
+            </div>
 
-              <div className="mt-8">
-                 <label className="block text-[10px] font-black text-slate-700 uppercase tracking-widest mb-4 ml-2">Neural Meta Narrative</label>
-                 <textarea
-                   {...register("meta_description")}
-                   className="w-full bg-white/5 border border-white/10 rounded-[1.2rem] px-6 py-4 text-white font-medium focus:ring-2 focus:ring-primary-600 outline-none min-h-[120px] resize-none transition-all shadow-inner leading-relaxed"
-                   maxLength={160}
-                 />
-              </div>
-           </div>
+            <div className="mt-8">
+              <label className="block text-[10px] font-black text-slate-700 uppercase tracking-widest mb-4 ml-2">Neural Meta Narrative</label>
+              <textarea
+                {...register("meta_description")}
+                className="w-full bg-white/5 border border-white/10 rounded-[1.2rem] px-6 py-4 text-white font-medium focus:ring-2 focus:ring-primary-600 outline-none min-h-[120px] resize-none transition-all shadow-inner leading-relaxed"
+                maxLength={160}
+              />
+            </div>
+          </div>
         </div>
 
         <div className="pt-16 border-t border-slate-200 flex justify-end pb-32">
-           <button 
-             type="submit" 
-             className="px-14 py-6 bg-primary-600 text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-slate-900 hover:scale-105 transition-all shadow-[0_20px_40px_-5px_rgba(37,99,235,0.4)] active:scale-95 group flex items-center gap-3"
-           >
-             Commit Release <Save size={16} className="group-hover:rotate-45 transition-transform" />
-           </button>
+          <button
+            type="submit"
+            className="px-14 py-6 bg-primary-600 text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-slate-900 hover:scale-105 transition-all shadow-[0_20px_40px_-5px_rgba(37,99,235,0.4)] active:scale-95 group flex items-center gap-3"
+          >
+            Commit Release <Save size={16} className="group-hover:rotate-45 transition-transform" />
+          </button>
         </div>
       </form>
     </div>
