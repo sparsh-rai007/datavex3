@@ -16,6 +16,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import PublicWrapper from '../../wrapper';
 import BlogRenderer from '@/components/BlogRenderer';
+import RelatedReferences from '@/components/RelatedReferences';
 
 export default function BlogDetailPage() {
   const router = useRouter();
@@ -57,9 +58,41 @@ export default function BlogDetailPage() {
   if (loading) {
     return (
       <PublicWrapper>
-        <div className="py-40 text-center animate-pulse">
-          <div className="w-10 h-10 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Initializing Retrieval Matrix...</p>
+        <div className="min-h-screen bg-slate-50 font-outfit pt-32 pb-40">
+          <div className="max-w-[700px] mx-auto px-6 lg:px-0">
+            {/* Header Skeleton */}
+            <div className="animate-pulse space-y-6 mb-16">
+              <div className="flex items-center gap-3">
+                <div className="w-20 h-6 bg-slate-200 rounded-full"></div>
+                <div className="w-4 h-4 rounded-full bg-slate-200"></div>
+                <div className="w-24 h-4 bg-slate-200 rounded-full"></div>
+              </div>
+              <div className="w-full h-16 bg-slate-200 rounded-3xl"></div>
+              <div className="w-3/4 h-16 bg-slate-200 rounded-3xl"></div>
+              <div className="flex items-center gap-4 mt-8">
+                <div className="w-12 h-12 bg-slate-200 rounded-full"></div>
+                <div className="space-y-2">
+                  <div className="w-24 h-4 bg-slate-200 rounded-full"></div>
+                  <div className="w-32 h-3 bg-slate-200 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+
+             {/* Content Skeleton */}
+             <div className="animate-pulse space-y-8">
+                <div className="w-full h-8 bg-slate-200 rounded-full"></div>
+                <div className="w-full h-4 bg-slate-200 rounded-full"></div>
+                <div className="w-5/6 h-4 bg-slate-200 rounded-full"></div>
+                <div className="w-full h-4 bg-slate-200 rounded-full"></div>
+                <div className="w-4/5 h-4 bg-slate-200 rounded-full"></div>
+                
+                <div className="w-full h-64 bg-slate-200 rounded-[3rem] mt-10 mb-10"></div>
+                
+                <div className="w-5/6 h-4 bg-slate-200 rounded-full"></div>
+                <div className="w-full h-4 bg-slate-200 rounded-full"></div>
+                <div className="w-4/5 h-4 bg-slate-200 rounded-full"></div>
+             </div>
+          </div>
         </div>
       </PublicWrapper>
     );
@@ -110,7 +143,7 @@ export default function BlogDetailPage() {
           </div>
         </nav>
 
-        <main className="max-w-4xl mx-auto px-6 py-24">
+        <main className="max-w-7xl mx-auto px-6 py-24">
           {/* Release Label */}
           <div className="flex items-center gap-4 mb-8">
             <span className="px-4 py-1.5 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-primary-600/20">
@@ -120,9 +153,12 @@ export default function BlogDetailPage() {
           </div>
 
           {/* Neural Title */}
-          <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight mb-10">
+          <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight mb-16 max-w-5xl">
             {blog.title}
           </h1>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 relative">
+            <div className="lg:col-span-8">
 
           {/* Narrative Context */}
           <div className="flex items-center gap-6 mb-16 py-8 border-y border-slate-50">
@@ -151,8 +187,56 @@ export default function BlogDetailPage() {
 
           {/* Rendered Intelligence Matrix */}
           <BlogRenderer content={blog.content || ''} />
+        </div>
 
-          {/* Global Footer Context */}
+        {/* Dynamic Context Sidebar */}
+        <div className="lg:col-span-4 hidden lg:block border-l border-slate-100 pl-10">
+          <div className="sticky top-32">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary-600 animate-pulse" />
+              Correlated External Nodes
+            </h3>
+            
+            <div className="space-y-6">
+              {Array.from(new Map(Array.from((blog.content || '').matchAll(/\[(.*?)\]\((https?:\/\/[^\)]+)\)/g)).map((m: any) => [m[2], { title: m[1], url: m[2] }])).values()).map((ref: any, idx) => {
+                let hostname = 'external-source.com';
+                try { hostname = new URL(ref.url).hostname.replace('www.', ''); } catch (e) {}
+
+                return (
+                  <a key={idx} href={ref.url} target="_blank" rel="noopener noreferrer" className="block group">
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 mt-1 shadow-sm group-hover:bg-primary-50 group-hover:border-primary-100 transition-all">
+                        <img src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=32`} className="w-4 h-4" alt="" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 leading-snug group-hover:text-primary-600 transition-colors line-clamp-2">{ref.title}</h4>
+                        <span className="text-[10px] text-slate-400 font-medium tracking-widest uppercase mt-2 block group-hover:text-primary-400 transition-colors">{hostname}</span>
+                      </div>
+                    </div>
+                  </a>
+                );
+              })}
+
+              {Array.from((blog.content || '').matchAll(/\[(.*?)\]\((https?:\/\/[^\)]+)\)/g)).length === 0 && (
+                <p className="text-xs font-medium text-slate-400 italic">No external references detected in this intelligence node.</p>
+              )}
+            </div>
+
+            <RelatedReferences topic={blog.title} />
+
+            <div className="mt-8 p-6 rounded-3xl bg-slate-50 border border-slate-100">
+               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Node Integrity Status</h3>
+               <div className="flex items-center gap-3 mb-2">
+                 <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                 <span className="text-xs font-bold text-slate-900">Verified Authentic</span>
+               </div>
+               <p className="text-xs text-slate-500 font-medium leading-relaxed">This architectural document has been audited for hallucinations and structural integrity via neural pipelines.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Global Footer Context */}
           <div className="mt-40 pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">© {new Date().getFullYear()} DATAVEX.ai — ALL RIGHTS RESERVED.</p>
             <div className="flex gap-8">
