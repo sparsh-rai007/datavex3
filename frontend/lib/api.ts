@@ -137,10 +137,10 @@ class ApiClient {
   async reviewBlog(content: string) {
     const response = await this.client.post('/blog/review', { content });
     return response.data as {
+      structure_check: { passed: boolean; issues: string[] };
+      tone_check: { passed: boolean; issues: string[] };
       hallucination_check: { passed: boolean; issues: string[] };
       reference_check: { passed: boolean; issues: string[] };
-      human_tone_check: { passed: boolean; issues: string[] };
-      content_check: { passed: boolean; issues: string[] };
       overall_score: number;
     };
   }

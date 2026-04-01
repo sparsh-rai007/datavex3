@@ -31,10 +31,10 @@ export interface CheckResult {
 }
 
 export interface ReviewResult {
+  structure_check:      CheckResult;
+  tone_check:           CheckResult;
   hallucination_check:  CheckResult;
   reference_check:      CheckResult;
-  human_tone_check:     CheckResult;
-  content_check:        CheckResult;
   overall_score:        number;
 }
 
@@ -65,29 +65,21 @@ router.post(
     console.log(`🔍 [Blog Review] Auditing draft (${content.length.toLocaleString()} chars)...`);
     console.log("=".repeat(60));
 
-    const systemPrompt = `You are a ruthless, highly critical technical blog editor. Review the provided blog draft against a strict 4-point checklist.
+    const systemPrompt = `You are a highly critical technical blog editor. Review the provided markdown blog draft. You must evaluate the text on four strict criteria:
 
-CHECKLIST:
-1. hallucination_check — Find any fake stats, wrong dates, made-up product names, or unverifiable claims. Be specific.
-2. reference_check — Every H2 section MUST end with a reference line formatted exactly as: *Reference: [Title](URL)*. Flag every section that is missing this or has a malformed reference.
-3. human_tone_check — Detect AI-sounding patterns: excessive lists, generic phrasing like "In conclusion", "It's worth noting", "Delve into", "In today's world", robotic transitions, or lack of personality.
-4. content_check — Evaluate overall structure, flow, heading hierarchy, and whether the intro and conclusion are present and effective.
+1. **Structure (structure_check):** Look for broken Markdown. Are there unclosed code blocks? Are headings mashed together with paragraphs? Are image tags malformed?
+2. **AI Tone (tone_check):** Does this read like a robot wrote it? Flag robotic filler phrases like 'In conclusion', 'Delve into', 'It is important to note', or overly generic corporate speak.
+3. **Hallucinations (hallucination_check):** Flag any technically inaccurate statements, fake statistics, or logic flaws.
+4. **References (reference_check):** Ensure that EVERY main section ends with a blockquote reference formatted exactly like this: \`> Source: [Title](URL)\`. 
 
-You MUST respond with ONLY a valid JSON object — absolutely no text, prose, or markdown outside the JSON.
-
-Output this exact structure:
+You MUST output your review strictly in the following JSON format. If a check passes, leave the issues array empty.
 {
-  "hallucination_check": { "passed": boolean, "issues": ["specific issue 1", "specific issue 2"] },
-  "reference_check":     { "passed": boolean, "issues": ["specific issue 1"] },
-  "human_tone_check":    { "passed": boolean, "issues": ["specific issue 1"] },
-  "content_check":       { "passed": boolean, "issues": ["specific issue 1"] },
-  "overall_score":       number
-}
-
-Rules:
-- "passed" is true only if there are ZERO issues for that check.
-- "issues" must be a list of strings. Use an empty array [] if there are no issues.
-- "overall_score" is an integer 1-100. Penalise heavily for failed checks.`;
+  "structure_check": { "passed": boolean, "issues": ["list of specific formatting errors"] },
+  "tone_check": { "passed": boolean, "issues": ["list of robotic phrases found"] },
+  "hallucination_check": { "passed": boolean, "issues": ["list of factual red flags"] },
+  "reference_check": { "passed": boolean, "issues": ["list of sections missing the blockquote reference"] },
+  "overall_score": <number 1-100>
+}`;
 
     try {
       const groq = getGroqClient();
@@ -118,20 +110,20 @@ Rules:
 
       // Defensive normalisation
       const safe: ReviewResult = {
+        structure_check:     normaliseCheck(parsed?.structure_check),
+        tone_check:          normaliseCheck(parsed?.tone_check),
         hallucination_check: normaliseCheck(parsed?.hallucination_check),
         reference_check:     normaliseCheck(parsed?.reference_check),
-        human_tone_check:    normaliseCheck(parsed?.human_tone_check),
-        content_check:       normaliseCheck(parsed?.content_check),
         overall_score:       typeof parsed?.overall_score === "number"
           ? Math.min(100, Math.max(1, Math.round(parsed.overall_score)))
           : 50,
       };
 
       const totalPassed = [
+        safe.structure_check,
+        safe.tone_check,
         safe.hallucination_check,
         safe.reference_check,
-        safe.human_tone_check,
-        safe.content_check,
       ].filter(c => c.passed).length;
 
       console.log(`📊 [Blog Review] Score: ${safe.overall_score}/100 | Checks passed: ${totalPassed}/4`);

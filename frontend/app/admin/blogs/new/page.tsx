@@ -18,6 +18,10 @@ export default function NewBlogPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiQuery, setAiQuery] = useState('');
 
+  // ── AI Review State ──
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [reviewReport, setReviewReport] = useState<any>(null);
+
   const { register, handleSubmit, watch, setValue } = useForm({
     defaultValues: {
       title: '',
@@ -68,6 +72,9 @@ export default function NewBlogPage() {
       setValue('excerpt', '');
       setContent(blog.content || '');
 
+      // Trigger automatic review immediately on the new draft
+      triggerReview(blog.content || '');
+
       // Switch to manual mode so user can review/edit the draft
       setMode('manual');
       setAiQuery('');
@@ -77,6 +84,19 @@ export default function NewBlogPage() {
       alert(error?.response?.data?.error || 'Intelligence Generation Error. Please try again.');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const triggerReview = async (text: string) => {
+    setIsReviewing(true);
+    setReviewReport(null);
+    try {
+      const result = await apiClient.reviewBlog(text);
+      setReviewReport(result);
+    } catch (err) {
+      console.error("Review failed", err);
+    } finally {
+      setIsReviewing(false);
     }
   };
 
@@ -237,6 +257,62 @@ export default function NewBlogPage() {
             </span>
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Marked Rendering Active</span>
           </div>
+
+          {/* Loading Review Indicator */}
+          <AnimatePresence>
+            {isReviewing && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6">
+                <div className="bg-primary-50 border border-primary-100 p-4 rounded-2xl flex items-center justify-center gap-3">
+                  <Loader2 className="animate-spin text-primary-600" size={20} />
+                  <span className="text-primary-900 font-bold text-sm tracking-wide">🤖 AI is auditing this draft...</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Review Report Panel */}
+          <AnimatePresence>
+            {reviewReport && !isReviewing && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 bg-white border border-slate-200 shadow-xl rounded-[2rem] p-8 overflow-hidden relative">
+                <div className="absolute top-0 left-0 w-2 h-full bg-primary-600"></div>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-black text-slate-900">AI Quality Audit</h3>
+                  <div className={`px-4 py-2 rounded-xl font-black text-sm ${reviewReport.overall_score >= 80 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    Score: {reviewReport.overall_score}/100
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { name: 'Structure Check', key: 'structure_check' },
+                    { name: 'Tone Check', key: 'tone_check' },
+                    { name: 'Hallucination Check', key: 'hallucination_check' },
+                    { name: 'Reference Check', key: 'reference_check' },
+                  ].map((check) => {
+                    const result = reviewReport[check.key];
+                    return (
+                      <div key={check.key} className={`p-4 rounded-2xl border ${result?.passed ? 'bg-green-50/50 border-green-100' : 'bg-red-50/50 border-red-100'}`}>
+                        <div className="flex items-center gap-3 mb-1">
+                          {result?.passed ? <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-xs">✓</div> : <div className="w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs">!</div>}
+                          <span className={`font-bold ${result?.passed ? 'text-green-900' : 'text-red-900'}`}>{check.name}</span>
+                        </div>
+                        {!result?.passed && result?.issues?.length > 0 && (
+                          <ul className="mt-3 space-y-2 pl-9">
+                            {result.issues.map((issue: string, i: number) => (
+                              <li key={i} className="text-sm text-red-700 font-medium flex items-start gap-2">
+                                <span className="text-red-400 mt-0.5">•</span> <span>{issue}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="rounded-[3rem] overflow-hidden border border-slate-100 bg-white shadow-2xl shadow-slate-200/20">
             <TipTapEditor content={content} onChange={setContent} />
           </div>
@@ -321,7 +397,7 @@ export default function NewBlogPage() {
         <div className="pt-16 border-t border-slate-200 flex justify-end pb-32">
           <button
             type="submit"
-            disabled={isSaving}
+            disabled={isSaving || isReviewing || (reviewReport && (reviewReport.overall_score < 80 || Object.values(reviewReport).some((val: any) => typeof val === 'object' && val?.passed === false)))}
             className="px-14 py-6 bg-primary-600 text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-slate-900 hover:scale-105 transition-all shadow-[0_20px_40px_-5px_rgba(37,99,235,0.4)] active:scale-95 group flex items-center gap-3 disabled:opacity-50 disabled:scale-100"
           >
             {isSaving ? (

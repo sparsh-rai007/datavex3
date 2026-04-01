@@ -12,10 +12,10 @@ import { useForm } from 'react-hook-form';
 type CheckResult = { passed: boolean; issues: string[] };
 
 type ReviewResult = {
+  structure_check:     CheckResult;
+  tone_check:          CheckResult;
   hallucination_check: CheckResult;
   reference_check:     CheckResult;
-  human_tone_check:    CheckResult;
-  content_check:       CheckResult;
   overall_score:       number;
 };
 
@@ -273,10 +273,10 @@ export default function EditBlogPage() {
             {/* 4-check grid */}
             <div className="grid grid-cols-2 gap-3">
               {([
+                { key: 'structure_check',     label: '🏗️ Structure',      data: review.structure_check     },
+                { key: 'tone_check',          label: '🗣️ Tone',           data: review.tone_check          },
                 { key: 'hallucination_check', label: '🧠 Hallucinations', data: review.hallucination_check },
                 { key: 'reference_check',     label: '🔗 References',     data: review.reference_check     },
-                { key: 'human_tone_check',    label: '🗣️ Human Tone',     data: review.human_tone_check    },
-                { key: 'content_check',       label: '📄 Content & Flow', data: review.content_check       },
               ] as const).map(({ key, label, data }) => (
                 <div
                   key={key}
@@ -316,7 +316,8 @@ export default function EditBlogPage() {
 
           <button
             type="submit"
-            className="px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+            disabled={isReviewing || (review !== null && (review.overall_score < 80 || Object.values(review).some((val: any) => typeof val === 'object' && val?.passed === false)))}
+            className="px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:bg-gray-400"
           >
             Save Changes
           </button>
