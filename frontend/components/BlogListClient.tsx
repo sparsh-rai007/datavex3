@@ -84,40 +84,52 @@ export default function BlogListClient({ blogs }: BlogListClientProps) {
             >
               <div 
                 onClick={() => handleReadMore(featuredPost)}
-                className="group cursor-pointer relative grid grid-cols-1 lg:grid-cols-2 gap-8 bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-2xl shadow-slate-200/50"
+                className={`group cursor-pointer relative grid gap-8 bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-2xl shadow-slate-200/50 ${
+                  featuredPost.featured_image ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'
+                }`}
               >
-                <div className="relative h-64 lg:h-full overflow-hidden">
-                  <img 
-                    src={featuredPost.featured_image || "https://picsum.photos/seed/ai-future/800/600"} 
-                    alt={featuredPost.title}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute top-6 left-6">
-                    <span className="bg-white/95 backdrop-blur px-4 py-2 rounded-2xl text-[10px] font-black text-primary-700 uppercase tracking-widest flex items-center gap-2 shadow-xl border border-slate-50">
-                      <TrendingUp size={14} />
-                      Featured Strategy
-                    </span>
+                {featuredPost.featured_image && (
+                  <div className="relative h-64 lg:h-full overflow-hidden">
+                    <img 
+                      src={featuredPost.featured_image} 
+                      alt={featuredPost.title}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute top-6 left-6">
+                      <span className="bg-white/95 backdrop-blur px-4 py-2 rounded-2xl text-[10px] font-black text-primary-700 uppercase tracking-widest flex items-center gap-2 shadow-xl border border-slate-50">
+                        <TrendingUp size={14} />
+                        Featured Strategy
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className="p-8 lg:p-12 flex flex-col justify-center">
-                  <div className="flex items-center gap-4 mb-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                )}
+                <div className={`p-8 lg:p-12 flex flex-col justify-center ${!featuredPost.featured_image ? 'lg:max-w-4xl mx-auto text-center items-center' : ''}`}>
+                  <div className={`flex items-center gap-4 mb-6 text-[10px] font-black uppercase tracking-widest text-slate-400 ${!featuredPost.featured_image ? 'justify-center' : ''}`}>
                     <span className="text-primary-600">{featuredPost.category || "AI Trends"}</span>
                     <span>•</span>
                     <span className="flex items-center gap-1.5"><Clock size={14} /> {featuredPost.read_time || "8 Min Read"}</span>
                   </div>
-                  <h2 className="text-3xl lg:text-5xl font-black text-slate-900 mb-6 group-hover:text-primary-600 transition-colors leading-[1.1] tracking-tight">
+                  <h2 className={`text-3xl lg:text-5xl font-black text-slate-900 mb-6 group-hover:text-primary-600 transition-colors leading-[1.1] tracking-tight ${!featuredPost.featured_image ? 'max-w-3xl' : ''}`}>
                     {featuredPost.title}
                   </h2>
-                  <p className="text-slate-500 font-medium text-lg mb-8 leading-relaxed line-clamp-3">
+                  <p className={`text-slate-500 font-medium text-lg mb-8 leading-relaxed line-clamp-3 ${!featuredPost.featured_image ? 'max-w-2xl' : ''}`}>
                     {featuredPost.excerpt}
                   </p>
-                  <div className="flex items-center justify-between mt-auto">
+                  
+                  {!featuredPost.featured_image && (
+                    <div className="mb-10 px-6 py-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
+                      <div className="w-1.5 h-1.5 bg-primary-600 rounded-full animate-pulse" />
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Neural Authority Trace Active</span>
+                    </div>
+                  )}
+
+                  <div className={`flex items-center justify-between mt-auto w-full ${!featuredPost.featured_image ? 'max-w-2xl border-t border-slate-50 pt-8' : ''}`}>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-slate-900/20">
                         {featuredPost.author_name?.charAt(0) || "D"}
                       </div>
-                      <div>
+                      <div className="text-left">
                         <p className="text-xs font-black text-slate-900 uppercase tracking-widest">{featuredPost.author_name || "DataVex Intel"}</p>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{new Date(featuredPost.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                       </div>
@@ -174,19 +186,21 @@ export default function BlogListClient({ blogs }: BlogListClientProps) {
                   onClick={() => handleReadMore(post)}
                   className="group cursor-pointer bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-700 flex flex-col"
                 >
-                  <div className="relative h-56 overflow-hidden">
-                    <img 
-                      src={post.featured_image || `https://picsum.photos/seed/related-${index}/600/400`} 
-                      alt={post.title}
-                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute top-5 left-5">
-                      <span className="bg-white/95 backdrop-blur px-3 py-1.5 rounded-xl text-[9px] font-black text-slate-900 uppercase tracking-[0.2em] border border-slate-50">
-                        {post.category || "Intel"}
-                      </span>
+                  {post.featured_image && (
+                    <div className="relative h-56 overflow-hidden">
+                      <img 
+                        src={post.featured_image} 
+                        alt={post.title}
+                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="absolute top-5 left-5">
+                        <span className="bg-white/95 backdrop-blur px-3 py-1.5 rounded-xl text-[9px] font-black text-slate-900 uppercase tracking-[0.2em] border border-slate-50">
+                          {post.category || "Intel"}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className="p-8 flex flex-col flex-grow">
                     <div className="flex items-center gap-3 mb-6 text-[10px] font-black text-slate-300 uppercase tracking-widest">
                       <span className="flex items-center gap-1.5"><Calendar size={13} /> {new Date(post.created_at).toLocaleDateString()}</span>

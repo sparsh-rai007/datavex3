@@ -32,7 +32,7 @@ class ApiClient {
         return Promise.reject(error);
       }
     );
-   
+
 
     // Response interceptor to handle token refresh
     this.client.interceptors.response.use(
@@ -66,7 +66,7 @@ class ApiClient {
       }
     );
   }
-    // ⭐ ADD THIS BELOW THE CONSTRUCTOR ⭐
+  // ⭐ ADD THIS BELOW THE CONSTRUCTOR ⭐
 
   private async request(method: string, url: string, body?: any) {
     return this.client.request({
@@ -80,140 +80,140 @@ class ApiClient {
     return this.request("POST", url, body);
   }
 
-// REGISTER (New User Signup)
-// REGISTER (New User Signup)
-async register(data: { firstName: string; lastName: string; email: string; password: string }) {
-  const response = await this.client.post('/auth/register', data);
-  return response.data; // { user }
-}
-// Bookings endpoints
+  // REGISTER (New User Signup)
+  // REGISTER (New User Signup)
+  async register(data: { firstName: string; lastName: string; email: string; password: string }) {
+    const response = await this.client.post('/auth/register', data);
+    return response.data; // { user }
+  }
+  // Bookings endpoints
 
-async approveBooking(id: string) {
-  return this.post(`/bookings/${id}/approve`);
-}
+  async approveBooking(id: string) {
+    return this.post(`/bookings/${id}/approve`);
+  }
 
-async rejectBooking(id: string) {
-  return this.post(`/bookings/${id}/reject`);
-}
+  async rejectBooking(id: string) {
+    return this.post(`/bookings/${id}/reject`);
+  }
 
-async getBlogs() {
-  const response = await this.client.get('/blogs');
-  return response.data;
-}
+  async getBlogs() {
+    const response = await this.client.get('/blogs');
+    return response.data;
+  }
 
-async getBlog(id: string) {
-  const response = await this.client.get(`/blogs/${id}`);
-  return response.data;
-}
+  async getBlog(id: string) {
+    const response = await this.client.get(`/blogs/${id}`);
+    return response.data;
+  }
 
-async createBlog(data: any) {
-  const response = await this.client.post('/blogs', {
-    ...data,
-    external_url: data.external_url || null,
-  });
-  return response.data;
-}
-
-
-async updateBlog(id: string, data: any) {
-  const response = await this.client.put(`/blogs/${id}`, {
-    ...data,
-    external_url: data.external_url || null,
-  });
-  return response.data;
-}
+  async createBlog(data: any) {
+    const response = await this.client.post('/blogs', {
+      ...data,
+      external_url: data.external_url || null,
+    });
+    return response.data;
+  }
 
 
-async deleteBlog(id: string) {
-  const response = await this.client.delete(`/blogs/${id}`);
-  return response.data;
-}
-
-async generateBlog(type: 'keyword' | 'url', query: string) {
-  const response = await this.client.post('/blog/generate', { type, query });
-  return response.data;
-}
-
-async reviewBlog(content: string) {
-  const response = await this.client.post('/blog/review', { content });
-  return response.data as {
-    hallucination_check:  { passed: boolean; issues: string[] };
-    reference_check:      { passed: boolean; issues: string[] };
-    human_tone_check:     { passed: boolean; issues: string[] };
-    content_check:        { passed: boolean; issues: string[] };
-    overall_score:        number;
-  };
-}
-
-async editSnippet(original_text: string, instruction: string) {
-  const response = await this.client.post('/blog/edit-snippet', { original_text, instruction });
-  return response.data as { rewritten_text: string };
-}
-
-async getPublicBlogs() {
-  const response = await this.client.get('/blogs/public/all', {
-    withCredentials: false,
-  });
-  return response.data.blogs;
-}
+  async updateBlog(id: string, data: any) {
+    const response = await this.client.put(`/blogs/${id}`, {
+      ...data,
+      external_url: data.external_url || null,
+    });
+    return response.data;
+  }
 
 
+  async deleteBlog(id: string) {
+    const response = await this.client.delete(`/blogs/${id}`);
+    return response.data;
+  }
 
-async getPublicBlog(slug: string) {
-  const response = await this.client.get(`/blogs/public/${slug}`, {
-    withCredentials: false,
-  });
-  return response.data;
-}
+  async generateBlog(type: 'keyword' | 'url', query: string) {
+    const response = await this.client.post('/blog/generate', { type, query });
+    return response.data;
+  }
 
-async getSocialCredentials() {
-  const response = await this.client.get("/social/credentials");
-  const data = response.data;
+  async reviewBlog(content: string) {
+    const response = await this.client.post('/blog/review', { content });
+    return response.data as {
+      hallucination_check: { passed: boolean; issues: string[] };
+      reference_check: { passed: boolean; issues: string[] };
+      human_tone_check: { passed: boolean; issues: string[] };
+      content_check: { passed: boolean; issues: string[] };
+      overall_score: number;
+    };
+  }
 
-  return {
-    linkedin_client_id: data.linkedin?.client_id || "",
-    linkedin_client_secret: data.linkedin?.client_secret || "",
-    linkedin_access_token: data.linkedin?.access_token || "",
+  async editSnippet(original_text: string, instruction: string) {
+    const response = await this.client.post('/blog/edit-snippet', { original_text, instruction });
+    return response.data as { rewritten_text: string };
+  }
 
-    reddit_client_id: data.reddit?.client_id || "",
-    reddit_client_secret: data.reddit?.client_secret || "",
-    reddit_refresh_token: data.reddit?.refresh_token || "",
-
-    instagram_app_id: data.instagram?.client_id || "",
-    instagram_app_secret: data.instagram?.client_secret || "",
-    instagram_access_token: data.instagram?.access_token || "",
-    instagram_page_id: data.instagram?.page_id || "",
-    instagram_ig_user_id: data.instagram?.ig_user_id || "",
-  };
-}
-
-
-async saveSocialCredentials(data: any) {
-  // frontend already sends the correct structure
-  return (await this.client.post("/social/credentials", data)).data;
-}
+  async getPublicBlogs() {
+    const response = await this.client.get('/blogs/public/all', {
+      withCredentials: false,
+    });
+    return response.data.blogs;
+  }
 
 
-async publishToSocial(data: any) {
-  const response = await this.client.post("/social/publish", data);
-  return response.data;
-}
 
-async getAdminUsers() {
-  return (await this.client.get("/admin/users")).data;
-}
+  async getPublicBlog(slug: string) {
+    const response = await this.client.get(`/blogs/public/${slug}`, {
+      withCredentials: false,
+    });
+    return response.data;
+  }
 
-async createAdminUser(data: any) {
-  return (await this.client.post("/admin/users", data)).data;
-}
+  async getSocialCredentials() {
+    const response = await this.client.get("/social/credentials");
+    const data = response.data;
 
-async deleteAdminUser(id: string) {
-  return (await this.client.delete(`/admin/users/${id}`)).data;
-}
+    return {
+      linkedin_client_id: data.linkedin?.client_id || "",
+      linkedin_client_secret: data.linkedin?.client_secret || "",
+      linkedin_access_token: data.linkedin?.access_token || "",
 
-async updateUserRole(id: string, role: string) {
-  return (await this.client.put(`/admin/users/${id}/role`, { role })).data;
-}
+      reddit_client_id: data.reddit?.client_id || "",
+      reddit_client_secret: data.reddit?.client_secret || "",
+      reddit_refresh_token: data.reddit?.refresh_token || "",
+
+      instagram_app_id: data.instagram?.client_id || "",
+      instagram_app_secret: data.instagram?.client_secret || "",
+      instagram_access_token: data.instagram?.access_token || "",
+      instagram_page_id: data.instagram?.page_id || "",
+      instagram_ig_user_id: data.instagram?.ig_user_id || "",
+    };
+  }
+
+
+  async saveSocialCredentials(data: any) {
+    // frontend already sends the correct structure
+    return (await this.client.post("/social/credentials", data)).data;
+  }
+
+
+  async publishToSocial(data: any) {
+    const response = await this.client.post("/social/publish", data);
+    return response.data;
+  }
+
+  async getAdminUsers() {
+    return (await this.client.get("/admin/users")).data;
+  }
+
+  async createAdminUser(data: any) {
+    return (await this.client.post("/admin/users", data)).data;
+  }
+
+  async deleteAdminUser(id: string) {
+    return (await this.client.delete(`/admin/users/${id}`)).data;
+  }
+
+  async updateUserRole(id: string, role: string) {
+    return (await this.client.put(`/admin/users/${id}/role`, { role })).data;
+  }
 
   // Auth endpoints
   async login(email: string, password: string) {
@@ -224,13 +224,13 @@ async updateUserRole(id: string, role: string) {
   }
 
   async logout() {
-  try {
-    await this.client.post('/auth/logout');
-  } catch (err) {
-    console.warn("Logout error ignored:", err);
+    try {
+      await this.client.post('/auth/logout');
+    } catch (err) {
+      console.warn("Logout error ignored:", err);
+    }
+    Cookies.remove('accessToken');
   }
-  Cookies.remove('accessToken');
-}
 
 
   async getCurrentUser() {
@@ -281,10 +281,10 @@ async updateUserRole(id: string, role: string) {
     const response = await this.client.get(`/posts/${postId}/revisions`);
     return response.data;
   }
- async getBookings() {
-  const response = await this.client.get("/bookings");
-  return response.data;
-}
+  async getBookings() {
+    const response = await this.client.get("/bookings");
+    return response.data;
+  }
   // Leads endpoints
   async getLeads(params?: { page?: number; limit?: number; status?: string; source?: string; search?: string }) {
     const response = await this.client.get('/leads', { params });
@@ -315,10 +315,10 @@ async updateUserRole(id: string, role: string) {
     const response = await this.client.delete(`/leads/${id}`);
     return response.data;
   }
-async submitAssessment(data: any) {
-  const response = await this.client.post('/leads/assessment', data);
-  return response.data;
-}
+  async submitAssessment(data: any) {
+    const response = await this.client.post('/leads/assessment', data);
+    return response.data;
+  }
 
   // Jobs endpoints
   async getJobs(params?: { page?: number; limit?: number; status?: string; type?: string; department?: string; search?: string }) {
