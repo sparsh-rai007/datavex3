@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { Link2 } from 'lucide-react';
+import HoverLink from './HoverLink';
 
 function cleanMessyMarkdown(rawText: string) {
   return rawText
@@ -69,14 +70,9 @@ export default function BlogRenderer({ content }: { content: string }) {
           p: ({node, ...props}) => <p className="mb-6 leading-relaxed text-slate-600 text-lg" {...props} />,
           ul: ({node, ...props}) => <ul className="mb-8 space-y-3" {...props} />,
           li: ({node, ...props}) => <li className="ml-6 list-disc text-slate-600 text-lg" {...props} />,
-          a: ({node, ...props}) => (
-            <a 
-              className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[9px] font-black uppercase tracking-wider hover:bg-slate-200 hover:text-slate-900 transition-all ml-1.5 align-middle border border-slate-200/50 shadow-sm" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              {...props} 
-            />
-          ),
+          a: ({node, ...props}) => {
+            return <HoverLink {...props} />;
+          },
           strong: ({node, ...props}) => <strong className="font-black text-slate-900" {...props} />,
           // You can also customize how images render here if you want to use Next.js <Image /> tags
           img: ({node, ...props}) => (

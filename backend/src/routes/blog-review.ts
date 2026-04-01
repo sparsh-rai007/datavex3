@@ -9,7 +9,7 @@ dotenv.config();
 const router = express.Router();
 
 const REVIEW_MODEL = "llama-3.1-8b-instant";
-const EDIT_MODEL   = "llama-3.3-70b-versatile"; // better quality for rewrites
+const EDIT_MODEL = "llama-3.3-70b-versatile"; // better quality for rewrites
 
 let _groq: Groq | null = null;
 function getGroqClient(): Groq {
@@ -31,11 +31,11 @@ export interface CheckResult {
 }
 
 export interface ReviewResult {
-  hallucination_check:  CheckResult;
-  reference_check:      CheckResult;
-  human_tone_check:     CheckResult;
-  content_check:        CheckResult;
-  overall_score:        number;
+  hallucination_check: CheckResult;
+  reference_check: CheckResult;
+  human_tone_check: CheckResult;
+  content_check: CheckResult;
+  overall_score: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -97,7 +97,7 @@ Rules:
         model: REVIEW_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user",   content: `Review this blog draft:\n\n${truncated}` },
+          { role: "user", content: `Review this blog draft:\n\n${truncated}` },
         ],
         temperature: 0.1,
         max_tokens: 1024,
@@ -119,10 +119,10 @@ Rules:
       // Defensive normalisation
       const safe: ReviewResult = {
         hallucination_check: normaliseCheck(parsed?.hallucination_check),
-        reference_check:     normaliseCheck(parsed?.reference_check),
-        human_tone_check:    normaliseCheck(parsed?.human_tone_check),
-        content_check:       normaliseCheck(parsed?.content_check),
-        overall_score:       typeof parsed?.overall_score === "number"
+        reference_check: normaliseCheck(parsed?.reference_check),
+        human_tone_check: normaliseCheck(parsed?.human_tone_check),
+        content_check: normaliseCheck(parsed?.content_check),
+        overall_score: typeof parsed?.overall_score === "number"
           ? Math.min(100, Math.max(1, Math.round(parsed.overall_score)))
           : 50,
       };
