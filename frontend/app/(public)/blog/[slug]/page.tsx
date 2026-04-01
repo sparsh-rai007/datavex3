@@ -15,6 +15,7 @@ import {
 import { useRouter, useParams } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import PublicWrapper from '../../wrapper';
+import BlogRenderer from '@/components/BlogRenderer';
 
 export default function BlogDetailPage() {
   const router = useRouter();
@@ -76,39 +77,7 @@ export default function BlogDetailPage() {
     );
   }
 
-  // Pre-process content to handle citations and clean up Reference prefixes
-  const renderMarkdown = (rawContent: string) => {
-    // Clean up "Reference: " or "*Reference: " prefixes and join to previous paragraph
-    const cleanedContent = (rawContent || '')
-      .replace(/[\s\n]*\*?Reference:\s*/gim, ' ') 
-      .replace(/\)\*/g, ')'); 
-    
-    return (
-      <ReactMarkdown 
-        remarkPlugins={[remarkGfm]}
-        components={{
-          h2: ({node, ...props}) => <h2 className="text-3xl font-black text-slate-900 mt-12 mb-6" {...props} />,
-          h3: ({node, ...props}) => <h3 className="text-2xl font-black text-slate-900 mt-10 mb-4" {...props} />,
-          p: ({node, ...props}) => <p className="mb-6 leading-relaxed text-slate-600 text-lg" {...props} />,
-          ul: ({node, ...props}) => <ul className="mb-8 space-y-3" {...props} />,
-          li: ({node, ...props}) => <li className="ml-6 list-disc text-slate-600 text-lg" {...props} />,
-          a: ({node, ...props}) => (
-            <a 
-              className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[9px] font-black uppercase tracking-wider hover:bg-slate-200 hover:text-slate-900 transition-all ml-1.5 align-middle border border-slate-200/50 shadow-sm" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              {...props} 
-            />
-          ),
-          strong: ({node, ...props}) => <strong className="font-black text-slate-900" {...props} />,
-          code: ({node, ...props}) => <code className="bg-slate-100 px-2 py-0.5 rounded text-primary-700 font-mono text-sm" {...props} />,
-          img: ({node, ...props}) => <img referrerPolicy="no-referrer" className="rounded-[2rem] shadow-xl my-10" {...props} />
-        }}
-      >
-        {cleanedContent}
-      </ReactMarkdown>
-    );
-  };
+
 
   return (
     <PublicWrapper>
@@ -181,9 +150,7 @@ export default function BlogDetailPage() {
           )}
 
           {/* Rendered Intelligence Matrix */}
-          <div className="prose prose-slate prose-xl max-w-none prose-headings:font-black prose-strong:text-slate-900 markdown-body">
-            {renderMarkdown(blog.content || '')}
-          </div>
+          <BlogRenderer content={blog.content || ''} />
 
           {/* Global Footer Context */}
           <div className="mt-40 pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">

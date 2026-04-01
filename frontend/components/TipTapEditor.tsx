@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Image from '@tiptap/extension-image';
@@ -16,11 +17,16 @@ import {
   ImageIcon,
   LinkIcon,
   RotateCcw,
-  Heading3
+  Heading3,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
+import { apiClient } from '@/lib/api';
 
 export default function TipTapMarkdownEditor({ content, onChange }: any) {
   const [mounted, setMounted] = useState(false);
+  const [aiInstruction, setAiInstruction] = useState('');
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -77,6 +83,25 @@ export default function TipTapMarkdownEditor({ content, onChange }: any) {
       <Icon size={16} className={active ? 'scale-110' : 'group-hover:scale-110 transition-transform'} />
     </button>
   );
+
+  const handleAiEdit = async () => {
+    if (!editor || !aiInstruction.trim()) return;
+    
+    const { from, to } = editor.state.selection;
+    const text = editor.state.doc.textBetween(from, to, ' ');
+    if (!text) return;
+    
+    setIsAiLoading(true);
+    try {
+      const { rewritten_text } = await apiClient.editSnippet(text, aiInstruction);
+      editor.chain().focus().insertContent(rewritten_text).run();
+      setAiInstruction('');
+    } catch (err: any) {
+      alert(err?.response?.data?.error || 'AI edit failed.');
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   return (
     <div className="relative group">
@@ -161,6 +186,31 @@ export default function TipTapMarkdownEditor({ content, onChange }: any) {
           </button>
         </div>
       </div>
+
+      {/* AI Bubble Menu */}
+      {editor && (
+        <BubbleMenu 
+          editor={editor} 
+          className="flex items-center gap-2 p-2 bg-white rounded-2xl shadow-2xl border border-slate-100 min-w-[320px]"
+        >
+          <input 
+            type="text"
+            className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium text-slate-800 placeholder:text-slate-400"
+            placeholder="Ask AI to edit this..."
+            value={aiInstruction}
+            onChange={e => setAiInstruction(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleAiEdit(); }}
+            disabled={isAiLoading}
+          />
+          <button
+            onClick={handleAiEdit}
+            disabled={isAiLoading || !aiInstruction.trim()}
+            className="p-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 disabled:opacity-50 transition-colors shadow-md shadow-primary-500/20"
+          >
+            {isAiLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+          </button>
+        </BubbleMenu>
+      )}
 
       {/* Narrative Buffer Environment */}
       <div className="bg-white group-hover:bg-slate-50/30 transition-colors duration-1000">

@@ -193,14 +193,15 @@ Rules you MUST follow:
 4. Keep ALL code blocks exactly as they appear — do not modify or paraphrase code.
 5. Keep markdown image tags \`![alt](url)\` when they are relevant to the topic.
 6. Write in a clear, engaging, authoritative tone for a technical audience.
-7. CRUCIAL FORMATTING RULE: At the end of EVERY main H2 section, you MUST add a reference line on its own line, formatted exactly like this:
-   \`*Reference: [Original Article](SOURCE_URL)*\`
-   Replace SOURCE_URL with the actual source URL provided. Do this for every single section without exception.`;
+7. CRUCIAL FORMATTING RULE: At the end of EVERY main section, you must add a reference pointing to the source URL. You MUST format it as a markdown blockquote exactly like this:
+   > Source: [Original Article Title](SOURCE_URL)
+   Replace SOURCE_URL with the actual source URL provided. Do this for every single section without exception.
+8. CRUCIAL FORMATTING RULE: You must output PURE Markdown only. Do not wrap your response in HTML tags. You MUST include double line breaks (\n\n) before AND after every single heading, list, and paragraph. Never put a heading and a paragraph on the same line.`;
 
   const userPrompt = `Transform the following scraped content into a complete, polished tech blog post.
 
-IMPORTANT: After every H2 section, add a reference line formatted exactly as:
-*Reference: [Original Article](${url})*
+IMPORTANT: After every H2 section, add a reference formatted exactly as a blockquote:
+> Source: [Original Article](${url})
 
 Original Source URL: ${url}
 
@@ -283,12 +284,11 @@ Rules you MUST follow:
 4. Keep useful code blocks exactly as they appear — do not alter code.
 5. Keep relevant markdown image tags \`![alt](url)\` when they illustrate the topic.
 6. DO NOT copy content verbatim. Synthesize, clarify, and add editorial insight.
-7. CRUCIAL FORMATTING RULE: At the end of EVERY H2 section, you MUST add a reference line on its own line stating exactly which source(s) that section was built from. Format it like this:
-   \`*Reference: [Title of that source](URL of that source)*\`
-   If a section uses multiple sources, list them all on separate lines:
-   \`*Reference: [Source One Title](url1)*\`
-   \`*Reference: [Source Two Title](url2)*\`
-   Do this for EVERY section. Never skip it.`;
+7. CRUCIAL FORMATTING RULE: At the end of EVERY main section, you must add a reference pointing to the source URL. You MUST format it as a markdown blockquote exactly like this:
+   > Source: [Title of that source](URL of that source)
+   If a section uses multiple sources, list them all on separate lines as individual blockquotes.
+   Do this for EVERY section. Never skip it.
+8. CRUCIAL FORMATTING RULE: You must output PURE Markdown only. Do not wrap your response in HTML tags. You MUST include double line breaks (\n\n) before AND after every single heading, list, and paragraph. Never put a heading and a paragraph on the same line.`;
 
   // Build numbered source blocks with clear labels
   const sourceBlocks = sources
@@ -297,8 +297,8 @@ Rules you MUST follow:
 
   const userPrompt = `Write a comprehensive, original tech blog post about: "${keyword}".
 
-Use the sources below as your research. After EVERY H2 section, add a reference line:
-*Reference: [Title of the source you used](URL of that source)*
+Use the sources below as your research. After EVERY H2 section, add a reference formatted as a blockquote:
+> Source: [Title of the source you used](URL of that source)
 
 Do NOT wait until the end of the blog — put the reference immediately after the section text.
 

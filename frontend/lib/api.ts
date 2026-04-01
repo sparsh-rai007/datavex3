@@ -137,11 +137,17 @@ async generateBlog(type: 'keyword' | 'url', query: string) {
 async reviewBlog(content: string) {
   const response = await this.client.post('/blog/review', { content });
   return response.data as {
-    score: number;
-    factual_warnings: string[];
-    formatting_errors: string[];
-    general_feedback: string;
+    hallucination_check:  { passed: boolean; issues: string[] };
+    reference_check:      { passed: boolean; issues: string[] };
+    human_tone_check:     { passed: boolean; issues: string[] };
+    content_check:        { passed: boolean; issues: string[] };
+    overall_score:        number;
   };
+}
+
+async editSnippet(original_text: string, instruction: string) {
+  const response = await this.client.post('/blog/edit-snippet', { original_text, instruction });
+  return response.data as { rewritten_text: string };
 }
 
 async getPublicBlogs() {

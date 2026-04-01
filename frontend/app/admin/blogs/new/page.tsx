@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Link as LinkIcon, Edit3, Loader2, Save, ArrowLeft, Terminal } from 'lucide-react';
 import TipTapEditor from '@/components/TipTapEditor';
+import BlogRenderer from '@/components/BlogRenderer';
 import { apiClient } from '@/lib/api';
 
 type GeneratorMode = 'manual' | 'keyword' | 'url';
@@ -232,6 +233,17 @@ export default function NewBlogPage() {
           </div>
           <div className="rounded-[3rem] overflow-hidden border border-slate-100 bg-white shadow-2xl shadow-slate-200/20">
             <TipTapEditor content={content} onChange={setContent} />
+          </div>
+        </div>
+
+        <div className="space-y-8 mt-12">
+          <div className="flex items-center justify-between px-4">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 flex items-center gap-3">
+              <div className="w-1.5 h-1.5 bg-primary-600 rounded-full" /> Live Preview
+            </span>
+          </div>
+          <div className="rounded-[3rem] p-8 md:p-12 border border-slate-100 bg-white shadow-2xl shadow-slate-200/20 min-h-[400px]">
+            <BlogRenderer content={content} />
           </div>
         </div>
 
