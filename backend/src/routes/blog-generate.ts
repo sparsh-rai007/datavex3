@@ -86,32 +86,21 @@ router.post(
 
       console.log(`✅ Blog generated: "${result.title}"`);
 
-      // ── Auto-save as draft ──────────────────────────────────
+      // ── Generate Unique Slug ──────────────────────────────────
       const slug = slugify(result.title) + "-" + Date.now();
 
-      const insertResult = await pool.query(
-        `INSERT INTO blogs (
-            title, slug, content, status,
-            generation_method, source_reference, author_id
-         )
-         VALUES ($1, $2, $3, 'draft', $4, $5, $6)
-         RETURNING *`,
-        [
-          result.title,
-          slug,
-          result.content,
-          result.generationMethod,
-          result.sourceReference,
-          authorId,
-        ]
-      );
-
-      const savedBlog = insertResult.rows[0];
-      console.log(`💾 Blog draft saved: id=${savedBlog.id}`);
-
-      return res.status(201).json({
-        message: "Blog generated and saved as draft",
-        blog: savedBlog,
+      // Just return the generated content without saving to DB yet.
+      // This allows the frontend to populate the form and the user to finalize the save.
+      // It also prevents "duplicate slug" errors when the frontend eventually calls the create API.
+      return res.status(200).json({
+        message: "Blog content generated successfully",
+        blog: {
+          title: result.title,
+          slug: slug,
+          content: result.content,
+          generation_method: result.generationMethod,
+          source_reference: result.sourceReference
+        },
       });
     } catch (error: any) {
       console.error("❌ Blog generation error:", error.message);
