@@ -191,12 +191,13 @@ Rules you MUST follow:
 2. Start with a compelling H1 title (# Title) on the very first line.
 3. Use clear H2 (##) and H3 (###) headings to organize sections.
 4. Keep ALL code blocks exactly as they appear — do not modify or paraphrase code.
-5. Keep markdown image tags \`![alt](url)\` when they are relevant to the topic.
+5. CRITICAL IMAGE RULE: The source text contains markdown images \`![alt](url)\`. You must evaluate every image. ONLY keep images that are highly relevant to the technical topic (e.g., architecture diagrams, code screenshots, charts, or UI previews). You MUST delete any images that look like logos, author portraits, social media icons, or generic decorative stock photos. Place the retained images near the paragraphs they illustrate.
 6. Write in a clear, engaging, authoritative tone for a technical audience.
 7. CRUCIAL FORMATTING RULE: At the end of EVERY main section, you must add a reference pointing to the source URL. You MUST format it as a markdown blockquote exactly like this:
    > Source: [Original Article Title](SOURCE_URL)
    Replace SOURCE_URL with the actual source URL provided. Do this for every single section without exception.
-8. CRUCIAL FORMATTING RULE: You must output PURE Markdown only. Do not wrap your response in HTML tags. You MUST include double line breaks (\n\n) before AND after every single heading, list, and paragraph. Never put a heading and a paragraph on the same line.`;
+8. CRUCIAL FORMATTING RULE: You must output PURE Markdown only. Do not wrap your response in HTML tags. You MUST include double line breaks (\n\n) before AND after every single heading, list, and paragraph. Never put a heading and a paragraph on the same line.
+9. CRITICAL CODE BLOCK RULE: When closing a code block, the closing triple backticks (\`\`\`) MUST be on their own isolated line. Never place any text, links, or characters on the same line as the closing backticks. Always leave a blank empty line before and after the code block.`;
 
   const userPrompt = `Transform the following scraped content into a complete, polished tech blog post.
 
@@ -282,13 +283,14 @@ Rules you MUST follow:
 2. Start with a compelling H1 title (# Title) on the very first line.
 3. Organize the content into clear H2 (##) sections — one per major concept or subtopic.
 4. Keep useful code blocks exactly as they appear — do not alter code.
-5. Keep relevant markdown image tags \`![alt](url)\` when they illustrate the topic.
+5. CRITICAL IMAGE RULE: The source text contains markdown images \`![alt](url)\`. You must evaluate every image. ONLY keep images that are highly relevant to the technical topic (e.g., architecture diagrams, code screenshots, charts, or UI previews). You MUST delete any images that look like logos, author portraits, social media icons, or generic decorative stock photos. Place the retained images near the paragraphs they illustrate.
 6. DO NOT copy content verbatim. Synthesize, clarify, and add editorial insight.
 7. CRUCIAL FORMATTING RULE: At the end of EVERY main section, you must add a reference pointing to the source URL. You MUST format it as a markdown blockquote exactly like this:
    > Source: [Title of that source](URL of that source)
    If a section uses multiple sources, list them all on separate lines as individual blockquotes.
    Do this for EVERY section. Never skip it.
-8. CRUCIAL FORMATTING RULE: You must output PURE Markdown only. Do not wrap your response in HTML tags. You MUST include double line breaks (\n\n) before AND after every single heading, list, and paragraph. Never put a heading and a paragraph on the same line.`;
+8. CRUCIAL FORMATTING RULE: You must output PURE Markdown only. Do not wrap your response in HTML tags. You MUST include double line breaks (\n\n) before AND after every single heading, list, and paragraph. Never put a heading and a paragraph on the same line.
+9. CRITICAL CODE BLOCK RULE: When closing a code block, the closing triple backticks (\`\`\`) MUST be on their own isolated line. Never place any text, links, or characters on the same line as the closing backticks. Always leave a blank empty line before and after the code block.`;
 
   // Build numbered source blocks with clear labels
   const sourceBlocks = sources
