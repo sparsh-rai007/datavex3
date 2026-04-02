@@ -31,7 +31,9 @@ export default function NewBlogPage() {
       external_url: '',
       meta_title: '',
       meta_description: '',
-      meta_keywords: ''
+      meta_keywords: '',
+      generation_method: 'manual',
+      source_reference: ''
     }
   });
 
@@ -70,6 +72,8 @@ export default function NewBlogPage() {
       setValue('title', blog.title || '');
       setValue('slug', blog.slug || generateSlug(blog.title || ''));
       setValue('excerpt', '');
+      setValue('generation_method', blog.generation_method || 'manual');
+      setValue('source_reference', blog.source_reference || '');
       setContent(blog.content || '');
 
       // Trigger automatic review immediately on the new draft
@@ -397,7 +401,7 @@ export default function NewBlogPage() {
         <div className="pt-16 border-t border-slate-200 flex justify-end pb-32">
           <button
             type="submit"
-            disabled={isSaving || isReviewing || (reviewReport && (reviewReport.overall_score < 80 || Object.values(reviewReport).some((val: any) => typeof val === 'object' && val?.passed === false)))}
+            disabled={isSaving}
             className="px-14 py-6 bg-primary-600 text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-slate-900 hover:scale-105 transition-all shadow-[0_20px_40px_-5px_rgba(37,99,235,0.4)] active:scale-95 group flex items-center gap-3 disabled:opacity-50 disabled:scale-100"
           >
             {isSaving ? (

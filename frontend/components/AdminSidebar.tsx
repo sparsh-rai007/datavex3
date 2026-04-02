@@ -36,9 +36,8 @@ export default function AdminSidebar() {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${
-              isActive(item.href) ? 'bg-primary-50 border-r-2 border-primary-600 text-primary-600' : ''
-            }`}
+            className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive(item.href) ? 'bg-primary-50 border-r-2 border-primary-600 text-primary-600' : ''
+              }`}
           >
             <span className="mr-3">{item.icon}</span>
             <span className="font-medium">{item.label}</span>

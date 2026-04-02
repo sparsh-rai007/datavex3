@@ -86,11 +86,11 @@ export default function TipTapMarkdownEditor({ content, onChange }: any) {
 
   const handleAiEdit = async () => {
     if (!editor || !aiInstruction.trim()) return;
-    
+
     const { from, to } = editor.state.selection;
     const text = editor.state.doc.textBetween(from, to, ' ');
     if (!text) return;
-    
+
     setIsAiLoading(true);
     try {
       const { rewritten_text } = await apiClient.editSnippet(text, aiInstruction);
@@ -189,11 +189,11 @@ export default function TipTapMarkdownEditor({ content, onChange }: any) {
 
       {/* AI Bubble Menu */}
       {editor && (
-        <BubbleMenu 
-          editor={editor} 
+        <BubbleMenu
+          editor={editor}
           className="flex items-center gap-2 p-2 bg-white rounded-2xl shadow-2xl border border-slate-100 min-w-[320px]"
         >
-          <input 
+          <input
             type="text"
             className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium text-slate-800 placeholder:text-slate-400"
             placeholder="Ask AI to edit this..."
