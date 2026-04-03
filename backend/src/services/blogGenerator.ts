@@ -44,13 +44,14 @@ CRITICAL VOICE & TONE RULES:
 5. EXTENDED BANISHED WORDS LIST: You are strictly forbidden from using: delve, tapestry, testament, landscape, crucial, vital, beacon, realm, unleash, robust, seamless, navigate, ultimate, paradigm, or "in today's digital age".
 
 CRITICAL FORMATTING & STRUCTURE RULES:
-1. Output PURE Markdown only. No HTML tags.
-2. SUBHEADINGS: You MUST use frequent, catchy side headings/subheadings (## and ###) to organize the content. Do not output massive walls of text without a heading to break them up.
-3. Real humans don't write perfectly symmetrical articles. Avoid having exactly three paragraphs under every single heading. Make some sections long and detailed, and others incredibly brief.
-4. Include double line breaks (\\n\\n) before and after EVERY heading, list, and paragraph.
-5. Code blocks MUST have the closing triple backticks (\`\`\`) on their own isolated, empty line.
-6. Keep relevant image tags ![alt](url) but discard useless logos or stock photos.
-7. At the end of EVERY main section, add a blockquote citation containing ONLY the link, like this: \`> [Title](URL)\`. Do not use the word "Source:".`;
+1. TITLE: You MUST start every response with a single '# ' H1 heading that serves as a punchy, suitable title for the blog post.
+2. Output PURE Markdown only. No HTML tags.
+3. SUBHEADINGS: You MUST use frequent, catchy side headings/subheadings (## and ###) to organize the content. Do not output massive walls of text without a heading to break them up.
+4. Real humans don't write perfectly symmetrical articles. Avoid having exactly three paragraphs under every single heading. Make some sections long and detailed, and others incredibly brief.
+5. Include double line breaks (\\n\\n) before and after EVERY heading, list, and paragraph.
+6. Code blocks MUST have the closing triple backticks (\`\`\`) on their own isolated, empty line.
+7. Keep relevant image tags ![alt](url) but discard useless logos or stock photos.
+8. At the end of EVERY main section, add a blockquote citation containing ONLY the link, like this: \`> [Title](URL)\`. Do not use the word "Source:".`;
 
 export type BlogTone = 'human' | 'professional' | 'executive' | 'academic';
 
@@ -229,7 +230,8 @@ export async function generateFromUrl(
   // Step 3: Generate
   console.log(`🤖 [Step 3] Sending to Groq...`);
 
-  const userPrompt = `Transform the following scraped content into a highly engaging, human-sounding tech blog post. 
+  const userPrompt = `Generate a high-impact technical blog post based on the following content. 
+Start with a single '# ' H1 heading that provides a suitable, engaging title.
 Remember to add ([Source](${url})) at the end of any paragraph that uses facts or concepts. Do not create a separate references block.
 
 Original Source URL: ${url}
@@ -306,7 +308,8 @@ export async function generateFromKeyword(
     .map((s) => `Source URL: ${s.url}\nContent:\n${s.content}`)
     .join("\n\n---\n\n");
 
-  const userPrompt = `Write a comprehensive and engaging blog post about: "${keyword}" using the requested tone. 
+  const userPrompt = `Write a comprehensive technical blog post about: "${keyword}".
+Start with a single '# ' H1 heading that serves as a suitable title for the content.
 Focus on what actually matters to the intended audience.
 
 Use the sources below as your research. Remember to add ([Source](SPECIFIC_URL)) at the end of any paragraph that uses facts or concepts. Do not create a separate references block.
@@ -339,16 +342,35 @@ ${sourceBlocks}`;
 
 function extractTitleAndBody(markdown: string): { title: string; body: string } {
   const lines = markdown.split("\n");
-  let title = "Untitled Blog Post";
-  let bodyStartIndex = 0;
+  let title = "";
+  let bodyStartIndex = -1;
 
-  for (let i = 0; i < lines.length; i++) {
+  // 🏛️ Robust Tier 1: Look for first H1 line (# )
+  for (let i = 0; i < Math.min(lines.length, 10); i++) {
     const trimmed = lines[i].trim();
     if (trimmed.startsWith("# ")) {
       title = trimmed.replace(/^#+\s*/, "").trim();
       bodyStartIndex = i + 1;
       break;
     }
+  }
+
+  // 🧱 Robust Tier 2: If no H1 found, look for first non-empty line that isn't filler
+  if (!title) {
+    for (let i = 0; i < Math.min(lines.length, 10); i++) {
+      const trimmed = lines[i].trim();
+      if (trimmed && !trimmed.startsWith(">") && !trimmed.startsWith("![") && trimmed.length > 5) {
+        // Clean common prefixes if any
+        title = trimmed.replace(/^(Title|Proposed Title|Article Title|Headline):\s*/i, "").trim();
+        bodyStartIndex = i + 1;
+        break;
+      }
+    }
+  }
+
+  // 🛡️ Fallback: Untitled
+  if (!title) {
+    return { title: "Strategic Synthesis Analysis", body: markdown };
   }
 
   const body = lines.slice(bodyStartIndex).join("\n").trim();
