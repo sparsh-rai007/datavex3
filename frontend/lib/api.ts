@@ -145,6 +145,16 @@ class ApiClient {
     };
   }
 
+  async getTodayNewsletter() {
+    const response = await this.client.get("/newsletter/today");
+    return response.data as { draft: any | null };
+  }
+
+  async forceRunNewsletter() {
+    const response = await this.client.post("/newsletter/force-run");
+    return response.data as { newsletter: any };
+  }
+
   async editSnippet(original_text: string, instruction: string) {
     const response = await this.client.post('/blog/edit-snippet', { original_text, instruction });
     return response.data as { rewritten_text: string };

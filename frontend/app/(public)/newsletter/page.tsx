@@ -2,10 +2,10 @@ export const dynamic = "force-dynamic";
 
 import PublicWrapper from '../wrapper';
 import { apiClient } from '@/lib/api';
-import BlogListClient from '@/components/BlogListClient';
+import NewsletterListClient from '@/components/NewsletterListClient';
 
 export const metadata = {
-  title: 'Insights Matrix - DATAVEX.ai',
+  title: 'Insights Synthesis Matrix — DATAVEX.ai',
   description: 'Synchronize with the latest articles, neural strategy, and architectural updates from the DATAVEX.ai intelligence core.',
 };
 
@@ -21,7 +21,7 @@ export default async function BlogPage() {
 
   return (
     <PublicWrapper>
-      <BlogListClient blogs={blogs} />
+      <NewsletterListClient blogs={blogs} />
     </PublicWrapper>
   );
 }

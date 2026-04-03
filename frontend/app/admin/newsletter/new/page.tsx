@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Link as LinkIcon, Edit3, Loader2, Save, ArrowLeft, Terminal, User, Briefcase, BarChart, GraduationCap, ChevronDown, Share2 } from 'lucide-react';
 import TipTapEditor from '@/components/TipTapEditor';
-import BlogRenderer from '@/components/newslettterrenderer';
+import NewsletterRenderer from '@/components/NewsletterRenderer';
 import ShareModal from '@/components/ShareModal';
 import { apiClient } from '@/lib/api';
 
@@ -448,7 +448,7 @@ export default function NewNewsletterPage() {
             </span>
           </div>
           <div className="rounded-[3rem] p-8 md:p-12 border border-slate-100 bg-white shadow-2xl shadow-slate-200/20 min-h-[400px]">
-            <BlogRenderer content={content} />
+            <NewsletterRenderer content={content} />
           </div>
         </div>
 

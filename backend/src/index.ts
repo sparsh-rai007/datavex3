@@ -32,7 +32,6 @@ import blogReviewRoutes from "./routes/blog-review";
 import socialRoutes from "./routes/social";
 import calRouter from "./routes/cal";
 import calWebhookRoute from "./routes/cal-webhook";
-import { generateDailyNewsletter } from "./services/dailyNewsletterService";
 
 dotenv.config();
 
@@ -112,6 +111,7 @@ app.use("/api/admin/bookings", adminBookingsRoute);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/blog", blogGenerateRoutes);
 app.use("/api/blog", blogReviewRoutes);
+
 app.use("/api/social", socialRoutes);
 
 // Cal.com

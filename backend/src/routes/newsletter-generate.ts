@@ -1,9 +1,7 @@
 import express, { Response } from "express";
-import { body, validationResult } from "express-validator";
 import { authenticateToken, requireRole, AuthRequest } from "../middleware/auth";
 import { pool } from "../db/connection";
 import {
-  generateFromUrl,
   generateFromKeyword,
 } from "../services/newsletterGenerator";
 
@@ -21,95 +19,52 @@ function slugify(title: string): string {
 }
 
 /**
- * POST /api/blog/generate
+ * POST /api/newsletter/force-run
  *
- * AI Blog Generator endpoint.
- * Accepts { type: "keyword" | "url", query: string }
- * Generates content, saves as draft, and returns the saved blog row.
+ * Manual trigger for daily newsletter generation.
+ * This simulates the overnight cron job.
  */
 router.post(
-  "/generate",
+  "/force-run",
   authenticateToken,
   requireRole("admin", "editor"),
-  [
-    body("type")
-      .isIn(["keyword", "url"])
-      .withMessage('type must be either "keyword" or "url"'),
-    body("query")
-      .notEmpty()
-      .withMessage("query is required")
-      .isString()
-      .withMessage("query must be a string")
-      .isLength({ min: 3, max: 2000 })
-      .withMessage("query must be between 3 and 2000 characters"),
-  ],
   async (req: AuthRequest, res: Response) => {
     try {
-      // Validate input
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
+      console.log(`🤖 Force-run Daily Tech Newsletter for today...`);
 
-      const { type, query, tone } = req.body as {
-        type: "keyword" | "url";
-        query: string;
-        tone?: any;
-      };
+      // Mock scanning RSS feeds by using a broad keyword for now
+      const result = await generateFromKeyword("Latest Tech Trends and News Analysis", "human");
 
+      // Save as draft for today
+      const slug = slugify(result.title) + "-" + Date.now();
       const authorId = req.user?.id || null;
 
-      console.log(
-        `🤖 Blog generation started: type=${type}, query="${query.slice(0, 80)}...", tone=${tone}`
+      const saved = await pool.query(
+        `INSERT INTO blogs (
+            title, slug, excerpt, content, generation_method, status, author_id
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        RETURNING *`,
+        [
+          result.title,
+          slug,
+          `Daily Tech Briefing: ${result.title.slice(0, 100)}...`,
+          result.content,
+          "newsletter",
+          "draft",
+          authorId
+        ]
       );
 
-      let result;
-      console.log("type", type);
-
-      if (type === "url") {
-        // Validate it looks like a URL
-        try {
-          console.log("urll one")
-          new URL(query);
-        } catch {
-          return res.status(400).json({
-            error: "Invalid URL format. Please provide a valid URL.",
-          });
-        }
-        console.log("url one")
-        result = await generateFromUrl(query, tone);
-
-      } else {
-        console.log("keyword one")
-        result = await generateFromKeyword(query, tone);
-
-      }
-
-      console.log(`✅ Blog generated: "${result.title}"`);
-
-      // ── Generate Unique Slug ──────────────────────────────────
-      const slug = slugify(result.title) + "-" + Date.now();
-
-      // Just return the generated content without saving to DB yet.
-      // This allows the frontend to populate the form and the user to finalize the save.
-      // It also prevents "duplicate slug" errors when the frontend eventually calls the create API.
+      console.log(`✅ Automated Daily Newsletter draft created: "${result.title}"`);
       return res.status(200).json({
-        message: "Blog content generated successfully",
-        blog: {
-          title: result.title,
-          slug: slug,
-          content: result.content,
-          generation_method: result.generationMethod,
-          source_reference: result.sourceReference
-        },
+        message: "Newsletter generated successfully",
+        newsletter: saved.rows[0],
       });
     } catch (error: any) {
-      console.error("❌ Blog generation error:", error.message);
-
-      // Return a clean error message
-      const statusCode = error.message?.includes("API key") ? 503 : 500;
-      return res.status(statusCode).json({
-        error: error.message || "Failed to generate blog content",
+      console.error("❌ Force-run newsletter error:", error.message);
+      return res.status(500).json({
+        error: error.message || "Failed to generate newsletter content",
       });
     }
   }

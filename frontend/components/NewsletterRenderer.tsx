@@ -24,7 +24,7 @@ function cleanMarkdown(rawText: string) {
     .replace(/([^\n])```(?!\w)/g, '$1\n```\n\n');
 }
 
-export default function BlogRenderer({ content }: { content: string }) {
+export default function NewsletterRenderer({ content }: { content: string }) {
   const cleanedContent = cleanMarkdown(content);
 
   return (
