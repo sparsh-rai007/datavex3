@@ -33,12 +33,9 @@ export interface CheckResult {
 export interface ReviewResult {
   structure_check:      CheckResult;
   tone_check:           CheckResult;
-
-  hallucination_check: CheckResult;
-  reference_check: CheckResult;
-  human_tone_check: CheckResult;
-  content_check: CheckResult;
-  overall_score: number;
+  hallucination_check:  CheckResult;
+  reference_check:      CheckResult;
+  overall_score:        number;
 }
 
 // ---------------------------------------------------------------------------
@@ -118,10 +115,6 @@ You MUST output your review strictly in the following JSON format. If a check pa
         hallucination_check: normaliseCheck(parsed?.hallucination_check),
         reference_check:     normaliseCheck(parsed?.reference_check),
         overall_score:       typeof parsed?.overall_score === "number"
-        reference_check: normaliseCheck(parsed?.reference_check),
-        human_tone_check: normaliseCheck(parsed?.human_tone_check),
-        content_check: normaliseCheck(parsed?.content_check),
-        overall_score: typeof parsed?.overall_score === "number"
           ? Math.min(100, Math.max(1, Math.round(parsed.overall_score)))
           : 50,
       };

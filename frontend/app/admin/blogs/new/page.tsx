@@ -35,6 +35,8 @@ export default function NewBlogPage() {
     }
   });
 
+  const currentStatus = watch('status');
+
   const generateSlug = (text: string) =>
     text
       .toLowerCase()
@@ -397,7 +399,7 @@ export default function NewBlogPage() {
         <div className="pt-16 border-t border-slate-200 flex justify-end pb-32">
           <button
             type="submit"
-            disabled={isSaving || isReviewing || (reviewReport && (reviewReport.overall_score < 80 || Object.values(reviewReport).some((val: any) => typeof val === 'object' && val?.passed === false)))}
+            disabled={isSaving || isReviewing || (currentStatus === 'published' && (!reviewReport || reviewReport.overall_score < 80 || Object.values(reviewReport).some((val: any) => typeof val === 'object' && val?.passed === false)))}
             className="px-14 py-6 bg-primary-600 text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-slate-900 hover:scale-105 transition-all shadow-[0_20px_40px_-5px_rgba(37,99,235,0.4)] active:scale-95 group flex items-center gap-3 disabled:opacity-50 disabled:scale-100"
           >
             {isSaving ? (

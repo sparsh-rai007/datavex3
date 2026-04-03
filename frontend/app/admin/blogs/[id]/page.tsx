@@ -40,6 +40,8 @@ export default function EditBlogPage() {
   const [showEditPanel, setShowEditPanel] = useState(false);
 
   const { register, setValue, handleSubmit, watch } = useForm();
+  
+  const currentStatus = watch('status');
 
   const generateSlug = (text: string) =>
     text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -316,7 +318,7 @@ export default function EditBlogPage() {
 
           <button
             type="submit"
-            disabled={isReviewing || (review !== null && (review.overall_score < 80 || Object.values(review).some((val: any) => typeof val === 'object' && val?.passed === false)))}
+            disabled={isReviewing || (currentStatus === 'published' && (!review || review.overall_score < 80 || Object.values(review).some((val: any) => typeof val === 'object' && val?.passed === false)))}
             className="px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:bg-gray-400"
           >
             Save Changes
