@@ -150,6 +150,16 @@ class ApiClient {
     return response.data as { rewritten_text: string };
   }
 
+  async repurposeBlog(title: string, content: string) {
+    const response = await this.client.post('/blog/repurpose', { title, content });
+    return response.data as {
+      linkedin_post: string;
+      medium_title: string;
+      medium_subtitle: string;
+      tags: string[];
+    };
+  }
+
   async getPublicBlogs() {
     const response = await this.client.get('/blogs/public/all', {
       withCredentials: false,

@@ -4,9 +4,10 @@ import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Link as LinkIcon, Edit3, Loader2, Save, ArrowLeft, Terminal, User, Briefcase, BarChart, GraduationCap, ChevronDown } from 'lucide-react';
+import { Sparkles, Link as LinkIcon, Edit3, Loader2, Save, ArrowLeft, Terminal, User, Briefcase, BarChart, GraduationCap, ChevronDown, Share2 } from 'lucide-react';
 import TipTapEditor from '@/components/TipTapEditor';
 import BlogRenderer from '@/components/BlogRenderer';
+import ShareModal from '@/components/ShareModal';
 import { apiClient } from '@/lib/api';
 
 type GeneratorMode = 'manual' | 'keyword' | 'url';
@@ -32,6 +33,9 @@ export default function NewBlogPage() {
   // ── AI Review State ──
   const [isReviewing, setIsReviewing] = useState(false);
   const [reviewReport, setReviewReport] = useState<any>(null);
+
+  // ── Share Modal State ──
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { register, handleSubmit, watch, setValue } = useForm({
     defaultValues: {
@@ -501,7 +505,17 @@ export default function NewBlogPage() {
           </div>
         </div>
 
-        <div className="pt-16 border-t border-slate-200 flex justify-end pb-32">
+        <div className="pt-16 border-t border-slate-200 flex items-center justify-between pb-32">
+          <button
+            type="button"
+            onClick={() => setShowShareModal(true)}
+            disabled={!content || content.trim().length < 50}
+            className="px-8 py-5 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-slate-50 hover:border-primary-200 hover:text-primary-700 transition-all active:scale-95 flex items-center gap-3 disabled:opacity-30 disabled:scale-100 shadow-sm"
+          >
+            <Share2 size={16} />
+            Export & Share
+          </button>
+
           <button
             type="submit"
             disabled={isSaving || isReviewing}
@@ -515,6 +529,14 @@ export default function NewBlogPage() {
           </button>
         </div>
       </form>
+
+      {/* Share/Repurpose Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        title={watch('title') || ''}
+        content={content}
+      />
     </div>
   );
 }
