@@ -206,7 +206,7 @@ CRITICAL FORMATTING RULES:
 2. Include double line breaks (\\n\\n) before and after EVERY heading, list, and paragraph.
 3. Code blocks MUST have the closing triple backticks (\`\`\`) on their own isolated, empty line.
 4. Keep relevant image tags ![alt](url) but discard useless logos or stock photos.
-5. At the end of EVERY main section, add a blockquote citation exactly like this: \`> Source: [Title](URL)\`.`;
+5. At the end of EVERY main section, add a blockquote citation containing ONLY the link, like this: \`> [Title](URL)\`. Do not use the word "Source:".`;
 
   const userPrompt = `Transform the following scraped content into a highly engaging, human-sounding tech blog post. 
 Remember to add ([Source](${url})) at the end of any paragraph that uses facts or concepts. Do not create a separate references block.
@@ -296,7 +296,7 @@ CRITICAL FORMATTING RULES:
 2. Include double line breaks (\\n\\n) before and after EVERY heading, list, and paragraph.
 3. Code blocks MUST have the closing triple backticks (\`\`\`) on their own isolated, empty line.
 4. Keep relevant image tags ![alt](url) but discard useless logos or stock photos.
-5. At the end of EVERY main section, add a blockquote citation exactly like this: \`> Source: [Title](URL)\`.`;
+5. At the end of EVERY main section, add a blockquote citation containing ONLY the link, like this: \`> [Title](URL)\`. Do not use the word "Source:".`;
 
   const sourceBlocks = sources
     .map((s) => `Source URL: ${s.url}\nContent:\n${s.content}`)

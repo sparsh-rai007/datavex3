@@ -12,7 +12,9 @@ function cleanMarkdown(rawText: string) {
     // Just a safety net: Remove opening/closing HTML <p> tags if the AI hallucinated them
     .replace(/<\/?p>/g, '')
     // Clean up random artifacts sometimes left by scraping
-    .replace(/\[\s*\]\s*\(/g, '[');
+    .replace(/\[\s*\]\s*\(/g, '[')
+    // Remove "Source: " prefix from blockquotes for a cleaner minimalist feel
+    .replace(/^>\s*Source:\s*/gim, '> ');
 }
 
 export default function BlogRenderer({ content }: { content: string }) {
@@ -44,9 +46,9 @@ export default function BlogRenderer({ content }: { content: string }) {
             );
           },
           
-          // Reverted Blockquote to standard quote styling
+          // Minimalist Reference block: removes gray background and uses a subtle border
           blockquote: ({node, ...props}) => (
-            <blockquote className="border-l-4 border-primary-500 bg-slate-50 dark:bg-slate-800/50 p-4 my-6 italic text-slate-700 dark:text-slate-300 rounded-r-lg" {...props} />
+            <blockquote className="border-l-2 border-slate-200 pl-6 my-8 italic text-slate-500 transition-all hover:border-primary-500/50" {...props} />
           ),
 
           // Standard text elements
