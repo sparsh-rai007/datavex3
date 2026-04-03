@@ -93,14 +93,21 @@ export default function NewBlogPage() {
     }
   };
 
-  const triggerReview = async (text: string) => {
+  const triggerReview = async (overrideContent?: string) => {
+    const textToReview = overrideContent ?? content;
+    if (!textToReview || textToReview.trim().length < 50) {
+      alert('Neural content density insufficient for audit. Please expand the narrative (min 50 chars).');
+      return;
+    }
+
     setIsReviewing(true);
     setReviewReport(null);
     try {
-      const result = await apiClient.reviewBlog(text);
+      const result = await apiClient.reviewBlog(textToReview);
       setReviewReport(result);
     } catch (err) {
       console.error("Review failed", err);
+      alert("Intelligence Audit failed. Check system logs.");
     } finally {
       setIsReviewing(false);
     }
@@ -261,7 +268,18 @@ export default function NewBlogPage() {
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 flex items-center gap-3">
               <div className="w-1.5 h-1.5 bg-primary-600 rounded-full" /> Narrative Intelligence
             </span>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Marked Rendering Active</span>
+            <div className="flex items-center gap-4">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Marked Rendering Active</span>
+              <button
+                type="button"
+                onClick={() => triggerReview()}
+                disabled={isReviewing || content.length < 50}
+                className="px-4 py-2 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-primary-600 transition-all disabled:opacity-30 flex items-center gap-2"
+              >
+                {isReviewing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                Rerun AI Audit
+              </button>
+            </div>
           </div>
 
           {/* Loading Review Indicator */}
@@ -403,7 +421,7 @@ export default function NewBlogPage() {
         <div className="pt-16 border-t border-slate-200 flex justify-end pb-32">
           <button
             type="submit"
-            disabled={isSaving || isReviewing || (currentStatus === 'published' && (!reviewReport || reviewReport.overall_score < 80 || Object.values(reviewReport).some((val: any) => typeof val === 'object' && val?.passed === false)))}
+            disabled={isSaving || isReviewing}
             className="px-14 py-6 bg-primary-600 text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-slate-900 hover:scale-105 transition-all shadow-[0_20px_40px_-5px_rgba(37,99,235,0.4)] active:scale-95 group flex items-center gap-3 disabled:opacity-50 disabled:scale-100"
           >
             {isSaving ? (

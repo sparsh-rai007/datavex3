@@ -319,7 +319,7 @@ export default function EditBlogPage() {
 
           <button
             type="submit"
-            disabled={isReviewing || (currentStatus === 'published' && review !== null && (review.overall_score < 80 || Object.values(review).some((val: any) => typeof val === 'object' && val?.passed === false)))}
+            disabled={isReviewing}
             className="px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:bg-gray-400"
           >
             Save Changes
