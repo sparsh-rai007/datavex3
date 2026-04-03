@@ -14,7 +14,8 @@ function cleanMarkdown(rawText: string) {
     // Clean up random artifacts sometimes left by scraping
     .replace(/\[\s*\]\s*\(/g, '[')
     // Remove "Source: " prefix from blockquotes for a cleaner minimalist feel
-    .replace(/^>\s*Source:\s*/gim, '> ');
+    .replace(/^>\s*Source:\s*/gim, '> ')
+    .replace(/\n## References[\s\S]*$/g, '');
 }
 
 export default function BlogRenderer({ content }: { content: string }) {
