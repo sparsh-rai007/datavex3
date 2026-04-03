@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import TipTapEditor from '@/components/TipTapEditor';
 import BlogRenderer from '@/components/BlogRenderer';
+import ShareModal from '@/components/ShareModal';
 import { useForm } from 'react-hook-form';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -38,6 +39,9 @@ export default function EditBlogPage() {
   const [isEditing, setIsEditing]       = useState(false);
   const [editResult, setEditResult]     = useState('');
   const [showEditPanel, setShowEditPanel] = useState(false);
+
+  // Share modal state
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { register, setValue, handleSubmit, watch } = useForm();
   const currentStatus = watch('status');
@@ -304,18 +308,28 @@ export default function EditBlogPage() {
           </div>
         )}
 
-        {/* ── ACTION BAR ──────────────────────────────────────────────────── */}
         <div className="pt-4 border-t flex items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={handleReview}
-            disabled={isReviewing}
-            className="px-6 py-3 bg-gray-800 text-white rounded-lg font-semibold hover:bg-gray-900 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
-          >
-            {isReviewing ? (
-              <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Reviewing...</>
-            ) : '🔍 AI Review'}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleReview}
+              disabled={isReviewing}
+              className="px-6 py-3 bg-gray-800 text-white rounded-lg font-semibold hover:bg-gray-900 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+            >
+              {isReviewing ? (
+                <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Reviewing...</>
+              ) : '🔍 AI Review'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowShareModal(true)}
+              disabled={!content || content.trim().length < 50}
+              className="px-6 py-3 bg-primary-50 text-primary-700 border border-primary-200 rounded-lg font-semibold hover:bg-primary-100 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+            >
+              📤 Share / Repurpose
+            </button>
+          </div>
 
           <button
             type="submit"
@@ -327,6 +341,14 @@ export default function EditBlogPage() {
         </div>
 
       </form>
+
+      {/* Share/Repurpose Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        title={watch('title') || ''}
+        content={content}
+      />
     </div>
   );
 }

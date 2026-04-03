@@ -208,6 +208,101 @@ CRITICAL RULES:
 );
 
 // ---------------------------------------------------------------------------
+// POST /api/blog/repurpose
+// Generate social media versions of blog content using Groq JSON mode
+// ---------------------------------------------------------------------------
+
+const REPURPOSE_MODEL = "llama-3.3-70b-versatile";
+
+router.post(
+  "/repurpose",
+  authenticateToken,
+  requireRole("admin", "editor"),
+  [
+    body("title")
+      .notEmpty().withMessage("title is required")
+      .isString(),
+    body("content")
+      .notEmpty().withMessage("content is required")
+      .isString()
+      .isLength({ min: 50 }).withMessage("content is too short to repurpose"),
+  ],
+  async (req: AuthRequest, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const { title, content } = req.body as { title: string; content: string };
+    const truncated = content.slice(0, 10_000);
+
+    console.log("\n" + "=".repeat(60));
+    console.log(`📤 [Blog Repurpose] Generating social posts for "${title.slice(0, 50)}..."`);
+    console.log("=".repeat(60));
+
+    const systemPrompt = `You are an expert social media manager for a technical brand. The user will provide a technical blog post. You must repurpose this content for distribution.
+
+CRITICAL INSTRUCTIONS:
+1. **LinkedIn:** Write a highly engaging, punchy LinkedIn post summarizing the blog. Use a strong hook in the first line, 2-3 short bullet points covering key takeaways, a call-to-action to 'read the full blog', and 3-5 relevant hashtags. Use emojis tastefully but don't overdo it.
+2. **Medium/Dev.to Metadata:** Extract a highly clickable SEO title (different from original if the original is weak), a compelling 1-sentence subtitle, and an array of exactly 5 relevant technical tags.
+
+You MUST output your response strictly in the following JSON format:
+{
+  "linkedin_post": "The full text of the LinkedIn post with line breaks and emojis",
+  "medium_title": "SEO optimized title",
+  "medium_subtitle": "1-sentence compelling subtitle",
+  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"]
+}`;
+
+    try {
+      const groq = getGroqClient();
+      const startTime = Date.now();
+
+      const completion = await groq.chat.completions.create({
+        model: REPURPOSE_MODEL,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Title: ${title}\n\nBlog Content:\n${truncated}` },
+        ],
+        temperature: 0.7,
+        max_tokens: 1024,
+        response_format: { type: "json_object" },
+      });
+
+      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+      const rawJson = completion.choices?.[0]?.message?.content || "{}";
+      console.log(`✅ [Blog Repurpose] Complete in ${duration}s`);
+
+      let parsed: any;
+      try {
+        parsed = JSON.parse(rawJson);
+      } catch {
+        console.error("❌ [Blog Repurpose] JSON parse failed:", rawJson.slice(0, 200));
+        return res.status(502).json({ error: "AI returned unparseable response. Please try again." });
+      }
+
+      // Defensive normalisation
+      const safe = {
+        linkedin_post:   typeof parsed?.linkedin_post === "string" ? parsed.linkedin_post : "",
+        medium_title:    typeof parsed?.medium_title === "string" ? parsed.medium_title : title,
+        medium_subtitle: typeof parsed?.medium_subtitle === "string" ? parsed.medium_subtitle : "",
+        tags:            Array.isArray(parsed?.tags) ? parsed.tags.filter((t: any) => typeof t === "string").slice(0, 5) : [],
+      };
+
+      console.log(`📊 [Blog Repurpose] LinkedIn: ${safe.linkedin_post.length} chars | Tags: ${safe.tags.join(", ")}`);
+      return res.status(200).json(safe);
+
+    } catch (err: any) {
+      console.error(`❌ [Blog Repurpose] Error: ${err.message}`);
+      const isTimeout = err.message?.includes("timeout") || err.code === "ECONNABORTED";
+      return res.status(isTimeout ? 504 : 500).json({
+        error: isTimeout
+          ? "Repurpose timed out. Try shortening the content."
+          : "Failed to generate social posts. Please try again.",
+      });
+    }
+  }
+);
+
+// ---------------------------------------------------------------------------
 // Utility
 // ---------------------------------------------------------------------------
 
