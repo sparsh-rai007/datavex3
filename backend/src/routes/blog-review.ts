@@ -213,6 +213,9 @@ CRITICAL RULES:
 // ---------------------------------------------------------------------------
 
 const REPURPOSE_MODEL = "llama-3.3-70b-versatile";
+const LINKEDIN_LIMIT = 3000;
+const MEDIUM_LIMIT = 7000;
+const X_LIMIT = 280;
 
 router.post(
   "/repurpose",
@@ -226,13 +229,18 @@ router.post(
       .notEmpty().withMessage("content is required")
       .isString()
       .isLength({ min: 50 }).withMessage("content is too short to repurpose"),
+    body("blog_url")
+      .optional()
+      .isString()
+      .isLength({ max: 2000 }).withMessage("blog_url is too long"),
   ],
   async (req: AuthRequest, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { title, content } = req.body as { title: string; content: string };
+    const { title, content, blog_url } = req.body as { title: string; content: string; blog_url?: string };
     const truncated = content.slice(0, 10_000);
+    const blogUrl = typeof blog_url === "string" ? blog_url.trim() : "";
 
     console.log("\n" + "=".repeat(60));
     console.log(`📤 [Blog Repurpose] Generating social posts for "${title.slice(0, 50)}..."`);
@@ -241,12 +249,17 @@ router.post(
     const systemPrompt = `You are an expert social media manager for a technical brand. The user will provide a technical blog post. You must repurpose this content for distribution.
 
 CRITICAL INSTRUCTIONS:
-1. **LinkedIn:** Write a highly engaging, punchy LinkedIn post summarizing the blog. Use a strong hook in the first line, 2-3 short bullet points covering key takeaways, a call-to-action to 'read the full blog', and 3-5 relevant hashtags. Use emojis tastefully but don't overdo it.
-2. **Medium/Dev.to Metadata:** Extract a highly clickable SEO title (different from original if the original is weak), a compelling 1-sentence subtitle, and an array of exactly 5 relevant technical tags.
+1. **LinkedIn Post:** Write a highly engaging, punchy LinkedIn post summarizing the blog. Use a strong hook in the first line, 2-3 short bullet points covering key takeaways, a call-to-action to read the full blog, and 3-5 relevant hashtags. Keep it within ${LINKEDIN_LIMIT} characters.
+2. **Medium Post:** Write a polished Medium/Dev.to style post excerpt or intro summary based on the blog. Keep it within ${MEDIUM_LIMIT} characters.
+3. **X Post:** Write a concise, high-impact X post. Keep it within ${X_LIMIT} characters.
+4. **Medium/Dev.to Metadata:** Extract a highly clickable SEO title (different from original if the original is weak), a compelling 1-sentence subtitle, and an array of exactly 5 relevant technical tags.
+5. If a blog URL is provided, append it at the end of linkedin_post, medium_post, and x_post.
 
 You MUST output your response strictly in the following JSON format:
 {
   "linkedin_post": "The full text of the LinkedIn post with line breaks and emojis",
+  "medium_post": "Repurposed Medium/Dev.to post body",
+  "x_post": "Repurposed X post",
   "medium_title": "SEO optimized title",
   "medium_subtitle": "1-sentence compelling subtitle",
   "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"]
@@ -260,7 +273,10 @@ You MUST output your response strictly in the following JSON format:
         model: REPURPOSE_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Title: ${title}\n\nBlog Content:\n${truncated}` },
+          {
+            role: "user",
+            content: `Title: ${title}\nBlog URL: ${blogUrl || "N/A"}\n\nBlog Content:\n${truncated}`,
+          },
         ],
         temperature: 0.7,
         max_tokens: 1024,
@@ -281,13 +297,15 @@ You MUST output your response strictly in the following JSON format:
 
       // Defensive normalisation
       const safe = {
-        linkedin_post:   typeof parsed?.linkedin_post === "string" ? parsed.linkedin_post : "",
+        linkedin_post:   appendLinkWithinLimit(typeof parsed?.linkedin_post === "string" ? parsed.linkedin_post : "", blogUrl, LINKEDIN_LIMIT),
+        medium_post:     appendLinkWithinLimit(typeof parsed?.medium_post === "string" ? parsed.medium_post : truncated, blogUrl, MEDIUM_LIMIT),
+        x_post:          appendLinkWithinLimit(typeof parsed?.x_post === "string" ? parsed.x_post : "", blogUrl, X_LIMIT),
         medium_title:    typeof parsed?.medium_title === "string" ? parsed.medium_title : title,
         medium_subtitle: typeof parsed?.medium_subtitle === "string" ? parsed.medium_subtitle : "",
         tags:            Array.isArray(parsed?.tags) ? parsed.tags.filter((t: any) => typeof t === "string").slice(0, 5) : [],
       };
 
-      console.log(`📊 [Blog Repurpose] LinkedIn: ${safe.linkedin_post.length} chars | Tags: ${safe.tags.join(", ")}`);
+      console.log(`📊 [Blog Repurpose] LinkedIn: ${safe.linkedin_post.length}/${LINKEDIN_LIMIT} | Medium: ${safe.medium_post.length}/${MEDIUM_LIMIT} | X: ${safe.x_post.length}/${X_LIMIT} | Tags: ${safe.tags.join(", ")}`);
       return res.status(200).json(safe);
 
     } catch (err: any) {
@@ -313,4 +331,31 @@ function normaliseCheck(raw: any): CheckResult {
   };
 }
 
+function appendLinkWithinLimit(text: string, blogUrl: string, limit: number): string {
+  const normalized = (text || "").trim();
+  if (!blogUrl) return trimToLimit(normalized, limit);
+
+  const url = blogUrl.trim();
+  const withoutUrl = normalized.replace(new RegExp(escapeRegExp(url), "g"), "").trim();
+  const suffix = `\n\n${url}`;
+  const maxBodyLength = limit - suffix.length;
+
+  if (maxBodyLength <= 0) return trimToLimit(url, limit);
+
+  const trimmedBody = trimToLimit(withoutUrl, maxBodyLength);
+  return `${trimmedBody}${suffix}`;
+}
+
+function trimToLimit(text: string, limit: number): string {
+  if (!text) return "";
+  if (text.length <= limit) return text;
+  return text.slice(0, limit).trimEnd();
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export default router;
+
+

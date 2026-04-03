@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Copy, Check, BookOpen, Loader2, Share2, Hash, ExternalLink } from 'lucide-react';
+import { X, Copy, Check, BookOpen, Share2, Hash, ExternalLink, MessageSquare } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 
-type Tab = 'linkedin' | 'medium';
+type Tab = 'linkedin' | 'medium' | 'x';
 
 interface RepurposeData {
   linkedin_post: string;
+  medium_post: string;
+  x_post: string;
   medium_title: string;
   medium_subtitle: string;
   tags: string[];
@@ -18,9 +20,10 @@ interface ShareModalProps {
   onClose: () => void;
   title: string;
   content: string;
+  blogUrl?: string;
 }
 
-export default function ShareModal({ isOpen, onClose, title, content }: ShareModalProps) {
+export default function ShareModal({ isOpen, onClose, title, content, blogUrl }: ShareModalProps) {
   const [activeTab, setActiveTab] = useState<Tab>('linkedin');
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<RepurposeData | null>(null);
@@ -46,8 +49,15 @@ export default function ShareModal({ isOpen, onClose, title, content }: ShareMod
     setIsLoading(true);
     setError('');
     try {
-      const result = await apiClient.repurposeBlog(title, content);
-      setData(result);
+      const result = await apiClient.repurposeBlog(title, content, blogUrl);
+      setData({
+        linkedin_post: result?.linkedin_post || '',
+        medium_post: result?.medium_post || '',
+        x_post: result?.x_post || '',
+        medium_title: result?.medium_title || '',
+        medium_subtitle: result?.medium_subtitle || '',
+        tags: Array.isArray(result?.tags) ? result.tags : [],
+      });
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Failed to generate social posts. Try again.');
     } finally {
@@ -100,6 +110,7 @@ export default function ShareModal({ isOpen, onClose, title, content }: ShareMod
           <div className="flex items-center gap-1 px-8 pt-5">
             {([
               { key: 'linkedin' as Tab, label: 'LinkedIn', icon: ExternalLink },
+              { key: 'x' as Tab, label: 'X', icon: MessageSquare },
               { key: 'medium' as Tab, label: 'Medium / Dev.to', icon: BookOpen },
             ]).map(({ key, label, icon: Icon }) => (
               <button
@@ -158,21 +169,21 @@ export default function ShareModal({ isOpen, onClose, title, content }: ShareMod
                         Ready-to-Post Content
                       </label>
                       <span className="text-[10px] font-bold text-slate-300">
-                        {data.linkedin_post.length} chars
+                        {(data.linkedin_post || '').length} / 3000 chars
                       </span>
                     </div>
 
                     <div className="relative group">
                       <textarea
                         readOnly
-                        value={data.linkedin_post}
+                        value={data.linkedin_post || ''}
                         rows={12}
                         className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 text-slate-700 text-sm font-medium leading-relaxed resize-none focus:outline-none cursor-default"
                       />
                     </div>
 
                     <button
-                      onClick={() => copyToClipboard(data.linkedin_post, 'linkedin')}
+                      onClick={() => copyToClipboard(data.linkedin_post || '', 'linkedin')}
                       className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-[#0A66C2] text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-[#004182] transition-all shadow-lg shadow-[#0A66C2]/20 active:scale-[0.98]"
                     >
                       {copiedField === 'linkedin' ? (
@@ -184,9 +195,69 @@ export default function ShareModal({ isOpen, onClose, title, content }: ShareMod
                   </div>
                 )}
 
+                {/* X Tab */}
+                {activeTab === 'x' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        Ready-to-Post Content
+                      </label>
+                      <span className="text-[10px] font-bold text-slate-300">
+                        {(data.x_post || '').length} / 280 chars
+                      </span>
+                    </div>
+
+                    <div className="relative group">
+                      <textarea
+                        readOnly
+                        value={data.x_post || ''}
+                        rows={8}
+                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 text-slate-700 text-sm font-medium leading-relaxed resize-none focus:outline-none cursor-default"
+                      />
+                    </div>
+
+                    <button
+                      onClick={() => copyToClipboard(data.x_post || '', 'x')}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-slate-800 transition-all shadow-lg shadow-black/20 active:scale-[0.98]"
+                    >
+                      {copiedField === 'x' ? (
+                        <><Check size={16} /> Copied to Clipboard</>
+                      ) : (
+                        <><Copy size={16} /> Copy X Post</>
+                      )}
+                    </button>
+                  </div>
+                )}
+
                 {/* Medium Tab */}
                 {activeTab === 'medium' && (
                   <div className="space-y-6">
+                    {/* Medium Post */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          Medium / Dev.to Post
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-bold text-slate-300">
+                            {(data.medium_post || '').length} / 7000 chars
+                          </span>
+                          <button
+                            onClick={() => copyToClipboard(data.medium_post || '', 'medium')}
+                            className="text-[10px] font-bold text-primary-600 hover:underline flex items-center gap-1"
+                          >
+                            {copiedField === 'medium' ? <><Check size={10} /> Copied</> : <><Copy size={10} /> Copy</>}
+                          </button>
+                        </div>
+                      </div>
+                      <textarea
+                        readOnly
+                        value={data.medium_post || ''}
+                        rows={10}
+                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 text-slate-700 text-sm font-medium leading-relaxed resize-none focus:outline-none cursor-default"
+                      />
+                    </div>
+
                     {/* Medium Title */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">

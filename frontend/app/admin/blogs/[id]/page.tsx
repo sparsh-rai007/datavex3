@@ -116,6 +116,20 @@ export default function EditBlogPage() {
     navigator.clipboard.writeText(editResult);
   };
 
+  const getBlogUrl = () => {
+    const externalUrl = (watch('external_url') || '').trim();
+    if (externalUrl) return externalUrl;
+
+    const slug = (watch('slug') || '').trim();
+    if (!slug) return '';
+
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '');
+    if (siteUrl) return `${siteUrl}/blog/${slug}`;
+
+    if (typeof window !== 'undefined') return `${window.location.origin}/blog/${slug}`;
+    return `/blog/${slug}`;
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="p-8 max-w-3xl mx-auto">
@@ -348,6 +362,7 @@ export default function EditBlogPage() {
         onClose={() => setShowShareModal(false)}
         title={watch('title') || ''}
         content={content}
+        blogUrl={getBlogUrl()}
       />
     </div>
   );

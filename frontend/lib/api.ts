@@ -150,10 +150,12 @@ class ApiClient {
     return response.data as { rewritten_text: string };
   }
 
-  async repurposeBlog(title: string, content: string) {
-    const response = await this.client.post('/blog/repurpose', { title, content });
+  async repurposeBlog(title: string, content: string, blog_url?: string) {
+    const response = await this.client.post('/blog/repurpose', { title, content, blog_url });
     return response.data as {
       linkedin_post: string;
+      medium_post: string;
+      x_post: string;
       medium_title: string;
       medium_subtitle: string;
       tags: string[];
