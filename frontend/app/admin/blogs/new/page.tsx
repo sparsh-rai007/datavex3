@@ -86,12 +86,27 @@ export default function NewBlogPage() {
       const blog = response.blog;
 
       // Populate form with generated content (Native Markdown)
-      setValue('title', blog.title || '');
-      setValue('slug', blog.slug || generateSlug(blog.title || ''));
+      let finalTitle = blog.title || '';
+      const finalContent = blog.content || '';
+
+      // 🛡️ Frontend Fallback: If title is missing but content exists, extract it manually
+      if (!finalTitle && finalContent) {
+        const h1Match = finalContent.match(/^#\s+(.+)$/m);
+        const h2Match = finalContent.match(/^##\s+(.+)$/m);
+        finalTitle = h1Match ? h1Match[1].trim() : (h2Match ? h2Match[1].trim() : '');
+      }
+
+      const generatedTitle = finalTitle || 'Untitled Blog Post';
+      setValue('title', generatedTitle);
+      
+      // If we had to manually find the title, or if the slug is generic, generate a fresh one
+      const needsNewSlug = !blog.title || blog.slug?.includes('untitled');
+      setValue('slug', needsNewSlug ? generateSlug(generatedTitle) : (blog.slug || generateSlug(generatedTitle)));
+      
       setValue('excerpt', '');
       setValue('generation_method', blog.generation_method || 'manual');
       setValue('source_reference', blog.source_reference || '');
-      setContent(blog.content || '');
+      setContent(finalContent);
 
       // Trigger automatic review immediately on the new draft
       triggerReview(blog.content || '');

@@ -345,35 +345,57 @@ function extractTitleAndBody(markdown: string): { title: string; body: string } 
   let title = "";
   let bodyStartIndex = -1;
 
-  // 🏛️ Robust Tier 1: Look for first H1 line (# )
-  for (let i = 0; i < Math.min(lines.length, 10); i++) {
+  console.log(`[DEBUG] AI Output Sample: "${markdown.slice(0, 100).replace(/\n/g, '\\n')}..."`);
+
+  // 🏛️ Tier 1: Look for any heading (# or ##) in the first few lines
+  for (let i = 0; i < Math.min(lines.length, 15); i++) {
     const trimmed = lines[i].trim();
-    if (trimmed.startsWith("# ")) {
+    if (trimmed.startsWith("# ") || trimmed.startsWith("## ")) {
       title = trimmed.replace(/^#+\s*/, "").trim();
       bodyStartIndex = i + 1;
-      break;
+      
+      // If we found a title that's suspiciously short (like "Title"), keep looking
+      if (title.length > 3) break;
     }
   }
 
-  // 🧱 Robust Tier 2: If no H1 found, look for first non-empty line that isn't filler
+  // 🧱 Tier 2: Look for common "Title: " prefix
   if (!title) {
-    for (let i = 0; i < Math.min(lines.length, 10); i++) {
+    for (let i = 0; i < Math.min(lines.length, 15); i++) {
       const trimmed = lines[i].trim();
-      if (trimmed && !trimmed.startsWith(">") && !trimmed.startsWith("![") && trimmed.length > 5) {
-        // Clean common prefixes if any
-        title = trimmed.replace(/^(Title|Proposed Title|Article Title|Headline):\s*/i, "").trim();
+      if (/^(Title|Proposed Title|Article Title|Headline|Subject|Topic):\s*/i.test(trimmed)) {
+        title = trimmed.replace(/^(Title|Proposed Title|Article Title|Headline|Subject|Topic):\s*/i, "").trim();
         bodyStartIndex = i + 1;
         break;
       }
     }
   }
 
-  // 🛡️ Fallback: Untitled
+  // 🛡️ Tier 3: Fallback - use the first non-empty line that isn't a reference or image
   if (!title) {
+    for (let i = 0; i < Math.min(lines.length, 15); i++) {
+      const trimmed = lines[i].trim();
+      if (trimmed && !trimmed.startsWith(">") && !trimmed.startsWith("![") && trimmed.length > 5) {
+        title = trimmed;
+        bodyStartIndex = i + 1;
+        break;
+      }
+    }
+  }
+
+  // ⚔️ Absolute Fallback
+  if (!title) {
+    console.warn("⚠️ [extractTitleAndBody] Failed to find a title, using default.");
     return { title: "Strategic Synthesis Analysis", body: markdown };
   }
 
+  console.log(`✅ [extractTitleAndBody] Extracted Title: "${title}"`);
+
+  // Slice the body starting from the found index. 
+  // If the extractor found the title on line i, we start the body on i+1.
   const body = lines.slice(bodyStartIndex).join("\n").trim();
+  
+  // If the body is empty after extraction (rare), return the full markdown to be safe
   return { title, body: body || markdown };
 }
 
