@@ -1,29 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X as CloseIcon, Copy, Check, BookOpen, Loader2, Share2, Hash, ExternalLink } from 'lucide-react';
-
-const TwitterIcon = ({ size = 16, className = "" }) => (
-  <svg 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="currentColor" 
-    className={className}
-  >
-    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-  </svg>
-);
+import { X, Copy, Check, BookOpen, Loader2, Share2, Hash, ExternalLink } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 
-type Tab = 'linkedin' | 'medium' | 'x';
+type Tab = 'linkedin' | 'medium';
 
 interface RepurposeData {
   linkedin_post: string;
   medium_title: string;
   medium_subtitle: string;
-  medium_body: string;
-  x_post: string;
   tags: string[];
 }
 
@@ -32,10 +18,9 @@ interface ShareModalProps {
   onClose: () => void;
   title: string;
   content: string;
-  slug: string;
 }
 
-export default function ShareModal({ isOpen, onClose, title, content, slug }: ShareModalProps) {
+export default function ShareModal({ isOpen, onClose, title, content }: ShareModalProps) {
   const [activeTab, setActiveTab] = useState<Tab>('linkedin');
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<RepurposeData | null>(null);
@@ -60,11 +45,8 @@ export default function ShareModal({ isOpen, onClose, title, content, slug }: Sh
   const generateSocialPosts = async () => {
     setIsLoading(true);
     setError('');
-    setData(null); // Clear previous data for a fresh state
     try {
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://datavex.ai';
-      const fullUrl = `${baseUrl}/blog/${slug}`;
-      const result = await apiClient.repurposeBlog(title, content, fullUrl);
+      const result = await apiClient.repurposeBlog(title, content);
       setData(result);
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Failed to generate social posts. Try again.');
@@ -74,14 +56,9 @@ export default function ShareModal({ isOpen, onClose, title, content, slug }: Sh
   };
 
   const copyToClipboard = async (text: string, field: string) => {
-    try {
-      const safeText = text || '';
-      await navigator.clipboard.writeText(safeText);
-      setCopiedField(field);
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch (err) {
-      console.error("Clipboard copy failed", err);
-    }
+    await navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
   };
 
   if (!isOpen) return null;
@@ -115,17 +92,16 @@ export default function ShareModal({ isOpen, onClose, title, content, slug }: Sh
               onClick={onClose}
               className="w-10 h-10 rounded-xl border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all"
             >
-              <CloseIcon size={18} />
+              <X size={18} />
             </button>
           </div>
 
           {/* Tabs */}
           <div className="flex items-center gap-1 px-8 pt-5">
-            {[
+            {([
               { key: 'linkedin' as Tab, label: 'LinkedIn', icon: ExternalLink },
-              { key: 'medium' as Tab, label: 'Medium', icon: BookOpen },
-              { key: 'x' as Tab, label: 'X (Twitter)', icon: TwitterIcon },
-            ].map(({ key, label, icon: Icon }) => (
+              { key: 'medium' as Tab, label: 'Medium / Dev.to', icon: BookOpen },
+            ]).map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
@@ -181,22 +157,22 @@ export default function ShareModal({ isOpen, onClose, title, content, slug }: Sh
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         Ready-to-Post Content
                       </label>
-                      <span className={`text-[10px] font-bold ${(data?.linkedin_post || '').length > 3000 ? 'text-red-500' : 'text-slate-300'}`}>
-                        {(data?.linkedin_post || '').length} / 3000 chars
+                      <span className="text-[10px] font-bold text-slate-300">
+                        {data.linkedin_post.length} chars
                       </span>
                     </div>
 
                     <div className="relative group">
                       <textarea
                         readOnly
-                        value={data?.linkedin_post || ''}
+                        value={data.linkedin_post}
                         rows={12}
                         className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 text-slate-700 text-sm font-medium leading-relaxed resize-none focus:outline-none cursor-default"
                       />
                     </div>
 
                     <button
-                      onClick={() => copyToClipboard(data?.linkedin_post || '', 'linkedin')}
+                      onClick={() => copyToClipboard(data.linkedin_post, 'linkedin')}
                       className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-[#0A66C2] text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-[#004182] transition-all shadow-lg shadow-[#0A66C2]/20 active:scale-[0.98]"
                     >
                       {copiedField === 'linkedin' ? (
@@ -211,15 +187,6 @@ export default function ShareModal({ isOpen, onClose, title, content, slug }: Sh
                 {/* Medium Tab */}
                 {activeTab === 'medium' && (
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        Medium Reimagined Content
-                      </label>
-                      <span className={`text-[10px] font-bold ${(data?.medium_body || '').length > 7000 ? 'text-red-500' : 'text-slate-300'}`}>
-                        {(data?.medium_body || '').length} / 7000 chars
-                      </span>
-                    </div>
-
                     {/* Medium Title */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -227,41 +194,32 @@ export default function ShareModal({ isOpen, onClose, title, content, slug }: Sh
                           SEO Title
                         </label>
                         <button
-                          onClick={() => copyToClipboard(data?.medium_title || '', 'title')}
+                          onClick={() => copyToClipboard(data.medium_title, 'title')}
                           className="text-[10px] font-bold text-primary-600 hover:underline flex items-center gap-1"
                         >
                           {copiedField === 'title' ? <><Check size={10} /> Copied</> : <><Copy size={10} /> Copy</>}
                         </button>
                       </div>
                       <div className="bg-slate-50 border border-slate-100 rounded-xl px-5 py-4 text-slate-900 font-bold text-lg">
-                        {data?.medium_title || ''}
+                        {data.medium_title}
                       </div>
                     </div>
 
-                    {/* Medium Body Textarea */}
-                    <div className="relative group">
-                      <textarea
-                        readOnly
-                        value={data?.medium_body || ''}
-                        rows={10}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 text-slate-700 text-sm font-medium leading-relaxed resize-none focus:outline-none cursor-default"
-                        placeholder="Reimagined content for Medium..."
-                      />
-                    </div>
+                    {/* Medium Subtitle */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                           Subtitle
                         </label>
                         <button
-                          onClick={() => copyToClipboard(data?.medium_subtitle || '', 'subtitle')}
+                          onClick={() => copyToClipboard(data.medium_subtitle, 'subtitle')}
                           className="text-[10px] font-bold text-primary-600 hover:underline flex items-center gap-1"
                         >
                           {copiedField === 'subtitle' ? <><Check size={10} /> Copied</> : <><Copy size={10} /> Copy</>}
                         </button>
                       </div>
                       <div className="bg-slate-50 border border-slate-100 rounded-xl px-5 py-3 text-slate-600 font-medium text-sm italic">
-                        {data?.medium_subtitle || ''}
+                        {data.medium_subtitle}
                       </div>
                     </div>
 
@@ -269,17 +227,17 @@ export default function ShareModal({ isOpen, onClose, title, content, slug }: Sh
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                          Tags ({(data?.tags || []).length})
+                          Tags ({data.tags.length})
                         </label>
                         <button
-                          onClick={() => copyToClipboard((data?.tags || []).join(', '), 'tags')}
+                          onClick={() => copyToClipboard(data.tags.join(', '), 'tags')}
                           className="text-[10px] font-bold text-primary-600 hover:underline flex items-center gap-1"
                         >
                           {copiedField === 'tags' ? <><Check size={10} /> Copied</> : <><Copy size={10} /> Copy All</>}
                         </button>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {(data?.tags || []).map((tag, i) => (
+                        {data.tags.map((tag, i) => (
                           <span
                             key={i}
                             className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[11px] font-bold tracking-wide"
@@ -291,48 +249,18 @@ export default function ShareModal({ isOpen, onClose, title, content, slug }: Sh
                       </div>
                     </div>
 
+                    {/* Divider */}
+                    <div className="border-t border-slate-100 pt-4" />
+
+                    {/* Copy Full Markdown */}
                     <button
-                      onClick={() => copyToClipboard(data?.medium_body || '', 'markdown')}
+                      onClick={() => copyToClipboard(content, 'markdown')}
                       className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-primary-600 transition-all shadow-lg active:scale-[0.98]"
                     >
                       {copiedField === 'markdown' ? (
-                        <><Check size={16} /> Medium Body Copied</>
+                        <><Check size={16} /> Blog Markdown Copied</>
                       ) : (
-                        <><Copy size={16} /> Copy Reimagined Medium Body</>
-                      )}
-                    </button>
-                  </div>
-                )}
-
-                {/* X (Twitter) Tab */}
-                {activeTab === 'x' && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        Micro-Content (X / Twitter)
-                      </label>
-                      <span className={`text-[10px] font-bold ${(data?.x_post || '').length > 280 ? 'text-red-500' : 'text-slate-300'}`}>
-                        {(data?.x_post || '').length} / 280 chars
-                      </span>
-                    </div>
-
-                    <div className="relative group">
-                      <textarea
-                        readOnly
-                        value={data?.x_post || ''}
-                        rows={6}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 text-slate-700 text-sm font-medium leading-relaxed resize-none focus:outline-none cursor-default"
-                      />
-                    </div>
-
-                    <button
-                      onClick={() => copyToClipboard(data?.x_post || '', 'x')}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-slate-900 transition-all shadow-lg active:scale-[0.98]"
-                    >
-                      {copiedField === 'x' ? (
-                        <><Check size={16} /> Copied to Clipboard</>
-                      ) : (
-                        <><TwitterIcon size={16} /> Copy Post for X</>
+                        <><Copy size={16} /> Copy Full Blog Markdown</>
                       )}
                     </button>
                   </div>

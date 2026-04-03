@@ -348,7 +348,6 @@ export default function EditBlogPage() {
         onClose={() => setShowShareModal(false)}
         title={watch('title') || ''}
         content={content}
-        slug={watch('slug') || ''}
       />
     </div>
   );
