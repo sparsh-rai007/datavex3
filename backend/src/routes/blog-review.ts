@@ -10,6 +10,7 @@ const router = express.Router();
 
 const REVIEW_MODEL = "llama-3.1-8b-instant";
 const EDIT_MODEL = "llama-3.3-70b-versatile"; // better quality for rewrites
+const REPURPOSE_MODEL = "llama-3.3-70b-versatile";
 
 let _groq: Groq | null = null;
 function getGroqClient(): Groq {
@@ -108,7 +109,6 @@ You MUST output your review strictly in the following JSON format. If a check pa
         return res.status(502).json({ error: "AI returned unparseable response. Please try again." });
       }
 
-      // Defensive normalisation
       const safe: ReviewResult = {
         structure_check:     normaliseCheck(parsed?.structure_check),
         tone_check:          normaliseCheck(parsed?.tone_check),
@@ -212,8 +212,6 @@ CRITICAL RULES:
 // Generate social media versions of blog content using Groq JSON mode
 // ---------------------------------------------------------------------------
 
-const REPURPOSE_MODEL = "llama-3.3-70b-versatile";
-
 router.post(
   "/repurpose",
   authenticateToken,
@@ -226,29 +224,48 @@ router.post(
       .notEmpty().withMessage("content is required")
       .isString()
       .isLength({ min: 50 }).withMessage("content is too short to repurpose"),
+    body("url")
+      .notEmpty().withMessage("The specific blog URL is required for repurposing")
+      .isURL().withMessage("Must be a valid URL"),
   ],
   async (req: AuthRequest, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { title, content } = req.body as { title: string; content: string };
+    const { title, content, url } = req.body as { title: string; content: string; url: string };
     const truncated = content.slice(0, 10_000);
 
     console.log("\n" + "=".repeat(60));
     console.log(`📤 [Blog Repurpose] Generating social posts for "${title.slice(0, 50)}..."`);
     console.log("=".repeat(60));
 
-    const systemPrompt = `You are an expert social media manager for a technical brand. The user will provide a technical blog post. You must repurpose this content for distribution.
+    const systemPrompt = `You are an expert social media manager for a technical brand. You must repurpose the provided blog post into three highly optimized formats. 
+
+CRITICAL UNIVERSAL RULE: Output PURE PLAIN TEXT ONLY. You are strictly forbidden from using Markdown formatting syntax (no asterisks '**', no hash symbols for headers '##', no underscores '_', no backticks '\`'). 
+
+CRITICAL URL RULE: You MUST include the exact Target URL (${url}) at the very end of the linkedin_post, the medium_body, and the x_post. This is an absolute requirement.
 
 CRITICAL INSTRUCTIONS:
-1. **LinkedIn:** Write a highly engaging, punchy LinkedIn post summarizing the blog. Use a strong hook in the first line, 2-3 short bullet points covering key takeaways, a call-to-action to 'read the full blog', and 3-5 relevant hashtags. Use emojis tastefully but don't overdo it.
-2. **Medium/Dev.to Metadata:** Extract a highly clickable SEO title (different from original if the original is weak), a compelling 1-sentence subtitle, and an array of exactly 5 relevant technical tags.
+1. **LinkedIn:** Write a deeply insightful, long-form LinkedIn post. 
+   - LENGTH: It MUST be around 3000 characters (approx 500-550 words). Do not write a short summary. Go into detail.
+   - FORMATTING: Use plain text only. Use line breaks to separate thoughts.
+   - LINK: End the post with a compelling call-to-action and the exact URL: ${url}
+2. **Medium/Dev.to:** Re-write a massive, comprehensive version of the article for Medium.
+   - LENGTH: The 'medium_body' MUST be incredibly detailed, aiming for around 7000 characters (approx 1200+ words). 
+   - FORMATTING: PURE PLAIN TEXT. To create sub-sections or headers, simply write the section title in ALL CAPS on its own line (e.g., THE CHALLENGE) with double line breaks before and after. 
+   - LINK: At the very end of the text, append exactly: "Read the original post here: ${url}"
+3. **X (Twitter):** Write a punchy, viral-style X post. 
+   - LENGTH: You MUST maximize the character limit, hitting exactly around 270-280 characters total. 
+   - FORMATTING: You are allowed to use exactly 2 hashtags at the end. These are the ONLY '#' symbols allowed in your entire response.
+   - LINK: The last thing in the post MUST be the exact URL: ${url}
 
 You MUST output your response strictly in the following JSON format:
 {
-  "linkedin_post": "The full text of the LinkedIn post with line breaks and emojis",
-  "medium_title": "SEO optimized title",
-  "medium_subtitle": "1-sentence compelling subtitle",
+  "linkedin_post": "The full ~3000 character plain text of the LinkedIn post including the URL at the end",
+  "medium_title": "SEO optimized title (no markdown)",
+  "medium_subtitle": "1-sentence compelling subtitle (no markdown)",
+  "medium_body": "The reimagined ~7000 character body in PLAIN TEXT. Section headers in ALL CAPS. URL at the end.",
+  "x_post": "The ~280 character X post including the URL at the end",
   "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"]
 }`;
 
@@ -260,10 +277,10 @@ You MUST output your response strictly in the following JSON format:
         model: REPURPOSE_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Title: ${title}\n\nBlog Content:\n${truncated}` },
+          { role: "user", content: `Target URL: ${url}\n\nTitle: ${title}\n\nBlog Content:\n${truncated}` },
         ],
         temperature: 0.7,
-        max_tokens: 1024,
+        max_tokens: 8000, 
         response_format: { type: "json_object" },
       });
 
@@ -284,10 +301,12 @@ You MUST output your response strictly in the following JSON format:
         linkedin_post:   typeof parsed?.linkedin_post === "string" ? parsed.linkedin_post : "",
         medium_title:    typeof parsed?.medium_title === "string" ? parsed.medium_title : title,
         medium_subtitle: typeof parsed?.medium_subtitle === "string" ? parsed.medium_subtitle : "",
+        medium_body:     typeof parsed?.medium_body === "string" ? parsed.medium_body : "",
+        x_post:          typeof parsed?.x_post === "string" ? parsed.x_post : "",
         tags:            Array.isArray(parsed?.tags) ? parsed.tags.filter((t: any) => typeof t === "string").slice(0, 5) : [],
       };
 
-      console.log(`📊 [Blog Repurpose] LinkedIn: ${safe.linkedin_post.length} chars | Tags: ${safe.tags.join(", ")}`);
+      console.log(`📊 [Blog Repurpose] LinkedIn: ${safe.linkedin_post.length} chars | Medium: ${safe.medium_body.length} chars | X: ${safe.x_post.length} chars`);
       return res.status(200).json(safe);
 
     } catch (err: any) {

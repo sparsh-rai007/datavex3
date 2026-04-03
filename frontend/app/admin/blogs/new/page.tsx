@@ -551,6 +551,7 @@ export default function NewBlogPage() {
         onClose={() => setShowShareModal(false)}
         title={watch('title') || ''}
         content={content}
+        slug={watch('slug') || ''}
       />
     </div>
   );
