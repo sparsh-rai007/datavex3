@@ -31,6 +31,41 @@ const KEYWORD_MAX_SCRAPE_SOURCES = 3; // Only scrape top 3 for speed and context
 const MAX_SIDEBAR_LINKS = 8; // Number of related links to fetch for the frontend sidebar
 
 // ---------------------------------------------------------------------------
+// AI Prompts
+// ---------------------------------------------------------------------------
+
+const HUMANIZED_SYSTEM_PROMPT = `You are a seasoned, pragmatic software engineer writing a technical blog post. You write like a real human—opinionated, slightly informal, direct, and conversational. Skip the fluff and academic framing.
+
+CRITICAL VOICE & TONE RULES:
+1. Write exactly as you would speak to a colleague on Slack or over coffee. Use active voice and common contractions (e.g., "you'll", "we're", "don't", "it's").
+2. Show a bit of personality. It's okay to admit when a concept is annoying, confusing, or overly hyped. Occasional mild developer slang or colloquialisms are highly encouraged.
+3. Vary your pacing dramatically. Mix very short, punchy sentences (even one-word sentences for emphasis) with longer explanatory ones. Use one-sentence paragraphs occasionally to make a point.
+4. NEVER use generic AI transition phrases. Banned transitions: "In conclusion", "Furthermore", "Moreover", "Additionally", "Let's dive in", "It's worth noting", "To summarize".
+5. EXTENDED BANISHED WORDS LIST: You are strictly forbidden from using: delve, tapestry, testament, landscape, crucial, vital, beacon, realm, unleash, robust, seamless, navigate, ultimate, paradigm, or "in today's digital age".
+
+CRITICAL FORMATTING & STRUCTURE RULES:
+1. Output PURE Markdown only. No HTML tags.
+2. SUBHEADINGS: You MUST use frequent, catchy side headings/subheadings (## and ###) to organize the content. Do not output massive walls of text without a heading to break them up.
+3. Real humans don't write perfectly symmetrical articles. Avoid having exactly three paragraphs under every single heading. Make some sections long and detailed, and others incredibly brief.
+4. Include double line breaks (\\n\\n) before and after EVERY heading, list, and paragraph.
+5. Code blocks MUST have the closing triple backticks (\`\`\`) on their own isolated, empty line.
+6. Keep relevant image tags ![alt](url) but discard useless logos or stock photos.
+7. At the end of EVERY main section, add a blockquote citation containing ONLY the link, like this: \`> [Title](URL)\`. Do not use the word "Source:".`;
+
+export type BlogTone = 'human' | 'professional' | 'executive' | 'academic';
+
+const TONE_PROMPTS: Record<BlogTone, string> = {
+  human: HUMANIZED_SYSTEM_PROMPT,
+  professional: `You are a professional technical writer. Write in a clear, authoritative, yet accessible tone. 
+Keep it business-professional but engaging. Avoid excessive jargon unless necessary. 
+Use standard formatting and clear headings.`,
+  executive: `You are a strategic consultant writing for a C-suite audience. Focus on high-level strategy, ROI, market impact, and digital transformation. 
+Use bullet points for key takeaways. Keep it concise, punchy, and results-oriented.`,
+  academic: `You are a researcher writing a detailed technical whitepaper. Use formal language, precise terminology, and a structured, logical flow. 
+Focus on depth, evidence, and comprehensive explanations.`
+};
+
+// ---------------------------------------------------------------------------
 // Groq client (lazy singleton)
 // ---------------------------------------------------------------------------
 
@@ -138,7 +173,7 @@ async function generateWithGroq(
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      temperature: 0.7,
+      temperature: 0.85, // Increased from 0.7 for more creative/human variance
       max_tokens: 4096,
     });
 
@@ -167,10 +202,11 @@ export interface BlogGenerationResult {
 // ---------------------------------------------------------------------------
 
 export async function generateFromUrl(
-  url: string
+  url: string,
+  tone: BlogTone = 'human'
 ): Promise<BlogGenerationResult> {
   console.log("\n" + "=".repeat(60));
-  console.log(`🚀 [URL Mode] ${url}`);
+  console.log(`🚀 [URL Mode] ${url} | Tone: ${tone}`);
   console.log("=".repeat(60));
 
   // Step 1: Scrape
@@ -189,24 +225,9 @@ export async function generateFromUrl(
 
   // Step 2: Slice & Generate
   const sliced = markdown.slice(0, URL_CONTENT_LIMIT);
+  
   // Step 3: Generate
   console.log(`🤖 [Step 3] Sending to Groq...`);
-
-  const systemPrompt = `You are an expert, highly experienced senior developer writing a technical blog post. 
-
-CRITICAL VOICE & TONE RULES:
-1. Write conversationally, as if you are explaining this to a colleague over coffee. Use active voice and contractions (e.g., "you'll", "we're", "don't").
-2. Vary your sentence lengths dramatically. Mix very short, punchy sentences with longer, detailed explanatory ones. 
-3. NEVER use generic AI transition phrases. Do not use: "In conclusion", "Furthermore", "Moreover", "Additionally", or "Let's dive in".
-4. BANISHED WORDS: You are strictly forbidden from using the following words: delve, tapestry, testament, landscape, crucial, vital, beacon, realm, or unleash.
-5. If explaining a complex concept, use a brief, relatable real-world analogy. 
-
-CRITICAL FORMATTING RULES:
-1. Output PURE Markdown only. No HTML tags.
-2. Include double line breaks (\\n\\n) before and after EVERY heading, list, and paragraph.
-3. Code blocks MUST have the closing triple backticks (\`\`\`) on their own isolated, empty line.
-4. Keep relevant image tags ![alt](url) but discard useless logos or stock photos.
-5. At the end of EVERY main section, add a blockquote citation containing ONLY the link, like this: \`> [Title](URL)\`. Do not use the word "Source:".`;
 
   const userPrompt = `Transform the following scraped content into a highly engaging, human-sounding tech blog post. 
 Remember to add ([Source](${url})) at the end of any paragraph that uses facts or concepts. Do not create a separate references block.
@@ -215,17 +236,15 @@ Original Source URL: ${url}
 Scraped Content:
 ${sliced}`;
 
+  const systemPrompt = TONE_PROMPTS[tone] || HUMANIZED_SYSTEM_PROMPT;
   const generated = await generateWithGroq(systemPrompt, userPrompt);
   let { title, body } = extractTitleAndBody(generated);
 
-  // Step 3: Fetch Extra Related Links for the Frontend Sidebar
-  console.log(`🔍 [Step 3] Fetching ${MAX_SIDEBAR_LINKS} related links for sidebar...`);
+  // Step 4: Fetch Extra Related Links for the Frontend Sidebar
+  console.log(`🔍 [Step 4] Fetching ${MAX_SIDEBAR_LINKS} related links for sidebar...`);
   const relatedLinks = await searchWithJina(title); // Search using the AI-generated title
   
   if (relatedLinks.length > 0) {
-    // We append this block at the very end. 
-    // Your frontend BlogRenderer regex will HIDE this text from the blog body, 
-    // but the sidebar regex will EXTRACT the links to display the preview cards!
     body += `\n\n## References\n`;
     relatedLinks.slice(0, MAX_SIDEBAR_LINKS).forEach(link => {
       body += `* [${link.title}](${link.url})\n`;
@@ -245,10 +264,11 @@ ${sliced}`;
 // ---------------------------------------------------------------------------
 
 export async function generateFromKeyword(
-  keyword: string
+  keyword: string,
+  tone: BlogTone = 'human'
 ): Promise<BlogGenerationResult> {
   console.log("\n" + "=".repeat(60));
-  console.log(`🚀 [Keyword Mode] "${keyword}"`);
+  console.log(`🚀 [Keyword Mode] "${keyword}" | Tone: ${tone}`);
   console.log("=".repeat(60));
 
   // Step 1: Search
@@ -282,37 +302,22 @@ export async function generateFromKeyword(
   // Step 3: Generate
   console.log(`🤖 [Step 3] Sending to Groq...`);
 
-  const systemPrompt = `You are an expert, highly experienced senior developer writing a technical blog post. 
-
-CRITICAL VOICE & TONE RULES:
-1. Write conversationally, as if you are explaining this to a colleague over coffee. Use active voice and contractions (e.g., "you'll", "we're", "don't").
-2. Vary your sentence lengths dramatically. Mix very short, punchy sentences with longer, detailed explanatory ones. 
-3. NEVER use generic AI transition phrases. Do not use: "In conclusion", "Furthermore", "Moreover", "Additionally", or "Let's dive in".
-4. BANISHED WORDS: You are strictly forbidden from using the following words: delve, tapestry, testament, landscape, crucial, vital, beacon, realm, or unleash.
-5. If explaining a complex concept, use a brief, relatable real-world analogy. 
-
-CRITICAL FORMATTING RULES:
-1. Output PURE Markdown only. No HTML tags.
-2. Include double line breaks (\\n\\n) before and after EVERY heading, list, and paragraph.
-3. Code blocks MUST have the closing triple backticks (\`\`\`) on their own isolated, empty line.
-4. Keep relevant image tags ![alt](url) but discard useless logos or stock photos.
-5. At the end of EVERY main section, add a blockquote citation containing ONLY the link, like this: \`> [Title](URL)\`. Do not use the word "Source:".`;
-
   const sourceBlocks = sources
     .map((s) => `Source URL: ${s.url}\nContent:\n${s.content}`)
     .join("\n\n---\n\n");
 
-  const userPrompt = `Write a comprehensive, engaging, human-sounding tech blog post about: "${keyword}".
+  const userPrompt = `Write a comprehensive and engaging blog post about: "${keyword}" using the requested tone. 
+Focus on what actually matters to the intended audience.
 
 Use the sources below as your research. Remember to add ([Source](SPECIFIC_URL)) at the end of any paragraph that uses facts or concepts. Do not create a separate references block.
 
 ${sourceBlocks}`;
 
+  const systemPrompt = TONE_PROMPTS[tone] || HUMANIZED_SYSTEM_PROMPT;
   const generated = await generateWithGroq(systemPrompt, userPrompt);
   let { title, body } = extractTitleAndBody(generated);
 
   // Step 4: Inject the related links for the frontend sidebar
-  // We use the full search results list we got in Step 1
   if (searchResults.length > 0) {
     body += `\n\n## References\n`;
     searchResults.slice(0, MAX_SIDEBAR_LINKS).forEach(link => {
@@ -329,7 +334,7 @@ ${sourceBlocks}`;
 }
 
 // ---------------------------------------------------------------------------
-// Utility
+// Utilities
 // ---------------------------------------------------------------------------
 
 function extractTitleAndBody(markdown: string): { title: string; body: string } {
@@ -348,4 +353,33 @@ function extractTitleAndBody(markdown: string): { title: string; body: string } 
 
   const body = lines.slice(bodyStartIndex).join("\n").trim();
   return { title, body: body || markdown };
+}
+
+export interface TocItem {
+  level: number;
+  text: string;
+  slug: string;
+}
+
+/**
+ * Extracts ## and ### headings from a markdown string to build a frontend Table of Contents
+ */
+export function extractTableOfContents(markdown: string): TocItem[] {
+  const headings: TocItem[] = [];
+  const regex = /^(#{2,3})\s+(.+)$/gm;
+  let match;
+
+  while ((match = regex.exec(markdown)) !== null) {
+    const level = match[1].length; 
+    const text = match[2].trim();
+    
+    const slug = text
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-");
+
+    headings.push({ level, text, slug });
+  }
+
+  return headings;
 }

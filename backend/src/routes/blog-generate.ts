@@ -51,15 +51,16 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { type, query } = req.body as {
+      const { type, query, tone } = req.body as {
         type: "keyword" | "url";
         query: string;
+        tone?: any;
       };
 
       const authorId = req.user?.id || null;
 
       console.log(
-        `🤖 Blog generation started: type=${type}, query="${query.slice(0, 80)}..."`
+        `🤖 Blog generation started: type=${type}, query="${query.slice(0, 80)}...", tone=${tone}`
       );
 
       let result;
@@ -76,11 +77,11 @@ router.post(
           });
         }
         console.log("url one")
-        result = await generateFromUrl(query);
+        result = await generateFromUrl(query, tone);
 
       } else {
         console.log("keyword one")
-        result = await generateFromKeyword(query);
+        result = await generateFromKeyword(query, tone);
 
       }
 

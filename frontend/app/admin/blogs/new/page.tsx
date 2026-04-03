@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Link as LinkIcon, Edit3, Loader2, Save, ArrowLeft, Terminal } from 'lucide-react';
+import { Sparkles, Link as LinkIcon, Edit3, Loader2, Save, ArrowLeft, Terminal, User, Briefcase, BarChart, GraduationCap, ChevronDown } from 'lucide-react';
 import TipTapEditor from '@/components/TipTapEditor';
 import BlogRenderer from '@/components/BlogRenderer';
 import { apiClient } from '@/lib/api';
@@ -17,6 +17,17 @@ export default function NewBlogPage() {
   const [mode, setMode] = useState<GeneratorMode>('manual');
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiQuery, setAiQuery] = useState('');
+  const [selectedTone, setSelectedTone] = useState<string>('human');
+  const [isToneDropdownOpen, setIsToneDropdownOpen] = useState(false);
+  
+  const TONES = [
+    { id: 'human', label: 'Pragmatic Developer', icon: User, desc: 'Conversational & Humanized' },
+    { id: 'professional', label: 'Balanced Corporate', icon: Briefcase, desc: 'Official & Technical' },
+    { id: 'executive', label: 'C-Suite Insight', icon: BarChart, desc: 'Strategic & High-Level' },
+    { id: 'academic', label: 'Neural Scholar', icon: GraduationCap, desc: 'Formal & Detailed' },
+  ];
+
+  const currentTone = TONES.find(t => t.id === selectedTone) || TONES[0];
 
   // ── AI Review State ──
   const [isReviewing, setIsReviewing] = useState(false);
@@ -67,7 +78,7 @@ export default function NewBlogPage() {
       const type = mode as 'keyword' | 'url';
 
       // CALL AI API (Backend returns Markdown)
-      const response = await apiClient.generateBlog(type, aiQuery.trim());
+      const response = await apiClient.generateBlog(type, aiQuery.trim(), selectedTone);
       const blog = response.blog;
 
       // Populate form with generated content (Native Markdown)
@@ -178,12 +189,15 @@ export default function NewBlogPage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            className="bg-slate-900 p-10 rounded-[3rem] mb-16 relative overflow-hidden group shadow-2xl shadow-primary-900/20"
+            className="bg-slate-900 p-10 rounded-[3rem] mb-16 relative group shadow-2xl shadow-primary-900/20"
           >
-            <div className="absolute top-0 right-0 w-[50%] h-full bg-primary-600/10 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
+            {/* 🛡️ Overflow-hidden wrapper for background effects ONLY */}
+            <div className="absolute inset-0 rounded-[3rem] overflow-hidden pointer-events-none">
+               <div className="absolute top-0 right-0 w-[50%] h-full bg-primary-600/10 blur-[120px] rounded-full translate-x-1/2 -translate-y-1/2" />
+            </div>
 
             {isGenerating && (
-              <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center z-20">
+              <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center z-20 rounded-[3rem]">
                 <div className="flex gap-2.5 mb-6">
                   {[1, 2, 3].map(i => (
                     <motion.div
@@ -209,6 +223,75 @@ export default function NewBlogPage() {
                     ? 'Enter deep topic references to initiate cross-platform semantic synthesis. Our architecture handles formatting.'
                     : 'Analyze and redraft source authority intelligence using URL references for unique narrative retrieval.'}
                 </p>
+
+                {/* Tone Matrix Selection - Premium Dropdown */}
+                <div className="mt-8 relative max-w-sm z-20">
+                  <label className="block text-[10px] font-black text-primary-400 uppercase tracking-widest mb-3 ml-2 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary-600 animate-pulse" />
+                    Neural Voicing Protocol
+                  </label>
+                  
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsToneDropdownOpen(!isToneDropdownOpen)}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold flex items-center justify-between hover:bg-white/10 transition-all outline-none focus:ring-2 focus:ring-primary-600/50 shadow-inner group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-8 h-8 rounded-xl bg-primary-600/20 text-primary-400 flex items-center justify-center group-hover:bg-primary-600 group-hover:text-white transition-all shadow-lg shadow-primary-600/5">
+                          <currentTone.icon size={16} />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm font-black tracking-tight leading-none">{currentTone.label}</p>
+                          <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none mt-1.5">{currentTone.desc}</p>
+                        </div>
+                      </div>
+                      <ChevronDown size={18} className={`text-slate-500 transition-transform duration-300 ${isToneDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {isToneDropdownOpen && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setIsToneDropdownOpen(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="absolute top-full left-0 right-0 mt-3 bg-slate-950 border border-white/10 rounded-[2rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] overflow-hidden z-[60] p-2 backdrop-blur-3xl"
+                          >
+                            {TONES.map((t) => (
+                              <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedTone(t.id);
+                                  setIsToneDropdownOpen(false);
+                                }}
+                                className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
+                                  selectedTone === t.id 
+                                    ? 'bg-primary-600 text-white shadow-xl shadow-primary-600/20' 
+                                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                                }`}
+                              >
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                                  selectedTone === t.id ? 'bg-white/20' : 'bg-white/5'
+                                }`}>
+                                  <t.icon size={20} />
+                                </div>
+                                <div className="text-left">
+                                  <p className="text-sm font-black tracking-tight">{t.label}</p>
+                                  <p className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${
+                                    selectedTone === t.id ? 'text-primary-100' : 'text-slate-500'
+                                  }`}>{t.desc}</p>
+                                </div>
+                              </button>
+                            ))}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -217,7 +300,7 @@ export default function NewBlogPage() {
                 type="text"
                 value={aiQuery}
                 onChange={(e) => setAiQuery(e.target.value)}
-                placeholder={mode === 'keyword' ? "Topic: Future of Neural Architecture..." : "Authority Source: https://..."}
+                placeholder={mode === 'keyword' ? "" : "Authority Source: https://..."}
                 className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-primary-600 outline-none transition-all font-medium"
                 disabled={isGenerating}
               />
@@ -305,7 +388,7 @@ export default function NewBlogPage() {
                     Score: {reviewReport.overall_score}/100
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
                     { name: 'Structure Check', key: 'structure_check' },

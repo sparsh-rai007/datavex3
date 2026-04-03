@@ -129,8 +129,8 @@ class ApiClient {
     return response.data;
   }
 
-  async generateBlog(type: 'keyword' | 'url', query: string) {
-    const response = await this.client.post('/blog/generate', { type, query });
+  async generateBlog(type: 'keyword' | 'url', query: string, tone?: string) {
+    const response = await this.client.post('/blog/generate', { type, query, tone });
     return response.data;
   }
 

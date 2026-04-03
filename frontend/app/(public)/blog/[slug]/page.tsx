@@ -108,6 +108,9 @@ export default function BlogDetailPage() {
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   
+  // State for recommended blogs
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  
   // NEW: State to track if the sidebar "Show all" button is clicked
   const [showAllRefs, setShowAllRefs] = useState(false);
 
@@ -130,6 +133,18 @@ export default function BlogDetailPage() {
             return;
           }
           setBlog(data);
+          
+          // Fetch recommendations (other blogs)
+          try {
+            const allBlogs = await apiClient.getPublicBlogs();
+            // Filter current blog and take 3
+            const filtered = (allBlogs || [])
+              .filter((b: any) => b.slug !== slug)
+              .slice(0, 3);
+            setRecommendations(filtered);
+          } catch (recErr) {
+            console.error("Failed to load recommendations", recErr);
+          }
         }
       } catch (err) {
         console.error("Failed to load blog", err);
@@ -328,6 +343,54 @@ export default function BlogDetailPage() {
               </div>
             </div>
           </div>
+          
+          {/* Recommended Intelligence Matrix */}
+          {recommendations.length > 0 && (
+            <div className="mt-32 pt-24 border-t border-slate-100">
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+                <div>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight">More Blogs</h2>
+                 </div>
+                <div className="w-1.5 h-1.5 rounded-full bg-primary-600 animate-pulse hidden md:block" />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {recommendations.map((rec, idx) => (
+                  <motion.div
+                    key={rec.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    onClick={() => router.push(`/blog/${rec.slug}`)}
+                    className="group cursor-pointer bg-slate-50/50 rounded-[2.5rem] border border-slate-50 p-8 hover:bg-white hover:border-primary-100 hover:shadow-2xl hover:shadow-primary-600/5 transition-all duration-500 flex flex-col"
+                  >
+                    <div className="flex items-center gap-3 mb-6">
+                      
+                      <div className="h-px flex-1 bg-slate-100/50" />
+                    </div>
+                    
+                    <h3 className="text-xl font-black text-slate-900 mb-4 group-hover:text-primary-600 transition-colors line-clamp-2 leading-tight tracking-tight">
+                      {rec.title}
+                    </h3>
+                    
+                    <p className="text-slate-400 font-medium text-sm mb-8 line-clamp-3 leading-relaxed">
+                      {rec.excerpt}
+                    </p>
+                    
+                    <div className="mt-auto flex items-center justify-between pt-6 border-t border-slate-100/50">
+                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{rec.read_time || "5 Min Read"}</span>
+                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary-600 shadow-sm group-hover:bg-primary-600 group-hover:text-white transition-all">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Global Footer Context */}
           <div className="mt-40 pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
