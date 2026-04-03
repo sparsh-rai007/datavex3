@@ -8,6 +8,7 @@ export async function initBlogsTable() {
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       title VARCHAR(255) NOT NULL,
       slug VARCHAR(255) UNIQUE NOT NULL,
+      type VARCHAR(30) DEFAULT 'blog',
       excerpt TEXT,
       content TEXT,
       featured_image TEXT,

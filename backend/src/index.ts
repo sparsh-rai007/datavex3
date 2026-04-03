@@ -5,6 +5,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from "path";
+import cron from "node-cron";
 
 import { errorHandler } from "./middleware/errorHandler";
 import { rateLimiter } from "./middleware/rateLimiter";
@@ -22,6 +23,7 @@ import jobApplicationsRoutes from "./routes/job-applications";
 import aiRoutes from "./routes/ai";
 import adminRoutes from "./routes/admin";
 import adminUsersRoutes from "./routes/admin-users";
+import adminNewsletterRoutes from "./routes/admin-newsletter";
 import bookingsRouter from "./routes/bookings";
 import adminBookingsRoute from "./routes/admin-bookings";
 import blogRoutes from "./routes/blogs";
@@ -30,6 +32,7 @@ import blogReviewRoutes from "./routes/blog-review";
 import socialRoutes from "./routes/social";
 import calRouter from "./routes/cal";
 import calWebhookRoute from "./routes/cal-webhook";
+import { generateDailyNewsletter } from "./services/dailyNewsletterService";
 
 dotenv.config();
 
@@ -101,6 +104,7 @@ app.use("/api/ai", aiRoutes);
 
 app.use("/api/admin", authenticateToken, adminRoutes);
 app.use("/api/admin/users", authenticateToken, requireRole("admin"), adminUsersRoutes);
+app.use("/api/admin/newsletter", adminNewsletterRoutes);
 
 app.use("/api/bookings", bookingsRouter);
 app.use("/api/admin/bookings", adminBookingsRoute);
@@ -131,6 +135,16 @@ const startServer = async () => {
     await connectDB();
     console.log("? Database connected");
 
+    cron.schedule("0 3 * * *", async () => {
+      console.log("Starting daily newsletter generation...");
+      try {
+        await generateDailyNewsletter();
+      } catch (error) {
+        console.error("Failed daily newsletter generation:", error);
+      }
+    });
+    console.log("Daily newsletter cron scheduled for 03:00 server time");
+
     app.listen(Number(PORT), "0.0.0.0", () => {
       console.log(`?? Backend listening on http://0.0.0.0:${PORT}`);
     });
@@ -141,4 +155,3 @@ const startServer = async () => {
 };
 
 startServer();
-

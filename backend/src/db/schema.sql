@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS blogs (
 
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) UNIQUE NOT NULL,
+    type VARCHAR(30) DEFAULT 'blog',
 
     excerpt TEXT,
     content TEXT,
@@ -232,4 +233,3 @@ CREATE TRIGGER update_jobs_updated_at BEFORE UPDATE ON jobs
 DROP TRIGGER IF EXISTS update_job_applications_updated_at ON job_applications;
 CREATE TRIGGER update_job_applications_updated_at BEFORE UPDATE ON job_applications
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-

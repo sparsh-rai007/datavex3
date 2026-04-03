@@ -40,6 +40,13 @@ async function migrate() {
         ) THEN
           ALTER TABLE blogs ADD COLUMN source_reference TEXT;
         END IF;
+
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'blogs' AND column_name = 'type'
+        ) THEN
+          ALTER TABLE blogs ADD COLUMN type VARCHAR(30) DEFAULT 'blog';
+        END IF;
       END $$;
     `);
     console.log('✅ Blog generation columns ensured');
@@ -103,4 +110,3 @@ if (require.main === module) {
 }
 
 export { migrate };
-
