@@ -51,7 +51,10 @@ export default function Navigation() {
     { href: '/consultation', label: 'Consultation' },
   ];
 
-  const isActive = (href: string) => pathname === href || pathname?.startsWith(href);
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/';
+    return pathname === href || pathname?.startsWith(`${href}/`);
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white">

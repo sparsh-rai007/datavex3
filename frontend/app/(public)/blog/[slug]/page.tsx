@@ -324,14 +324,7 @@ export default function BlogDetailPage() {
                   <RelatedReferences topic={blog.title} />
                 </div>
 
-                <div className="mt-8 p-6 rounded-3xl bg-slate-50 border border-slate-100">
-                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Node Integrity Status</h3>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                    <span className="text-xs font-bold text-slate-900">Verified Authentic</span>
-                  </div>
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed">This architectural document has been audited for hallucinations and structural integrity via neural pipelines.</p>
-                </div>
+               
               </div>
             </div>
           </div>
