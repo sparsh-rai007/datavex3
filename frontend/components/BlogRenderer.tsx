@@ -15,7 +15,13 @@ function cleanMarkdown(rawText: string) {
     .replace(/\[\s*\]\s*\(/g, '[')
     // Remove "Source: " prefix from blockquotes for a cleaner minimalist feel
     .replace(/^>\s*Source:\s*/gim, '> ')
-    .replace(/\n## References[\s\S]*$/g, '');
+    .replace(/\n## References[\s\S]*$/g, '')
+    // 5. NEW: Fix unclosed code blocks by forcing text after closing backticks to a new line
+    // This finds ``` followed by spaces and text, and pushes the text down
+    .replace(/```[ \t]+([^`\n]+)/g, '```\n\n$1')
+    // 6. NEW: Ensure closing backticks aren't stuck to the end of a line of code
+    // This finds a character immediately followed by ``` and pushes the backticks down
+    .replace(/([^\n])```(?!\w)/g, '$1\n```\n\n');
 }
 
 export default function BlogRenderer({ content }: { content: string }) {
