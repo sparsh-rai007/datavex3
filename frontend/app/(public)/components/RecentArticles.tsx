@@ -11,9 +11,9 @@ export default function RecentArticles() {
     if (typeof window === 'undefined') {
       return;
     }
-    
+
     setMounted(true);
-    
+
     // Use requestAnimationFrame to ensure this runs only in the browser
     // This completely prevents Next.js from detecting the fetch during static generation
     const rafId = requestAnimationFrame(() => {
@@ -22,8 +22,8 @@ export default function RecentArticles() {
           try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL;
             if (!apiUrl) return;
-            
-            const response = await fetch(`${apiUrl}/api/blogs/latest`);
+
+            const response = await fetch(`${apiUrl}/blogs/latest`);
             if (response.ok) {
               const data = await response.json();
               setArticles(data);
@@ -33,11 +33,11 @@ export default function RecentArticles() {
             setArticles([]);
           }
         };
-        
+
         loadArticles();
       });
     });
-    
+
     return () => cancelAnimationFrame(rafId);
   }, []);
 

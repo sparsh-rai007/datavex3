@@ -49,34 +49,35 @@ export default function HoverLink({ href, title, children }: any) {
 
       {/* Predictive Popover Card */}
       <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[100] w-[340px] translate-y-2 group-hover:translate-y-0 pointer-events-none">
-        <div className="bg-[#1A1A1A] border border-white/10 rounded-2xl p-5 shadow-2xl shadow-black/50 backdrop-blur-xl">
-           <h4 className="text-white text-sm font-bold leading-relaxed mb-3 line-clamp-2">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl shadow-slate-200/80 ring-1 ring-slate-900/5">
+           <h4 className="text-slate-900 text-[15px] font-bold leading-snug mb-3 line-clamp-2">
              {children}
            </h4>
            
-           <p className="text-slate-400 text-xs mb-5 line-clamp-4 leading-relaxed font-medium">
+           <p className="text-slate-500 text-[12px] mb-6 line-clamp-4 leading-relaxed font-medium">
              {livePreview.description || title || "External intelligence node designated for neural cross-referencing. Gathering target material context..."}
            </p>
 
-           <div className="flex items-center justify-between pt-4 border-t border-white/10">
+           <div className="flex items-center justify-between pt-5 border-t border-slate-100">
              <div className="flex items-center gap-3">
-               <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center border border-white/10 overflow-hidden shrink-0">
+               <div className="w-6 h-6 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200 overflow-hidden shrink-0 shadow-sm">
                  {livePreview.image ? (
                    <img src={livePreview.image} className="w-full h-full object-cover" alt="" />
                  ) : (
                    <img src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`} className="w-3.5 h-3.5" alt="" />
                  )}
                </div>
-               <span className="text-[10px] text-slate-300 font-black tracking-widest uppercase truncate max-w-[150px]">{hostname}</span>
+               <span className="text-[11px] text-slate-400 font-bold tracking-widest uppercase truncate max-w-[150px]">{hostname}</span>
              </div>
-             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 text-[9px] font-black text-white/50 tracking-widest uppercase shrink-0">
+             <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 text-[10px] font-bold text-slate-500 tracking-widest uppercase shrink-0 border border-slate-100">
                <span>Expand</span>
-               <ExternalLink size={10} className="text-primary-400" />
+               <ExternalLink size={10} className="text-primary-500" />
              </div>
            </div>
         </div>
         {/* Indicator Triangle */}
-        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-0 h-0 border-l-[6px] border-r-[6px] border-l-transparent border-r-transparent border-t-[6px] border-t-[#1A1A1A]" />
+        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-0 h-0 border-l-[6px] border-r-[6px] border-l-transparent border-r-transparent border-t-[6px] border-t-white" />
+        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-0 h-0 border-l-[6px] border-r-[6px] border-l-transparent border-r-transparent border-t-[6px] border-t-slate-200 -z-1" />
       </div>
     </div>
   );

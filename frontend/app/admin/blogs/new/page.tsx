@@ -31,7 +31,9 @@ export default function NewBlogPage() {
       external_url: '',
       meta_title: '',
       meta_description: '',
-      meta_keywords: ''
+      meta_keywords: '',
+      generation_method: 'manual',
+      source_reference: ''
     }
   });
 
@@ -72,6 +74,8 @@ export default function NewBlogPage() {
       setValue('title', blog.title || '');
       setValue('slug', blog.slug || generateSlug(blog.title || ''));
       setValue('excerpt', '');
+      setValue('generation_method', blog.generation_method || 'manual');
+      setValue('source_reference', blog.source_reference || '');
       setContent(blog.content || '');
 
       // Trigger automatic review immediately on the new draft

@@ -114,6 +114,8 @@ You MUST output your review strictly in the following JSON format. If a check pa
         tone_check:          normaliseCheck(parsed?.tone_check),
         hallucination_check: normaliseCheck(parsed?.hallucination_check),
         reference_check:     normaliseCheck(parsed?.reference_check),
+        human_tone_check:    normaliseCheck(parsed?.human_tone_check),
+        content_check:       normaliseCheck(parsed?.content_check),
         overall_score:       typeof parsed?.overall_score === "number"
           ? Math.min(100, Math.max(1, Math.round(parsed.overall_score)))
           : 50,

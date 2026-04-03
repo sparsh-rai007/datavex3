@@ -1,16 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import {
   ArrowLeft,
   Share2,
   Bookmark,
-  Calendar,
-  Clock,
-  Share2 as ShareIcon
 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { apiClient } from '@/lib/api';
@@ -18,13 +13,103 @@ import PublicWrapper from '../../wrapper';
 import BlogRenderer from '@/components/BlogRenderer';
 import RelatedReferences from '@/components/RelatedReferences';
 
+// ---------------------------------------------------------------------------
+// Preview Node Card Component (Fetches real website metadata)
+// ---------------------------------------------------------------------------
+const PreviewNodeCard = ({ url, title }: { url: string; title: string }) => {
+  const [meta, setMeta] = useState({
+    image: `https://image.thum.io/get/width/256/crop/256/${url}`, // Fallback screenshot
+    description: 'Loading preview data...',
+  });
+
+  let hostname = 'external-source.com';
+  try {
+    hostname = new URL(url).hostname.replace('www.', '');
+  } catch (e) {}
+
+  useEffect(() => {
+    // Fetch real website metadata via free Microlink API
+    fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === 'success') {
+          setMeta({
+            image: data.data?.image?.url || data.data?.logo?.url || meta.image,
+            description: data.data?.description || 'Reference documentation and guides.',
+          });
+        }
+      })
+      .catch(() => {
+        setMeta((prev) => ({ ...prev, description: 'External reference link.' }));
+      });
+  }, [url]);
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-start gap-4 p-4 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group cursor-pointer"
+    >
+      {/* Left Text Content */}
+      <div className="flex-1 min-w-0 flex flex-col justify-between h-[84px]">
+        <div>
+          <h4 className="text-[14px] font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors">
+            {title}
+          </h4>
+          <p className="text-[12px] text-slate-500 line-clamp-2 mt-1 leading-tight">
+            {meta.description}
+          </p>
+        </div>
+
+        {/* Bottom Source Row */}
+        <div className="flex items-center gap-2 mt-auto pt-2">
+          <div className="w-4 h-4 rounded-full bg-slate-100 flex items-center justify-center shrink-0 overflow-hidden p-0.5 border border-slate-200">
+            <img
+              src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=32`}
+              className="w-full h-full object-cover rounded-full"
+              alt=""
+            />
+          </div>
+          <span className="text-[11px] font-bold text-slate-400 truncate uppercase tracking-widest">
+            {hostname}
+          </span>
+          <div className="ml-auto text-slate-300 opacity-50 group-hover:opacity-100 transition-opacity">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="1.5" />
+              <circle cx="12" cy="5" r="1.5" />
+              <circle cx="12" cy="19" r="1.5" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Image Thumbnail */}
+      <div className="w-[84px] h-[84px] shrink-0 rounded-[14px] bg-slate-50 overflow-hidden border border-slate-100 relative shadow-sm">
+        <img
+          src={meta.image}
+          alt="Preview thumbnail"
+          className="w-full h-full object-cover opacity-100 group-hover:scale-105 transition-transform duration-500"
+        />
+      </div>
+    </a>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Main Page Component
+// ---------------------------------------------------------------------------
 export default function BlogDetailPage() {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
-  
+
   const [blog, setBlog] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  
+  // NEW: State to track if the sidebar "Show all" button is clicked
+  const [showAllRefs, setShowAllRefs] = useState(false);
 
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -34,6 +119,7 @@ export default function BlogDetailPage() {
   });
 
   useEffect(() => {
+    setMounted(true);
     async function loadBlog() {
       try {
         const data = await apiClient.getPublicBlog(slug);
@@ -54,6 +140,14 @@ export default function BlogDetailPage() {
     loadBlog();
     window.scrollTo(0, 0);
   }, [slug, router]);
+
+  // NEW: Extract references efficiently using useMemo so it doesn't recalculate on scroll
+  const referencesMatch = useMemo(() => {
+    if (!blog?.content) return [];
+    const matches = Array.from(blog.content.matchAll(/\[(.*?)\]\((https?:\/\/[^\)]+)\)/g));
+    const uniqueMap = new Map(matches.map((m: any) => [m[2], { title: m[1], url: m[2] }]));
+    return Array.from(uniqueMap.values());
+  }, [blog?.content]);
 
   if (loading) {
     return (
@@ -78,20 +172,20 @@ export default function BlogDetailPage() {
               </div>
             </div>
 
-             {/* Content Skeleton */}
-             <div className="animate-pulse space-y-8">
-                <div className="w-full h-8 bg-slate-200 rounded-full"></div>
-                <div className="w-full h-4 bg-slate-200 rounded-full"></div>
-                <div className="w-5/6 h-4 bg-slate-200 rounded-full"></div>
-                <div className="w-full h-4 bg-slate-200 rounded-full"></div>
-                <div className="w-4/5 h-4 bg-slate-200 rounded-full"></div>
-                
-                <div className="w-full h-64 bg-slate-200 rounded-[3rem] mt-10 mb-10"></div>
-                
-                <div className="w-5/6 h-4 bg-slate-200 rounded-full"></div>
-                <div className="w-full h-4 bg-slate-200 rounded-full"></div>
-                <div className="w-4/5 h-4 bg-slate-200 rounded-full"></div>
-             </div>
+            {/* Content Skeleton */}
+            <div className="animate-pulse space-y-8">
+              <div className="w-full h-8 bg-slate-200 rounded-full"></div>
+              <div className="w-full h-4 bg-slate-200 rounded-full"></div>
+              <div className="w-5/6 h-4 bg-slate-200 rounded-full"></div>
+              <div className="w-full h-4 bg-slate-200 rounded-full"></div>
+              <div className="w-4/5 h-4 bg-slate-200 rounded-full"></div>
+
+              <div className="w-full h-64 bg-slate-200 rounded-[3rem] mt-10 mb-10"></div>
+
+              <div className="w-5/6 h-4 bg-slate-200 rounded-full"></div>
+              <div className="w-full h-4 bg-slate-200 rounded-full"></div>
+              <div className="w-4/5 h-4 bg-slate-200 rounded-full"></div>
+            </div>
           </div>
         </div>
       </PublicWrapper>
@@ -109,8 +203,6 @@ export default function BlogDetailPage() {
       </PublicWrapper>
     );
   }
-
-
 
   return (
     <PublicWrapper>
@@ -160,83 +252,91 @@ export default function BlogDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 relative">
             <div className="lg:col-span-8">
 
-          {/* Narrative Context */}
-          <div className="flex items-center gap-6 mb-16 py-8 border-y border-slate-50">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Author Trace</span>
-              <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{blog.author_name || "DataVex Architect"}</span>
-            </div>
-            <div className="w-px h-8 bg-slate-100" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Retrieval Date</span>
-              <span className="text-xs font-black text-slate-600 uppercase tracking-widest">{new Date(blog.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-            </div>
-          </div>
+              {/* Narrative Context */}
+              <div className="flex items-center gap-6 mb-16 py-8 border-y border-slate-50">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Author Trace</span>
+                  <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{blog.author_name || "DataVex Architect"}</span>
+                </div>
+                <div className="w-px h-8 bg-slate-100" />
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Retrieval Date</span>
+                  <span className="text-xs font-black text-slate-600 uppercase tracking-widest">
+                    {mounted ? new Date(blog.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ""}
+                  </span>
+                </div>
+              </div>
 
-          {/* Featured Matrix Image */}
-          {blog.featured_image && (
-            <div className="mb-20 rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/50 group">
-              <img
-                src={blog.featured_image}
-                alt={blog.title}
-                className="w-full h-auto max-h-[500px] object-cover transition-transform duration-1000 group-hover:scale-105"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-          )}
-
-          {/* Rendered Intelligence Matrix */}
-          <BlogRenderer content={blog.content || ''} />
-        </div>
-
-        {/* Dynamic Context Sidebar */}
-        <div className="lg:col-span-4 hidden lg:block border-l border-slate-100 pl-10">
-          <div className="sticky top-32">
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary-600 animate-pulse" />
-              Correlated External Nodes
-            </h3>
-            
-            <div className="space-y-6">
-              {Array.from(new Map(Array.from((blog.content || '').matchAll(/\[(.*?)\]\((https?:\/\/[^\)]+)\)/g)).map((m: any) => [m[2], { title: m[1], url: m[2] }])).values()).map((ref: any, idx) => {
-                let hostname = 'external-source.com';
-                try { hostname = new URL(ref.url).hostname.replace('www.', ''); } catch (e) {}
-
-                return (
-                  <a key={idx} href={ref.url} target="_blank" rel="noopener noreferrer" className="block group">
-                    <div className="flex items-start gap-4">
-                      <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 mt-1 shadow-sm group-hover:bg-primary-50 group-hover:border-primary-100 transition-all">
-                        <img src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=32`} className="w-4 h-4" alt="" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-slate-900 leading-snug group-hover:text-primary-600 transition-colors line-clamp-2">{ref.title}</h4>
-                        <span className="text-[10px] text-slate-400 font-medium tracking-widest uppercase mt-2 block group-hover:text-primary-400 transition-colors">{hostname}</span>
-                      </div>
-                    </div>
-                  </a>
-                );
-              })}
-
-              {Array.from((blog.content || '').matchAll(/\[(.*?)\]\((https?:\/\/[^\)]+)\)/g)).length === 0 && (
-                <p className="text-xs font-medium text-slate-400 italic">No external references detected in this intelligence node.</p>
+              {/* Featured Matrix Image */}
+              {blog.featured_image && (
+                <div className="mb-20 rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/50 group">
+                  <img
+                    src={blog.featured_image}
+                    alt={blog.title}
+                    className="w-full h-auto max-h-[500px] object-cover transition-transform duration-1000 group-hover:scale-105"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
               )}
+
+              {/* Rendered Intelligence Matrix */}
+              <BlogRenderer content={blog.content || ''} />
             </div>
 
-            <RelatedReferences topic={blog.title} />
+            {/* Dynamic Context Sidebar */}
+            <div className="lg:col-span-4 hidden lg:block border-l border-slate-100 pl-10">
+              <div className="sticky top-32">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary-600 animate-pulse" />
+                  Correlated External Nodes
+                </h3>
 
-            <div className="mt-8 p-6 rounded-3xl bg-slate-50 border border-slate-100">
-               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Node Integrity Status</h3>
-               <div className="flex items-center gap-3 mb-2">
-                 <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                 <span className="text-xs font-bold text-slate-900">Verified Authentic</span>
-               </div>
-               <p className="text-xs text-slate-500 font-medium leading-relaxed">This architectural document has been audited for hallucinations and structural integrity via neural pipelines.</p>
+                {/* --- UPDATED LIGHT THEME UI --- */}
+                <div className="bg-white rounded-[24px] shadow-xl border border-slate-100 overflow-hidden">
+                  <div className="flex flex-col">
+                    {/* NEW: Slice based on showAllRefs state */}
+                    {(showAllRefs ? referencesMatch : referencesMatch.slice(0, 3)).map((ref: any, idx) => (
+                      <PreviewNodeCard key={idx} url={ref.url} title={ref.title} />
+                    ))}
+
+                    {referencesMatch.length === 0 && (
+                      <p className="text-xs font-medium text-slate-400 italic p-6 text-center">
+                        No external references detected.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Show All Button - Now Functional */}
+                  {referencesMatch.length > 3 && (
+                    <div className="p-3 bg-slate-50/50">
+                      <button 
+                        onClick={() => setShowAllRefs(!showAllRefs)}
+                        className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all"
+                      >
+                        {showAllRefs ? "Collapse Matrix" : `Analyze All Nodes (${referencesMatch.length})`}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {/* --- END EXACT UI MATCH --- */}
+
+                <div className="mt-8">
+                  <RelatedReferences topic={blog.title} />
+                </div>
+
+                <div className="mt-8 p-6 rounded-3xl bg-slate-50 border border-slate-100">
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Node Integrity Status</h3>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                    <span className="text-xs font-bold text-slate-900">Verified Authentic</span>
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">This architectural document has been audited for hallucinations and structural integrity via neural pipelines.</p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Global Footer Context */}
+          {/* Global Footer Context */}
           <div className="mt-40 pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">© {new Date().getFullYear()} DATAVEX.ai — ALL RIGHTS RESERVED.</p>
             <div className="flex gap-8">

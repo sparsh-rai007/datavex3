@@ -27,7 +27,8 @@ const JINA_SEARCH_PREFIX = "https://s.jina.ai/";
 /** Context limits — generous enough to capture images + code, but safe for 128K ctx */
 const URL_CONTENT_LIMIT = 12_000; // single URL mode
 const KEYWORD_PER_SOURCE_LIMIT = 4_000; // per source in keyword mode
-const KEYWORD_MAX_SOURCES = 5;      // search up to 5, use what responds
+const KEYWORD_MAX_SCRAPE_SOURCES = 3; // Only scrape top 3 for speed and context limit
+const MAX_SIDEBAR_LINKS = 8; // Number of related links to fetch for the frontend sidebar
 
 // ---------------------------------------------------------------------------
 // Groq client (lazy singleton)
@@ -51,7 +52,6 @@ function getGroqClient(): Groq {
 
 /**
  * Fetch a URL's content as clean Markdown via Jina Reader.
- * Jina automatically extracts code blocks and images into Markdown format.
  */
 async function fetchMarkdownFromUrl(url: string): Promise<string> {
   const headers: Record<string, string> = {
@@ -69,10 +69,15 @@ async function fetchMarkdownFromUrl(url: string): Promise<string> {
   return typeof response.data === "string" ? response.data : String(response.data);
 }
 
+export interface SearchResult {
+  title: string;
+  url: string;
+}
+
 /**
- * Search for relevant URLs via Jina Search.
+ * Search for relevant URLs via Jina Search. Returns an array of Titles and URLs.
  */
-async function searchWithJina(query: string): Promise<string[]> {
+async function searchWithJina(query: string): Promise<SearchResult[]> {
   const headers: Record<string, string> = {
     Accept: "application/json",
     "X-Return-Format": "json",
@@ -81,28 +86,34 @@ async function searchWithJina(query: string): Promise<string[]> {
     headers["Authorization"] = `Bearer ${JINA_API_KEY}`;
   }
 
-  const response = await axios.get(
-    `${JINA_SEARCH_PREFIX}${encodeURIComponent(query)}`,
-    { headers, timeout: 30_000 }
-  );
+  try {
+    const response = await axios.get(
+      `${JINA_SEARCH_PREFIX}${encodeURIComponent(query)}`,
+      { headers, timeout: 30_000 }
+    );
 
-  const data = response.data;
+    const data = response.data;
 
-  // Jina search returns { data: [{ url, title, content }, ...] }
-  if (data?.data && Array.isArray(data.data)) {
-    return data.data
-      .slice(0, KEYWORD_MAX_SOURCES)
-      .map((item: { url?: string }) => item.url)
-      .filter(Boolean) as string[];
-  }
+    // Jina search returns { data: [{ url, title, content }, ...] }
+    if (data?.data && Array.isArray(data.data)) {
+      return data.data
+        .filter((item: any) => item.url && !item.url.includes("jina.ai"))
+        .map((item: any) => ({
+          title: item.title || "Related Resource",
+          url: item.url
+        }));
+    }
 
-  // Fallback: parse URLs from raw text response
-  if (typeof data === "string") {
-    const urlRegex = /https?:\/\/[^\s)>\]"']+/g;
-    const matches = data.match(urlRegex) || [];
-    return matches
-      .filter((u: string) => !u.includes("jina.ai"))
-      .slice(0, KEYWORD_MAX_SOURCES);
+    // Fallback: parse URLs from raw text response if JSON fails
+    if (typeof data === "string") {
+      const urlRegex = /https?:\/\/[^\s)>\]"']+/g;
+      const matches = data.match(urlRegex) || [];
+      return matches
+        .filter((u: string) => !u.includes("jina.ai"))
+        .map((u: string) => ({ title: "Related Resource", url: u }));
+    }
+  } catch (err: any) {
+    console.warn(`⚠️ Jina Search warning: ${err.message}`);
   }
 
   return [];
@@ -141,7 +152,7 @@ async function generateWithGroq(
 }
 
 // ---------------------------------------------------------------------------
-// Public API
+// Interfaces
 // ---------------------------------------------------------------------------
 
 export interface BlogGenerationResult {
@@ -169,7 +180,6 @@ export async function generateFromUrl(
     markdown = await fetchMarkdownFromUrl(url);
     console.log(`✅ [Step 1] ${markdown.length.toLocaleString()} chars received`);
   } catch (err: any) {
-    console.error(`❌ [Step 1] Scrape failed: ${err.message}`);
     throw new Error(`Failed to retrieve article content from URL: ${err.message}`);
   }
 
@@ -177,10 +187,8 @@ export async function generateFromUrl(
     throw new Error("The URL returned insufficient content to generate a blog post");
   }
 
-  // Step 2: Slice
-  console.log(`✂️  [Step 2] Slicing to ${URL_CONTENT_LIMIT.toLocaleString()} chars...`);
+  // Step 2: Slice & Generate
   const sliced = markdown.slice(0, URL_CONTENT_LIMIT);
-
   // Step 3: Generate
   console.log(`🤖 [Step 3] Sending to Groq...`);
 
@@ -200,18 +208,29 @@ CRITICAL FORMATTING RULES:
 4. Keep relevant image tags ![alt](url) but discard useless logos or stock photos.
 5. At the end of EVERY main section, add a blockquote citation exactly like this: \`> Source: [Title](URL)\`.`;
 
-  const userPrompt = `Transform the following scraped content into a complete, polished tech blog post.
-
-IMPORTANT: After every H2 section, add a reference formatted exactly as a blockquote:
-> Source: [Original Article](${url})
+  const userPrompt = `Transform the following scraped content into a highly engaging, human-sounding tech blog post. 
+Remember to add ([Source](${url})) at the end of any paragraph that uses facts or concepts. Do not create a separate references block.
 
 Original Source URL: ${url}
-
 Scraped Content:
 ${sliced}`;
 
   const generated = await generateWithGroq(systemPrompt, userPrompt);
-  const { title, body } = extractTitleAndBody(generated);
+  let { title, body } = extractTitleAndBody(generated);
+
+  // Step 3: Fetch Extra Related Links for the Frontend Sidebar
+  console.log(`🔍 [Step 3] Fetching ${MAX_SIDEBAR_LINKS} related links for sidebar...`);
+  const relatedLinks = await searchWithJina(title); // Search using the AI-generated title
+  
+  if (relatedLinks.length > 0) {
+    // We append this block at the very end. 
+    // Your frontend BlogRenderer regex will HIDE this text from the blog body, 
+    // but the sidebar regex will EXTRACT the links to display the preview cards!
+    body += `\n\n## References\n`;
+    relatedLinks.slice(0, MAX_SIDEBAR_LINKS).forEach(link => {
+      body += `* [${link.title}](${link.url})\n`;
+    });
+  }
 
   return {
     title,
@@ -234,48 +253,34 @@ export async function generateFromKeyword(
 
   // Step 1: Search
   console.log(`🔍 [Step 1] Searching with Jina Search...`);
-  let urls: string[];
-  try {
-    urls = await searchWithJina(keyword);
-    console.log(`🔗 [Step 1] Found ${urls.length} candidate URLs:`);
-    urls.forEach((u, i) => console.log(`   ${i + 1}. ${u}`));
-  } catch (err: any) {
-    console.error(`❌ [Step 1] Search failed: ${err.message}`);
-    throw new Error(`Search failed for keyword "${keyword}": ${err.message}`);
+  const searchResults = await searchWithJina(keyword);
+  
+  if (searchResults.length === 0) {
+    throw new Error(`No relevant sources found for keyword "${keyword}".`);
   }
 
-  if (urls.length === 0) {
-    throw new Error(
-      `No relevant sources found for keyword "${keyword}". Try a different search term.`
-    );
-  }
-
-  // Step 2: Scrape each source
-  console.log(`📝 [Step 2] Scraping ${urls.length} sources...`);
+  // Step 2: Scrape top sources for AI context
+  const scrapeTargets = searchResults.slice(0, KEYWORD_MAX_SCRAPE_SOURCES);
+  console.log(`📝 [Step 2] Scraping top ${scrapeTargets.length} sources...`);
   const sources: Array<{ url: string; content: string }> = [];
 
-  for (const url of urls) {
+  for (const target of scrapeTargets) {
     try {
-      console.log(`   🌐 Scraping: ${url}...`);
-      const md = await fetchMarkdownFromUrl(url);
+      const md = await fetchMarkdownFromUrl(target.url);
       if (md && md.trim().length > 50) {
-        console.log(`   ✅ ${md.length.toLocaleString()} chars received`);
-        sources.push({ url, content: md.slice(0, KEYWORD_PER_SOURCE_LIMIT) });
-      } else {
-        console.warn(`   ⚠️  Skipped — content too short`);
+        sources.push({ url: target.url, content: md.slice(0, KEYWORD_PER_SOURCE_LIMIT) });
       }
     } catch {
-      console.warn(`   ⚠️  Failed to scrape, skipping.`);
+      console.warn(`   ⚠️  Failed to scrape ${target.url}, skipping.`);
     }
   }
 
-  console.log(`📊 [Step 2] Using ${sources.length}/${urls.length} sources`);
-
   if (sources.length === 0) {
-    throw new Error(
-      "Failed to retrieve content from any search results. Try a different keyword."
-    );
+    throw new Error("Failed to retrieve content from any search results.");
   }
+
+  // Step 3: Generate
+  console.log(`🤖 [Step 3] Sending to Groq...`);
 
   const systemPrompt = `You are an expert, highly experienced senior developer writing a technical blog post. 
 
@@ -293,22 +298,27 @@ CRITICAL FORMATTING RULES:
 4. Keep relevant image tags ![alt](url) but discard useless logos or stock photos.
 5. At the end of EVERY main section, add a blockquote citation exactly like this: \`> Source: [Title](URL)\`.`;
 
-  // Build numbered source blocks with clear labels
   const sourceBlocks = sources
-    .map((s, i) => `Source ${i + 1}: ${s.url}\nContent ${i + 1}:\n${s.content}`)
+    .map((s) => `Source URL: ${s.url}\nContent:\n${s.content}`)
     .join("\n\n---\n\n");
 
-  const userPrompt = `Write a comprehensive, original tech blog post about: "${keyword}".
+  const userPrompt = `Write a comprehensive, engaging, human-sounding tech blog post about: "${keyword}".
 
-Use the sources below as your research. After EVERY H2 section, add a reference formatted as a blockquote:
-> Source: [Title of the source you used](URL of that source)
-
-Do NOT wait until the end of the blog — put the reference immediately after the section text.
+Use the sources below as your research. Remember to add ([Source](SPECIFIC_URL)) at the end of any paragraph that uses facts or concepts. Do not create a separate references block.
 
 ${sourceBlocks}`;
 
   const generated = await generateWithGroq(systemPrompt, userPrompt);
-  const { title, body } = extractTitleAndBody(generated);
+  let { title, body } = extractTitleAndBody(generated);
+
+  // Step 4: Inject the related links for the frontend sidebar
+  // We use the full search results list we got in Step 1
+  if (searchResults.length > 0) {
+    body += `\n\n## References\n`;
+    searchResults.slice(0, MAX_SIDEBAR_LINKS).forEach(link => {
+      body += `* [${link.title}](${link.url})\n`;
+    });
+  }
 
   return {
     title,

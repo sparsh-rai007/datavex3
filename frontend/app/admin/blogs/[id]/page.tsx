@@ -40,7 +40,6 @@ export default function EditBlogPage() {
   const [showEditPanel, setShowEditPanel] = useState(false);
 
   const { register, setValue, handleSubmit, watch } = useForm();
-  
   const currentStatus = watch('status');
 
   const generateSlug = (text: string) =>
@@ -62,6 +61,8 @@ export default function EditBlogPage() {
       setValue('meta_description', data.meta_description || '');
       setValue('meta_keywords',    data.meta_keywords    || '');
       setValue('external_url',     data.external_url     || '');
+      setValue('generation_method', data.generation_method || 'manual');
+      setValue('source_reference', data.source_reference || '');
       setContent(data.content);
     });
   }, [blogId, setValue]);
@@ -318,7 +319,7 @@ export default function EditBlogPage() {
 
           <button
             type="submit"
-            disabled={isReviewing || (currentStatus === 'published' && (!review || review.overall_score < 80 || Object.values(review).some((val: any) => typeof val === 'object' && val?.passed === false)))}
+            disabled={isReviewing || (currentStatus === 'published' && review !== null && (review.overall_score < 80 || Object.values(review).some((val: any) => typeof val === 'object' && val?.passed === false)))}
             className="px-6 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:bg-gray-400"
           >
             Save Changes
