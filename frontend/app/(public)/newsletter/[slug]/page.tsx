@@ -10,7 +10,7 @@ import {
 import { useRouter, useParams } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import PublicWrapper from '../../wrapper';
-import BlogRenderer from '@/components/newslettterrenderer';
+import NewsletterRenderer from '@/components/NewsletterRenderer';
 import RelatedReferences from '@/components/RelatedReferences';
 
 // ---------------------------------------------------------------------------
@@ -295,7 +295,7 @@ export default function BlogDetailPage() {
               )}
 
               {/* Rendered Intelligence Matrix */}
-              <BlogRenderer content={blog.content || ''} />
+              <NewsletterRenderer content={blog.content || ''} />
             </div>
 
             {/* Dynamic Context Sidebar */}
@@ -378,7 +378,7 @@ export default function BlogDetailPage() {
                     </p>
 
                     <div className="mt-auto flex items-center justify-between pt-6 border-t border-slate-100/50">
-                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{rec.read_time || "5 Min Read"}</span>
+                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{mounted ? new Date(rec.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ""}</span>
                       <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary-600 shadow-sm group-hover:bg-primary-600 group-hover:text-white transition-all">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                           <line x1="5" y1="12" x2="19" y2="12"></line>

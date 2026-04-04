@@ -33,7 +33,7 @@ const navItems: NavItem[] = [
   { href: '/admin/leads', label: 'Leads', icon: Users },
   { href: '/admin/jobs', label: 'Jobs', icon: Briefcase },
   { href: '/admin/bookings', label: 'Bookings', icon: Calendar },
-  { href: '/admin/newsletter', label: 'Newsletter', icon: Mail },
+  { href: '/admin/newsletter', label: 'Daily Newsletter', icon: Mail },
   { href: '/admin/blogs', label: 'Blogs', icon: Library },
   { href: '/admin/settings/social', label: 'Social Integrations', icon: Globe },
   { href: '/admin/users', label: 'Users', icon: User },

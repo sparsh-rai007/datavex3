@@ -10,7 +10,7 @@ import {
 import { useRouter, useParams } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import PublicWrapper from '../../wrapper';
-import BlogRenderer from '@/components/BlogRenderer';
+import NewsletterRenderer from '@/components/NewsletterRenderer';
 import RelatedReferences from '@/components/RelatedReferences';
 
 // ---------------------------------------------------------------------------
@@ -295,7 +295,7 @@ export default function BlogDetailPage() {
               )}
 
               {/* Rendered Intelligence Matrix */}
-              <BlogRenderer content={blog.content || ''} />
+              <NewsletterRenderer content={blog.content || ''} />
             </div>
 
             {/* Dynamic Context Sidebar */}

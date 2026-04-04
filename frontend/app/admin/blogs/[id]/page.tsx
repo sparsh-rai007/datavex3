@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import TipTapEditor from '@/components/TipTapEditor';
-import BlogRenderer from '@/components/BlogRenderer';
+import NewsletterRenderer from '@/components/NewsletterRenderer';
 import ShareModal from '@/components/ShareModal';
 import { useForm } from 'react-hook-form';
 
@@ -168,7 +168,7 @@ export default function EditBlogPage() {
 
           <label className="block text-sm font-medium mb-2">Live Preview</label>
           <div className="rounded-xl p-6 md:p-8 border bg-white shadow-sm min-h-[400px]">
-            <BlogRenderer content={content} />
+            <NewsletterRenderer content={content} />
           </div>
         </div>
 
