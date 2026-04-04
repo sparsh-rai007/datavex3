@@ -49,7 +49,7 @@ export default function BlogListClient({ blogs }: BlogListClientProps) {
     if (post.external_url) {
       window.open(post.external_url, '_blank');
     } else {
-      router.push(`/blog/${post.slug}`);
+      router.push(`/newsletter/${post.slug}`);
     }
   };
 
@@ -131,7 +131,7 @@ export default function BlogListClient({ blogs }: BlogListClientProps) {
                       </div>
                       <div className="text-left">
                         <p className="text-xs font-black text-slate-900 uppercase tracking-widest">{featuredPost.author_name || "DataVex Intel"}</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{new Date(featuredPost.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{new Date(featuredPost.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                       </div>
                     </div>
                     <button className="flex items-center gap-2 text-primary-600 font-black uppercase tracking-widest text-[10px] hover:gap-4 transition-all">
@@ -203,7 +203,7 @@ export default function BlogListClient({ blogs }: BlogListClientProps) {
                   )}
                   <div className="p-8 flex flex-col flex-grow">
                     <div className="flex items-center gap-3 mb-6 text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                      <span className="flex items-center gap-1.5"><Calendar size={13} /> {new Date(post.created_at).toLocaleDateString()}</span>
+                      <span className="flex items-center gap-1.5"><Calendar size={13} /> {new Date(post.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                       <div className="w-1 h-1 rounded-full bg-slate-200" />
                       <span className="flex items-center gap-1.5 text-primary-600/50"><Clock size={13} /> {post.read_time || "4 Min"}</span>
                     </div>
