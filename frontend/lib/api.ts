@@ -146,12 +146,12 @@ class ApiClient {
   }
 
   async getTodayNewsletter() {
-    const response = await this.client.get("/newsletter/today");
+    const response = await this.client.get("/admin/newsletter/today");
     return response.data as { draft: any | null };
   }
 
   async forceRunNewsletter() {
-    const response = await this.client.post("/newsletter/force-run");
+    const response = await this.client.post("/admin/newsletter/trigger");
     return response.data as { newsletter: any };
   }
 

@@ -248,7 +248,7 @@ export default function MorningDashboard() {
               </div>
               <TipTapEditor 
                 content={content} 
-                onChange={(newContent) => {
+                onChange={(newContent: string) => {
                   setContent(newContent);
                   // Trigger review debounced or on request? The prompt says "As soon as text is loaded".
                   // Since we already auto-triggered for the initial load, manual re-runs are better for speed.

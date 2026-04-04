@@ -32,6 +32,7 @@ import blogReviewRoutes from "./routes/blog-review";
 import socialRoutes from "./routes/social";
 import calRouter from "./routes/cal";
 import calWebhookRoute from "./routes/cal-webhook";
+import { generateDailyNewsletter } from "./services/dailyNewsletterService";
 
 dotenv.config();
 
