@@ -14,6 +14,7 @@ const WRITER_MODEL =
   "llama-3.3-70b-versatile";
 
 const JINA_READER_PREFIX = "https://r.jina.ai/";
+const JINA_SEARCH_PREFIX = "https://s.jina.ai/";
 const SOURCE_MARKDOWN_LIMIT = 6_000;
 
 interface CuratedTopic {
@@ -281,6 +282,40 @@ async function fetchWorkingTopics(
   return selected;
 }
 
+async function searchTopicsByKeyword(keyword: string): Promise<CuratedTopic[]> {
+  const response = await axios.get(`${JINA_SEARCH_PREFIX}${encodeURIComponent(keyword)}`, {
+    headers: {
+      Accept: "application/json",
+      "X-Return-Format": "json",
+    },
+    timeout: 30_000,
+  });
+
+  const data = response.data;
+  if (!data?.data || !Array.isArray(data.data)) {
+    return [];
+  }
+
+  const topics = data.data
+    .map((item: any) => ({
+      title: typeof item?.title === "string" ? item.title.trim() : "",
+      url: typeof item?.url === "string" ? item.url.trim() : "",
+    }))
+    .filter((item: CuratedTopic) => item.title && isValidUrl(item.url));
+
+  const deduped: CuratedTopic[] = [];
+  const seen = new Set<string>();
+  for (const topic of topics) {
+    if (seen.has(topic.url)) {
+      continue;
+    }
+    seen.add(topic.url);
+    deduped.push(topic);
+  }
+
+  return deduped.slice(0, 10);
+}
+
 async function fetchArticleMarkdown(url: string): Promise<string> {
   try {
     const response = await axios.get(`${JINA_READER_PREFIX}${url}`, {
@@ -407,12 +442,24 @@ async function saveNewsletterDraft(markdown: string, topics: CuratedTopic[]) {
 /**
  * Automated daily newsletter pipeline.
  */
-export async function generateDailyNewsletter() {
+export async function generateDailyNewsletter(options?: { keyword?: string }) {
   console.log("[Newsletter] Starting daily newsletter generation...");
 
-  const { numberedText, items } = await fetchTrendingHeadlines();
-  const curatedTopics = await curateTopTopics(numberedText, items);
-  const candidateTopics = mergeCandidateTopics(curatedTopics, items);
+  const keyword = options?.keyword?.trim();
+  let candidateTopics: CuratedTopic[] = [];
+
+  if (keyword) {
+    console.log(`[Newsletter] Keyword mode: "${keyword}"`);
+    candidateTopics = await searchTopicsByKeyword(keyword);
+    if (candidateTopics.length < 2) {
+      throw new Error(`Keyword search did not return enough usable sources for "${keyword}"`);
+    }
+  } else {
+    const { numberedText, items } = await fetchTrendingHeadlines();
+    const curatedTopics = await curateTopTopics(numberedText, items);
+    candidateTopics = mergeCandidateTopics(curatedTopics, items);
+  }
+
   const workingTopics = await fetchWorkingTopics(candidateTopics, 2);
 
   if (workingTopics.length < 2) {

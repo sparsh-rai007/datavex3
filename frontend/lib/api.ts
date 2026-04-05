@@ -150,8 +150,10 @@ class ApiClient {
     return response.data as { draft: any | null };
   }
 
-  async forceRunNewsletter() {
-    const response = await this.client.post("/admin/newsletter/trigger");
+  async forceRunNewsletter(keyword?: string) {
+    const response = await this.client.post("/admin/newsletter/trigger", {
+      keyword: keyword?.trim() || undefined,
+    });
     return response.data as { newsletter: any };
   }
 

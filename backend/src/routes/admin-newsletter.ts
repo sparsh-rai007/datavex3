@@ -5,7 +5,7 @@ import { generateDailyNewsletter } from "../services/dailyNewsletterService";
 
 const router = express.Router();
 
-// Fetch most recent newsletter draft from today
+// Fetch most recent newsletter from today (draft or published)
 router.get(
   "/today",
   authenticateToken,
@@ -18,9 +18,10 @@ router.get(
           `SELECT *
            FROM blogs
            WHERE type = 'newsletter'
-             AND status = 'draft'
              AND created_at >= CURRENT_DATE
-           ORDER BY created_at DESC
+           ORDER BY
+             CASE WHEN status = 'draft' THEN 0 ELSE 1 END,
+             created_at DESC
            LIMIT 1`
         );
       } catch (error: any) {
@@ -32,10 +33,11 @@ router.get(
         result = await pool.query(
           `SELECT *
            FROM blogs
-           WHERE status = 'draft'
-             AND generation_method IN ('ai_newsletter', 'newsletter')
+           WHERE generation_method IN ('ai_newsletter', 'newsletter')
              AND created_at >= CURRENT_DATE
-           ORDER BY created_at DESC
+           ORDER BY
+             CASE WHEN status = 'draft' THEN 0 ELSE 1 END,
+             created_at DESC
            LIMIT 1`
         );
       }
@@ -57,11 +59,18 @@ router.post(
   "/trigger",
   authenticateToken,
   requireRole("admin"),
-  async (_req, res) => {
+  async (req, res) => {
     try {
-      const draft = await generateDailyNewsletter();
+      const keyword =
+        typeof req.body?.keyword === "string" ? req.body.keyword.trim() : "";
+
+      const draft = await generateDailyNewsletter({
+        keyword: keyword || undefined,
+      });
+
       return res.status(201).json({
         message: "Daily newsletter generated successfully",
+        mode: keyword ? "keyword" : "automatic",
         newsletter: {
           id: draft.id,
           title: draft.title,
