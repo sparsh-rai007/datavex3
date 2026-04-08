@@ -61,11 +61,10 @@ export default function NewsletterAdminPage() {
         : [];
 
       const now = new Date();
-      const todayDraftFromList = newsletters
+      const todayRecordFromList = newsletters
         .filter((item: any) => {
           const createdAt = item?.created_at ? new Date(item.created_at) : null;
           return (
-            item?.status === 'draft' &&
             !!createdAt &&
             createdAt.toDateString() === now.toDateString()
           );
@@ -76,13 +75,11 @@ export default function NewsletterAdminPage() {
         )[0];
 
       const latestDraft =
-        todayDraftFromList ||
-        newsletters
-          .filter((item: any) => item?.status === 'draft')
-          .sort(
-            (a: any, b: any) =>
-              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          )[0] ||
+        todayRecordFromList ||
+        newsletters.sort(
+          (a: any, b: any) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )[0] ||
         null;
 
       setCronHealth(health);

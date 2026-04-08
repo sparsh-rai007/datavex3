@@ -33,6 +33,7 @@ import socialRoutes from "./routes/social";
 import calRouter from "./routes/cal";
 import calWebhookRoute from "./routes/cal-webhook";
 import { runDailyNewsletter } from "./services/dailyNewsletterService";
+import { runScheduledBlogGeneration } from "./services/dailyBlogService";
 import newsletterRoutes from "./routes/newsletter";
 import newsletterGenerateRoutes from "./routes/newsletter-generate";
 
@@ -144,12 +145,23 @@ const startServer = async () => {
       console.log("[CRON] Starting daily newsletter generation...");
       try {
         await runDailyNewsletter();
-        console.log("✅ [CRON] Newsletter draft created successfully.");
+        console.log("✅ [CRON] Newsletter published successfully.");
       } catch (error) {
         console.error("❌ [CRON] Newsletter generation failed:", error);
       }
     });
     console.log("Daily newsletter cron scheduled for 03:00 server time");
+
+    cron.schedule("0 */12 * * *", async () => {
+      console.log("[CRON] Starting scheduled blog generation...");
+      try {
+        await runScheduledBlogGeneration();
+        console.log("✅ [CRON] Scheduled blog published successfully.");
+      } catch (error) {
+        console.error("❌ [CRON] Scheduled blog generation failed:", error);
+      }
+    });
+    console.log("Scheduled blog cron set for every 12 hours (00:00 and 12:00 server time)");
 
     app.listen(Number(PORT), "0.0.0.0", () => {
       console.log(`?? Backend listening on http://0.0.0.0:${PORT}`);

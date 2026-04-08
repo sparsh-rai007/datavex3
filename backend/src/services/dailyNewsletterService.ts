@@ -40,8 +40,8 @@ export async function runDailyNewsletter() {
     const generated = await generateAIText(safeUrls.slice(0, 3), NEWSLETTER_SYSTEM_PROMPT);
 
     const result = await pool.query(
-      `INSERT INTO newsletters (title, content, status)
-       VALUES ($1, $2, 'draft')
+      `INSERT INTO newsletters (title, content, status, sent_at)
+       VALUES ($1, $2, 'published', NOW())
        RETURNING *`,
       [generated.title, generated.content]
     );
