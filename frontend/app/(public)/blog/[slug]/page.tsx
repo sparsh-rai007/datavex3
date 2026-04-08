@@ -250,21 +250,21 @@ export default function BlogDetailPage() {
           </div>
         </nav>
 
-        <main className="max-w-7xl mx-auto px-6 py-24">
-          {/* Release Label */}
-          <div className="flex items-center gap-4 mb-8">
-            <span className="px-4 py-1.5 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-primary-600/20">
-              {blog.category || "Intelligence Release"}
-            </span>
-            <div className="h-px flex-1 bg-slate-100" />
-          </div>
-
-          {/* Neural Title */}
-          <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight mb-16 max-w-5xl">
-            {blog.title}
-          </h1>
-
+        <main className="mx-auto py-24">
           <div className="max-w-4xl mx-auto px-6">
+            {/* Release Label */}
+            <div className="flex items-center gap-4 mb-8">
+              <span className="px-4 py-1.5 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-primary-600/20">
+                {blog.category || "Intelligence Release"}
+              </span>
+              <div className="h-px flex-1 bg-slate-100" />
+            </div>
+
+            {/* Neural Title */}
+            <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight mb-16">
+              {blog.title}
+            </h1>
+
             <div className="space-y-16">
               {/* Metadata references removed */}
 
@@ -287,7 +287,7 @@ export default function BlogDetailPage() {
           
           {/* Recommended Intelligence Matrix */}
           {recommendations.length > 0 && (
-            <div className="mt-32 pt-24 border-t border-slate-100">
+            <div className="max-w-7xl mx-auto px-6 mt-32 pt-24 border-t border-slate-100">
               <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
                 <div>
                   <h2 className="text-3xl font-black text-slate-900 tracking-tight">More Blogs</h2>
@@ -334,7 +334,7 @@ export default function BlogDetailPage() {
           )}
 
           {/* Global Footer Context */}
-          <div className="mt-40 pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="max-w-7xl mx-auto px-6 mt-40 pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">© {new Date().getFullYear()} DATAVEX.ai — ALL RIGHTS RESERVED.</p>
             <div className="flex gap-8">
               {['Authority', 'Synthesis', 'Integrity'].map(word => (

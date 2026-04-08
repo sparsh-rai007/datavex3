@@ -27,16 +27,18 @@ function cleanMarkdown(rawText: string, stripReferences: boolean) {
 export default function NewsletterRenderer({ 
   content, 
   hideLinks = false,
-  stripReferences = false 
+  stripReferences = false,
+  className = ""
 }: { 
   content: string; 
   hideLinks?: boolean;
   stripReferences?: boolean;
+  className?: string;
 }) {
   const cleanedContent = cleanMarkdown(content, stripReferences);
 
   return (
-    <div className="prose prose-slate prose-lg max-w-none prose-headings:font-black prose-strong:text-slate-900 markdown-body dark:prose-invert">
+    <div className={`prose prose-slate prose-lg max-w-none prose-headings:font-black prose-strong:text-slate-900 markdown-body dark:prose-invert ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
