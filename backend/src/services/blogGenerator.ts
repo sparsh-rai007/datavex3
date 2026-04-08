@@ -8,6 +8,8 @@ const JINA_API_KEY = process.env.JINA_API_KEY || "";
 const JINA_SEARCH_PREFIX = "https://s.jina.ai/";
 const KEYWORD_MAX_SCRAPE_SOURCES = 3;
 const MAX_SIDEBAR_LINKS = 8;
+const SEARCH_TIMEOUT_MS = Number(process.env.JINA_SEARCH_TIMEOUT_MS || 45000);
+const SEARCH_RETRIES = Number(process.env.JINA_SEARCH_RETRIES || 2);
 
 const HUMANIZED_SYSTEM_PROMPT = `You are a seasoned, pragmatic software engineer writing a technical blog post. You write like a real human-opinionated, slightly informal, direct, and conversational. Skip fluff and academic framing.
 
@@ -51,10 +53,37 @@ async function searchWithJina(query: string): Promise<SearchResult[]> {
   }
 
   try {
-    const response = await axios.get(`${JINA_SEARCH_PREFIX}${encodeURIComponent(query)}`, {
-      headers,
-      timeout: 30_000,
-    });
+    let response: any = null;
+    let lastError: any = null;
+
+    for (let attempt = 1; attempt <= SEARCH_RETRIES; attempt++) {
+      try {
+        response = await axios.get(`${JINA_SEARCH_PREFIX}${encodeURIComponent(query)}`, {
+          headers,
+          timeout: SEARCH_TIMEOUT_MS,
+        });
+        break;
+      } catch (error: any) {
+        lastError = error;
+        const code = error?.code || "";
+        const status = error?.response?.status;
+        const isRetryable =
+          code === "ECONNABORTED" ||
+          code === "ETIMEDOUT" ||
+          code === "ECONNRESET" ||
+          (typeof status === "number" && status >= 500);
+
+        if (!isRetryable || attempt === SEARCH_RETRIES) {
+          throw error;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+      }
+    }
+
+    if (!response) {
+      throw lastError || new Error("Jina search failed");
+    }
 
     const data = response.data;
     if (data?.data && Array.isArray(data.data)) {

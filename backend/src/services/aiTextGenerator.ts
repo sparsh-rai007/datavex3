@@ -8,6 +8,8 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
 const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 const JINA_API_KEY = process.env.JINA_API_KEY || "";
 const JINA_READER_PREFIX = "https://r.jina.ai/";
+const FETCH_TIMEOUT_MS = Number(process.env.JINA_FETCH_TIMEOUT_MS || 45000);
+const FETCH_RETRIES = Number(process.env.JINA_FETCH_RETRIES || 2);
 
 let _groq: Groq | null = null;
 
@@ -32,12 +34,35 @@ async function fetchMarkdownFromUrl(url: string): Promise<string> {
     headers.Authorization = `Bearer ${JINA_API_KEY}`;
   }
 
-  const response = await axios.get(`${JINA_READER_PREFIX}${url}`, {
-    headers,
-    timeout: 30_000,
-  });
+  let lastError: any = null;
 
-  return typeof response.data === "string" ? response.data : String(response.data);
+  for (let attempt = 1; attempt <= FETCH_RETRIES; attempt++) {
+    try {
+      const response = await axios.get(`${JINA_READER_PREFIX}${url}`, {
+        headers,
+        timeout: FETCH_TIMEOUT_MS,
+      });
+
+      return typeof response.data === "string" ? response.data : String(response.data);
+    } catch (error: any) {
+      lastError = error;
+      const code = error?.code || "";
+      const status = error?.response?.status;
+      const isRetryable =
+        code === "ECONNABORTED" ||
+        code === "ETIMEDOUT" ||
+        code === "ECONNRESET" ||
+        (typeof status === "number" && status >= 500);
+
+      if (!isRetryable || attempt === FETCH_RETRIES) {
+        break;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+    }
+  }
+
+  throw lastError || new Error(`Failed to fetch source markdown for ${url}`);
 }
 
 function extractTitleAndBody(markdown: string): { title: string; content: string } {
@@ -104,12 +129,18 @@ export async function generateAIText(
 
   const sourceSections: string[] = [];
   for (const url of uniqueUrls) {
-    const markdown = await fetchMarkdownFromUrl(url);
-    if (!markdown || markdown.trim().length < 50) {
-      continue;
-    }
+    try {
+      const markdown = await fetchMarkdownFromUrl(url);
+      if (!markdown || markdown.trim().length < 50) {
+        continue;
+      }
 
-    sourceSections.push(`Source URL: ${url}\n${markdown.slice(0, 6_000)}`);
+      sourceSections.push(`Source URL: ${url}\n${markdown.slice(0, 6_000)}`);
+    } catch (error: any) {
+      console.warn(
+        `[AITextGenerator] Source fetch failed for ${url}: ${error?.message || "unknown error"}`
+      );
+    }
   }
 
   if (sourceSections.length === 0) {
@@ -139,4 +170,3 @@ ${sourceSections.join("\n\n---\n\n")}`;
 
   return extractTitleAndBody(generated);
 }
-

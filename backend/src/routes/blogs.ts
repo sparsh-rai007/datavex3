@@ -4,6 +4,14 @@ import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth'
 
 const router = express.Router();
 
+function slugify(text: string): string {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 200);
+}
+
 // Create Blog
 router.post(
   '/',
@@ -27,38 +35,58 @@ router.post(
       } = req.body;
 
       const authorId = req.user?.id;
+      const baseSlug = slugify(slug || title || "blog-post") || "blog-post";
 
-      const result = await pool.query(
-        `INSERT INTO blogs (
+      let createdRow: any = null;
+      let slugCandidate = baseSlug;
+      const maxRetries = 5;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const result = await pool.query(
+            `INSERT INTO blogs (
             title, slug, excerpt, content, featured_image,
             meta_title, meta_description, meta_keywords,
             status, generation_method, source_reference, author_id, external_url
         )
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
         RETURNING *`,
-        [
-          title,
-          slug,
-          excerpt,
-          content,
-          featured_image,
-          meta_title,
-          meta_description,
-          meta_keywords,
-          status,
-          generation_method,
-          source_reference,
-          authorId,
-          external_url
-        ]
-      );
+            [
+              title,
+              slugCandidate,
+              excerpt,
+              content,
+              featured_image,
+              meta_title,
+              meta_description,
+              meta_keywords,
+              status,
+              generation_method,
+              source_reference,
+              authorId,
+              external_url
+            ]
+          );
 
-      res.status(201).json(result.rows[0]);
+          createdRow = result.rows[0];
+          break;
+        } catch (error: any) {
+          if (error?.code !== "23505") {
+            throw error;
+          }
+
+          // Slug conflict: append suffix and retry.
+          slugCandidate = `${baseSlug}-${Date.now()}${attempt > 0 ? `-${attempt}` : ""}`;
+        }
+      }
+
+      if (!createdRow) {
+        return res.status(409).json({ error: "Could not create a unique slug. Please retry." });
+      }
+
+      res.status(201).json(createdRow);
     } catch (error: any) {
       console.error("Create blog error:", error);
-      if (error.code === "23505") {
-        return res.status(409).json({ error: "Slug already exists" });
-      }
       res.status(500).json({ error: "Internal server error" });
     }
   }

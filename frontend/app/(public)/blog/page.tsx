@@ -19,7 +19,7 @@ export default async function BlogPage() {
 
   return (
     <PublicWrapper>
-      <NewsletterListClient blogs={blogs} />
+      <NewsletterListClient blogs={blogs} contentType="blog" />
     </PublicWrapper>
   );
 }

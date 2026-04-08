@@ -3,6 +3,8 @@ import { pool } from "../db/connection";
 import { authenticateToken, requireRole, AuthRequest } from "../middleware/auth";
 
 const router = express.Router();
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 router.get(
   "/",
@@ -40,6 +42,10 @@ router.get("/public/all", async (_req, res) => {
 
 router.get("/public/:id", async (req, res) => {
   try {
+    if (!UUID_REGEX.test(req.params.id)) {
+      return res.status(404).json({ error: "Newsletter not found" });
+    }
+
     const result = await pool.query(
       `SELECT id, title, content, status, sent_at, created_at
        FROM newsletters

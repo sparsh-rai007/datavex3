@@ -113,11 +113,21 @@ router.post(
       });
     } catch (error: any) {
       console.error("❌ Blog generation error:", error.message);
+      const isTimeout =
+        error?.code === "ECONNABORTED" ||
+        error?.code === "ETIMEDOUT" ||
+        String(error?.message || "").toLowerCase().includes("timeout");
 
       // Return a clean error message
-      const statusCode = error.message?.includes("API key") ? 503 : 500;
+      const statusCode = isTimeout
+        ? 504
+        : error.message?.includes("API key")
+          ? 503
+          : 500;
       return res.status(statusCode).json({
-        error: error.message || "Failed to generate blog content",
+        error: isTimeout
+          ? "External content source timed out. Please retry."
+          : error.message || "Failed to generate blog content",
       });
     }
   }

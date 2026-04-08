@@ -30,11 +30,15 @@ interface BlogPost {
 
 interface NewsletterListClientProps {
   blogs: BlogPost[];
+  contentType?: 'blog' | 'newsletter';
 }
 
 const CATEGORIES = ['All Records', 'AI Strategy', 'Neural Systems', 'Security Protocol', 'Enterprise Synthesis', 'Tactical Analysis'];
 
-export default function NewsletterListClient({ blogs }: NewsletterListClientProps) {
+export default function NewsletterListClient({
+  blogs,
+  contentType = 'newsletter',
+}: NewsletterListClientProps) {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('All Records');
   const [searchQuery, setSearchQuery] = useState('');
@@ -53,7 +57,7 @@ export default function NewsletterListClient({ blogs }: NewsletterListClientProp
     if (post.external_url) {
       window.open(post.external_url, '_blank');
     } else {
-      router.push(`/newsletter/${post.slug}`);
+      router.push(contentType === 'blog' ? `/blog/${post.slug}` : `/newsletter/${post.slug}`);
     }
   };
 
