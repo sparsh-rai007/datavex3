@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { RefreshCw, Loader2, CheckCircle2, AlertTriangle, Activity } from 'lucide-react';
+import { RefreshCw, Loader2, CheckCircle2, AlertTriangle, Activity, Edit2, Search } from 'lucide-react';
 import TipTapEditor from '@/components/TipTapEditor';
 import NewsletterRenderer from '@/components/NewsletterRenderer';
 import { apiClient } from '@/lib/api';
@@ -32,8 +33,10 @@ type ReviewResult = {
 
 export default function NewsletterAdminPage() {
   const [cronHealth, setCronHealth] = useState<CronHealth | null>(null);
+  const [newsletters, setNewsletters] = useState<NewsletterDraft[]>([]);
   const [todayDraft, setTodayDraft] = useState<NewsletterDraft | null>(null);
   const [content, setContent] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [reviewResults, setReviewResults] = useState<ReviewResult | null>(null);
   const [isReviewing, setIsReviewing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -83,6 +86,7 @@ export default function NewsletterAdminPage() {
         null;
 
       setCronHealth(health);
+      setNewsletters(newsletters);
       setTodayDraft(latestDraft);
       setContent(latestDraft?.content || '');
       setReviewResults(null);
@@ -169,6 +173,10 @@ export default function NewsletterAdminPage() {
     if (!value) return 'N/A';
     return new Date(value).toLocaleString();
   };
+
+  const filteredNewsletters = newsletters.filter((item) =>
+    item.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (isLoading) {
     return (
@@ -327,6 +335,74 @@ export default function NewsletterAdminPage() {
           </div>
         </div>
       )}
+
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden">
+        <div className="p-6 border-b border-slate-50 bg-slate-50/50">
+          <h2 className="text-xl font-black text-slate-900 mb-4">Newsletter Archive</h2>
+          <div className="relative max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search newsletters..."
+              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary-600 outline-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <th className="px-8 py-5">Title</th>
+                <th className="px-8 py-5">Created</th>
+                <th className="px-8 py-5">Status</th>
+                <th className="px-8 py-5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {filteredNewsletters.map((item) => (
+                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-8 py-5">
+                    <div className="font-bold text-slate-900">{item.title || 'Untitled Newsletter'}</div>
+                    <div className="text-[10px] text-slate-400 font-medium">{item.id}</div>
+                  </td>
+                  <td className="px-8 py-5 text-sm text-slate-500 font-medium">
+                    {new Date(item.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-8 py-5">
+                    <span
+                      className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                        item.status === 'published'
+                          ? 'bg-green-100 text-green-700'
+                          : item.status === 'sent'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="px-8 py-5 text-right">
+                    <Link
+                      href={`/admin/newsletter/${item.id}`}
+                      className="inline-flex p-2 bg-slate-100 text-slate-400 rounded-lg hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                    >
+                      <Edit2 size={16} />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filteredNewsletters.length === 0 && (
+            <div className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+              No newsletters found in archive
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

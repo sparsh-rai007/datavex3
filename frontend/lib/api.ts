@@ -173,6 +173,19 @@ class ApiClient {
     return response.data as { newsletters: any[] };
   }
 
+  async getNewsletter(id: string) {
+    const response = await this.client.get(`/newsletters/${id}`);
+    return response.data;
+  }
+
+  async updateNewsletter(
+    id: string,
+    payload: { title?: string; content?: string; status?: "draft" | "published" | "sent" }
+  ) {
+    const response = await this.client.put(`/newsletters/${id}`, payload);
+    return response.data as { newsletter: any };
+  }
+
   async regenerateTodayNewsletter() {
     try {
       const response = await this.client.post("/newsletter/force-run");

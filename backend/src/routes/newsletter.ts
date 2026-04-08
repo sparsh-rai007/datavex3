@@ -80,6 +80,75 @@ router.get(
   }
 );
 
+router.get(
+  "/:id",
+  authenticateToken,
+  requireRole("admin", "editor", "viewer"),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const result = await pool.query(
+        `SELECT * FROM newsletters WHERE id = $1 LIMIT 1`,
+        [req.params.id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "Newsletter not found" });
+      }
+
+      return res.json(result.rows[0]);
+    } catch (error) {
+      console.error("Get newsletter by id error:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+
+router.put(
+  "/:id",
+  authenticateToken,
+  requireRole("admin", "editor"),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { title, content, status } = req.body ?? {};
+      const normalizedStatus =
+        typeof status === "string" ? status.trim().toLowerCase() : undefined;
+
+      if (
+        normalizedStatus &&
+        !["draft", "published", "sent"].includes(normalizedStatus)
+      ) {
+        return res.status(400).json({
+          error: "Invalid status. Allowed values: draft, published, sent",
+        });
+      }
+
+      const result = await pool.query(
+        `UPDATE newsletters
+         SET
+           title = COALESCE($2, title),
+           content = COALESCE($3, content),
+           status = COALESCE($4, status),
+           sent_at = CASE
+             WHEN COALESCE($4, status) = 'published' AND sent_at IS NULL THEN NOW()
+             ELSE sent_at
+           END
+         WHERE id = $1
+         RETURNING *`,
+        [req.params.id, title ?? null, content ?? null, normalizedStatus ?? null]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "Newsletter not found" });
+      }
+
+      return res.json({ newsletter: result.rows[0] });
+    } catch (error) {
+      console.error("Update newsletter error:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+
 router.put(
   "/:id/publish",
   authenticateToken,
