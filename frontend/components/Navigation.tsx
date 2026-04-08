@@ -22,8 +22,8 @@ export default function Navigation() {
     pathname.startsWith('/solutions') ||
     pathname.startsWith('/careers') ||
     pathname.startsWith('/use-cases') ||
-   
     pathname.startsWith('/blog') ||
+    pathname.startsWith('/newsletter') ||
     pathname.startsWith('/contact') ||
     pathname.startsWith('/consultation') ||
     pathname.startsWith("/admin/login");
@@ -46,17 +46,21 @@ export default function Navigation() {
         { href: '/use-cases', label: 'Use Cases' },
       ],
     },
-    { href: '/blog', label: 'Blog' },
+    { href: '/newsletter', label: 'Newsletter' },
+    { href: '/blog', label: 'Blogs' },
     { href: '/contact', label: 'Contact' },
     { href: '/consultation', label: 'Consultation' },
   ];
 
-  const isActive = (href: string) => pathname === href || pathname?.startsWith(href);
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/';
+    return pathname === href || pathname?.startsWith(`${href}/`);
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white">
 
-     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-b border-gray-200">
 
         <div className="flex justify-between items-center h-16">
 
@@ -70,12 +74,12 @@ export default function Navigation() {
             {navLinks.map((link) =>
               link.children ? (
                 <div key={link.label} className="relative group inline-flex items-center">
-  <span className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary-600 cursor-pointer">
-    {link.label}
-  </span>
+                  <span className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary-600 cursor-pointer">
+                    {link.label}
+                  </span>
 
-  {/* Dropdown */}
-  <div className="absolute top-full left-0 hidden group-hover:block bg-white shadow-md rounded-md py-2 w-44 z-50">
+                  {/* Dropdown */}
+                  <div className="absolute top-full left-0 hidden group-hover:block bg-white shadow-md rounded-md py-2 w-44 z-50">
 
                     {link.children.map((child) => (
                       <Link
@@ -93,11 +97,10 @@ export default function Navigation() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`px-3 py-2 text-sm font-medium transition-colors ${
-                      isActive(link.href)
-                        ? 'text-primary-600 border-b-2 border-primary-600'
-                        : 'text-gray-700 hover:text-primary-600'
-                    }`}
+                    className={`px-3 py-2 text-sm font-medium transition-colors ${isActive(link.href)
+                      ? 'text-primary-600 border-b-2 border-primary-600'
+                      : 'text-gray-700 hover:text-primary-600'
+                      }`}
                   >
                     {link.label}
                   </Link>
@@ -107,7 +110,7 @@ export default function Navigation() {
           </div>
 
           {/* Right side (Login / User Info) */}
-          
+
 
           {/* Mobile menu button */}
           <button
@@ -147,11 +150,10 @@ export default function Navigation() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`block px-3 py-2 text-base font-medium rounded-md ${
-                    isActive(link.href)
-                      ? 'bg-primary-50 text-primary-600'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                  className={`block px-3 py-2 text-base font-medium rounded-md ${isActive(link.href)
+                    ? 'bg-primary-50 text-primary-600'
+                    : 'text-gray-700 hover:bg-gray-50'
+                    }`}
                 >
                   {link.label}
                 </Link>

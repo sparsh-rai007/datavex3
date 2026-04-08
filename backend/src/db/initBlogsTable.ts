@@ -8,6 +8,7 @@ export async function initBlogsTable() {
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       title VARCHAR(255) NOT NULL,
       slug VARCHAR(255) UNIQUE NOT NULL,
+      type VARCHAR(30) DEFAULT 'blog',
       excerpt TEXT,
       content TEXT,
       featured_image TEXT,
@@ -15,10 +16,21 @@ export async function initBlogsTable() {
       meta_description TEXT,
       meta_keywords TEXT,
       status VARCHAR(20) DEFAULT 'draft',
+      generation_method VARCHAR(20) DEFAULT 'manual',
+      source_reference TEXT,
       author_id UUID REFERENCES users(id) ON DELETE SET NULL,
       external_url TEXT,
       created_at TIMESTAMP DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS newsletters (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      title VARCHAR(255) NOT NULL,
+      content TEXT NOT NULL,
+      status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'sent')),
+      sent_at TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `;
 

@@ -22,6 +22,47 @@ async function migrate() {
 
     
     console.log('✅ Database migrations completed successfully');
+
+    // Add AI blog generation columns (idempotent)
+    await pool.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'blogs' AND column_name = 'generation_method'
+        ) THEN
+          ALTER TABLE blogs ADD COLUMN generation_method VARCHAR(20) DEFAULT 'manual';
+        END IF;
+
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'blogs' AND column_name = 'source_reference'
+        ) THEN
+          ALTER TABLE blogs ADD COLUMN source_reference TEXT;
+        END IF;
+
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'blogs' AND column_name = 'type'
+        ) THEN
+          ALTER TABLE blogs ADD COLUMN type VARCHAR(30) DEFAULT 'blog';
+        END IF;
+      END $$;
+    `);
+    console.log('✅ Blog generation columns ensured');
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS newsletters (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'sent')),
+        sent_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log("✅ Newsletters table ensured");
+
     await pool.query(`
   CREATE TABLE IF NOT EXISTS social_credentials (
     id SERIAL PRIMARY KEY,
@@ -81,4 +122,3 @@ if (require.main === module) {
 }
 
 export { migrate };
-
