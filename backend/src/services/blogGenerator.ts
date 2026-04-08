@@ -90,12 +90,13 @@ export async function generateFromUrl(
   const relatedLinks = await searchWithJina(generated.title);
   let content = generated.content;
 
-  if (relatedLinks.length > 0) {
-    content += "\n\n## References\n";
-    relatedLinks.slice(0, MAX_SIDEBAR_LINKS).forEach((link) => {
-      content += `* [${link.title}](${link.url})\n`;
-    });
-  }
+  // References moved to separate field
+  // if (relatedLinks.length > 0) {
+  //   content += "\n\n## References\n";
+  //   relatedLinks.slice(0, MAX_SIDEBAR_LINKS).forEach((link) => {
+  //     content += `* [${link.title}](${link.url})\n`;
+  //   });
+  // }
 
   return {
     title: generated.title,
@@ -118,11 +119,13 @@ export async function generateFromKeyword(
   const systemPrompt = TONE_PROMPTS[tone] || HUMANIZED_SYSTEM_PROMPT;
   const generated = await generateAIText(scrapeTargets, systemPrompt);
 
-  let content = generated.content;
-  content += "\n\n## References\n";
-  searchResults.slice(0, MAX_SIDEBAR_LINKS).forEach((link) => {
-    content += `* [${link.title}](${link.url})\n`;
-  });
+  const content = generated.content;
+
+  // References moved to separate sourceReference field or sidebar metadata
+  // content += "\n\n## References\n";
+  // searchResults.slice(0, MAX_SIDEBAR_LINKS).forEach((link) => {
+  //   content += `* [${link.title}](${link.url})\n`;
+  // });
 
   return {
     title: generated.title,

@@ -264,83 +264,24 @@ export default function BlogDetailPage() {
             {blog.title}
           </h1>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 relative">
-            <div className="lg:col-span-8">
-
-              {/* Narrative Context */}
-              <div className="flex items-center gap-6 mb-16 py-8 border-y border-slate-50">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Author Trace</span>
-                  <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{blog.author_name || "DataVex Architect"}</span>
-                </div>
-                <div className="w-px h-8 bg-slate-100" />
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Retrieval Date</span>
-                  <span className="text-xs font-black text-slate-600 uppercase tracking-widest">
-                    {mounted ? new Date(blog.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ""}
-                  </span>
-                </div>
-              </div>
+          <div className="max-w-4xl mx-auto px-6">
+            <div className="space-y-16">
+              {/* Metadata references removed */}
 
               {/* Featured Matrix Image */}
               {blog.featured_image && (
-                <div className="mb-20 rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/50 group">
+                <div className="rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/50 group">
                   <img
                     src={blog.featured_image}
                     alt={blog.title}
-                    className="w-full h-auto max-h-[500px] object-cover transition-transform duration-1000 group-hover:scale-105"
+                    className="w-full h-auto max-h-[600px] object-cover transition-transform duration-1000 group-hover:scale-105"
                     referrerPolicy="no-referrer"
                   />
                 </div>
               )}
 
               {/* Rendered Intelligence Matrix */}
-              <NewsletterRenderer content={blog.content || ''} />
-            </div>
-
-            {/* Dynamic Context Sidebar */}
-            <div className="lg:col-span-4 hidden lg:block border-l border-slate-100 pl-10">
-              <div className="sticky top-32">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary-600 animate-pulse" />
-                  Correlated External Nodes
-                </h3>
-
-                {/* --- UPDATED LIGHT THEME UI --- */}
-                <div className="bg-white rounded-[24px] shadow-xl border border-slate-100 overflow-hidden">
-                  <div className="flex flex-col">
-                    {/* NEW: Slice based on showAllRefs state */}
-                    {(showAllRefs ? referencesMatch : referencesMatch.slice(0, 3)).map((ref: any, idx) => (
-                      <PreviewNodeCard key={idx} url={ref.url} title={ref.title} />
-                    ))}
-
-                    {referencesMatch.length === 0 && (
-                      <p className="text-xs font-medium text-slate-400 italic p-6 text-center">
-                        No external references detected.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Show All Button - Now Functional */}
-                  {referencesMatch.length > 3 && (
-                    <div className="p-3 bg-slate-50/50">
-                      <button 
-                        onClick={() => setShowAllRefs(!showAllRefs)}
-                        className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all"
-                      >
-                        {showAllRefs ? "Collapse Matrix" : `Analyze All Nodes (${referencesMatch.length})`}
-                      </button>
-                    </div>
-                  )}
-                </div>
-                {/* --- END EXACT UI MATCH --- */}
-
-                <div className="mt-8">
-                  <RelatedReferences topic={blog.title} />
-                </div>
-
-               
-              </div>
+              <NewsletterRenderer content={blog.content || ''} hideLinks={true} stripReferences={true} />
             </div>
           </div>
           

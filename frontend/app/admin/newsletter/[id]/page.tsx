@@ -192,7 +192,7 @@ export default function EditNewsletterPage() {
 
         <div className="bg-white rounded-2xl border border-slate-200 p-5">
           <h2 className="text-lg font-black text-slate-900 mb-4">Live Preview</h2>
-          <NewsletterRenderer content={content} />
+          <NewsletterRenderer content={content} hideLinks={true} />
         </div>
 
         <div className="pt-2 flex justify-end">
