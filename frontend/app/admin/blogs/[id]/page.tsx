@@ -235,7 +235,7 @@ export default function EditBlogPage() {
               </div>
               <div className="rounded-[4rem] p-10 md:p-14 border border-slate-100 bg-white shadow-2xl shadow-slate-200/20 min-h-[900px] relative">
                  <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none text-slate-900"><Terminal size={80} /></div>
-                 <NewsletterRenderer content={content} />
+                 <NewsletterRenderer content={content} hideLinks={true} stripReferences={true} />
                  {!content && (
                     <div className="absolute inset-0 flex items-center justify-center text-slate-200">
                        <Info size={40} className="animate-pulse" />

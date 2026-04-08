@@ -17,6 +17,7 @@ export default function NewNewsletterPage() {
   const [content, setContent] = useState('');
   const [mode, setMode] = useState<GeneratorMode>('manual');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [blogId, setBlogId] = useState<string | null>(null);
   const [aiQuery, setAiQuery] = useState('');
   const [selectedTone, setSelectedTone] = useState<string>('human');
   const [isToneDropdownOpen, setIsToneDropdownOpen] = useState(false);
@@ -84,6 +85,7 @@ export default function NewNewsletterPage() {
       // CALL AI API (Backend returns Markdown)
       const response = await apiClient.generateBlog(type, aiQuery.trim(), selectedTone);
       const blog = response.blog;
+      setBlogId(blog.id);
 
       // Populate form with generated content (Native Markdown)
       let finalTitle = blog.title || '';
@@ -149,8 +151,11 @@ export default function NewNewsletterPage() {
     if (isSaving) return;
     setIsSaving(true);
     try {
-      // Content is saved as raw Markdown from TipTap editor
-      await apiClient.createBlog({ ...data, content });
+      if (blogId) {
+        await apiClient.updateBlog(blogId, { ...data, content });
+      } else {
+        await apiClient.createBlog({ ...data, content });
+      }
       router.push('/admin/newsletter');
     } catch (error) {
       console.error('Save error:', error);
@@ -448,7 +453,7 @@ export default function NewNewsletterPage() {
             </span>
           </div>
           <div className="rounded-[3rem] p-8 md:p-12 border border-slate-100 bg-white shadow-2xl shadow-slate-200/20 min-h-[400px]">
-            <NewsletterRenderer content={content} />
+            <NewsletterRenderer content={content} hideLinks={true} />
           </div>
         </div>
 

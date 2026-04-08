@@ -250,103 +250,44 @@ export default function BlogDetailPage() {
           </div>
         </nav>
 
-        <main className="max-w-7xl mx-auto px-6 py-24">
-          {/* Release Label */}
-          <div className="flex items-center gap-4 mb-8">
-            <span className="px-4 py-1.5 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-primary-600/20">
-              {blog.category || "Intelligence Release"}
-            </span>
-            <div className="h-px flex-1 bg-slate-100" />
-          </div>
+        <main className="mx-auto py-24">
+          <div className="max-w-4xl mx-auto px-6">
+            {/* Release Label */}
+            <div className="flex items-center gap-4 mb-8">
+              <span className="px-4 py-1.5 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-primary-600/20">
+                {blog.category || "Intelligence Release"}
+              </span>
+              <div className="h-px flex-1 bg-slate-100" />
+            </div>
 
-          {/* Neural Title */}
-          <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight mb-16 max-w-5xl">
-            {blog.title}
-          </h1>
+            {/* Neural Title */}
+            <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight mb-16">
+              {blog.title}
+            </h1>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 relative">
-            <div className="lg:col-span-8">
-
-              {/* Narrative Context */}
-              <div className="flex items-center gap-6 mb-16 py-8 border-y border-slate-50">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Author Trace</span>
-                  <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{blog.author_name || "DataVex Architect"}</span>
-                </div>
-                <div className="w-px h-8 bg-slate-100" />
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Retrieval Date</span>
-                  <span className="text-xs font-black text-slate-600 uppercase tracking-widest">
-                    {mounted ? new Date(blog.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : ""}
-                  </span>
-                </div>
-              </div>
+            <div className="space-y-16">
+              {/* Metadata references removed */}
 
               {/* Featured Matrix Image */}
               {blog.featured_image && (
-                <div className="mb-20 rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/50 group">
+                <div className="rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/50 group">
                   <img
                     src={blog.featured_image}
                     alt={blog.title}
-                    className="w-full h-auto max-h-[500px] object-cover transition-transform duration-1000 group-hover:scale-105"
+                    className="w-full h-auto max-h-[600px] object-cover transition-transform duration-1000 group-hover:scale-105"
                     referrerPolicy="no-referrer"
                   />
                 </div>
               )}
 
               {/* Rendered Intelligence Matrix */}
-              <NewsletterRenderer content={blog.content || ''} />
-            </div>
-
-            {/* Dynamic Context Sidebar */}
-            <div className="lg:col-span-4 hidden lg:block border-l border-slate-100 pl-10">
-              <div className="sticky top-32">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary-600 animate-pulse" />
-                  Correlated External Nodes
-                </h3>
-
-                {/* --- UPDATED LIGHT THEME UI --- */}
-                <div className="bg-white rounded-[24px] shadow-xl border border-slate-100 overflow-hidden">
-                  <div className="flex flex-col">
-                    {/* NEW: Slice based on showAllRefs state */}
-                    {(showAllRefs ? referencesMatch : referencesMatch.slice(0, 3)).map((ref: any, idx) => (
-                      <PreviewNodeCard key={idx} url={ref.url} title={ref.title} />
-                    ))}
-
-                    {referencesMatch.length === 0 && (
-                      <p className="text-xs font-medium text-slate-400 italic p-6 text-center">
-                        No external references detected.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Show All Button - Now Functional */}
-                  {referencesMatch.length > 3 && (
-                    <div className="p-3 bg-slate-50/50">
-                      <button 
-                        onClick={() => setShowAllRefs(!showAllRefs)}
-                        className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all"
-                      >
-                        {showAllRefs ? "Collapse Matrix" : `Analyze All Nodes (${referencesMatch.length})`}
-                      </button>
-                    </div>
-                  )}
-                </div>
-                {/* --- END EXACT UI MATCH --- */}
-
-                <div className="mt-8">
-                  <RelatedReferences topic={blog.title} />
-                </div>
-
-               
-              </div>
+              <NewsletterRenderer content={blog.content || ''} hideLinks={true} stripReferences={true} />
             </div>
           </div>
           
           {/* Recommended Intelligence Matrix */}
           {recommendations.length > 0 && (
-            <div className="mt-32 pt-24 border-t border-slate-100">
+            <div className="max-w-7xl mx-auto px-6 mt-32 pt-24 border-t border-slate-100">
               <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
                 <div>
                   <h2 className="text-3xl font-black text-slate-900 tracking-tight">More Blogs</h2>
@@ -393,7 +334,7 @@ export default function BlogDetailPage() {
           )}
 
           {/* Global Footer Context */}
-          <div className="mt-40 pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="max-w-7xl mx-auto px-6 mt-40 pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
             <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">© {new Date().getFullYear()} DATAVEX.ai — ALL RIGHTS RESERVED.</p>
             <div className="flex gap-8">
               {['Authority', 'Synthesis', 'Integrity'].map(word => (

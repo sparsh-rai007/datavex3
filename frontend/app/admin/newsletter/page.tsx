@@ -329,7 +329,7 @@ export default function NewsletterAdminPage() {
             <div className="bg-white rounded-2xl border border-slate-200 p-6">
               <h3 className="text-lg font-black text-slate-900 mb-4">Live Preview</h3>
               <div className="max-h-[480px] overflow-auto">
-                <NewsletterRenderer content={content} />
+                <NewsletterRenderer content={content} hideLinks={true} />
               </div>
             </div>
           </div>
