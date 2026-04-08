@@ -3,66 +3,51 @@ import Parser from "rss-parser";
 export interface RssHeadline {
   title: string;
   link: string;
-  source: string;
 }
 
-const TOP_ARTICLES_PER_FEED = 5;
+const TOP_ITEMS_PER_FEED = 5;
 
-const RSS_FEEDS: Array<{ name: string; url: string }> = [
-  { name: "Hacker News", url: "https://hnrss.org/frontpage" },
-  { name: "TechCrunch AI", url: "https://techcrunch.com/category/artificial-intelligence/feed/" },
-  { name: "dev.to", url: "https://dev.to/feed" },
-  { name: "The Verge Tech", url: "https://www.theverge.com/rss/tech/index.xml" },
+const RSS_FEEDS: string[] = [
+  "https://hnrss.org/frontpage",
+  "https://techcrunch.com/category/artificial-intelligence/feed/",
+  "https://dev.to/feed",
 ];
 
-/**
- * Fetches top headlines from curated RSS feeds and returns both structured items
- * and a numbered text block for downstream LLM prompts.
- */
-export async function fetchTrendingHeadlines(): Promise<{
-  items: RssHeadline[];
-  numberedText: string;
-}> {
-  const parser = new Parser();
-  const allHeadlines: RssHeadline[] = [];
+const parser = new Parser();
 
-  for (const feed of RSS_FEEDS) {
+export async function fetchTrendingHeadlines(): Promise<{ headlines: RssHeadline[]; formattedText: string }> {
+  const headlines: RssHeadline[] = [];
+
+  for (const feedUrl of RSS_FEEDS) {
     try {
-      const parsed = await parser.parseURL(feed.url);
-      const topItems = (parsed.items || []).slice(0, TOP_ARTICLES_PER_FEED);
+      const feed = await parser.parseURL(feedUrl);
+      const topItems = (feed.items || []).slice(0, TOP_ITEMS_PER_FEED);
 
       for (const item of topItems) {
-        const title = (item.title || "").trim();
-        const link = (item.link || "").trim();
+        const title = String(item.title || "").trim();
+        const link = String(item.link || "").trim();
 
         if (!title || !link) {
           continue;
         }
 
-        allHeadlines.push({
-          title,
-          link,
-          source: feed.name,
-        });
+        headlines.push({ title, link });
       }
     } catch (error: any) {
-      console.warn(`[RSS] Failed to parse ${feed.name}: ${error.message}`);
+      console.warn(`[RSS] Failed feed ${feedUrl}: ${error.message}`);
     }
   }
 
-  if (allHeadlines.length === 0) {
-    throw new Error("No RSS headlines could be fetched from configured feeds");
+  const deduped = dedupeByLink(headlines).slice(0, 15);
+  if (deduped.length === 0) {
+    throw new Error("No RSS headlines available from configured feeds");
   }
 
-  const deduped = dedupeByLink(allHeadlines);
-  const numberedText = deduped
-    .map((item, idx) => `${idx + 1}. [${item.source}] ${item.title} - ${item.link}`)
+  const formattedText = deduped
+    .map((item, index) => `${index + 1}. ${item.title} - ${item.link}`)
     .join("\n");
 
-  return {
-    items: deduped,
-    numberedText,
-  };
+  return { headlines: deduped, formattedText };
 }
 
 function dedupeByLink(items: RssHeadline[]): RssHeadline[] {

@@ -1,291 +1,332 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Mail,
-  RefreshCw,
-  AlertTriangle,
-  Loader2,
-  Search,
-  Plus,
-  Pencil,
-  Clock3,
-} from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { RefreshCw, Loader2, CheckCircle2, AlertTriangle, Activity } from 'lucide-react';
+import TipTapEditor from '@/components/TipTapEditor';
+import NewsletterRenderer from '@/components/NewsletterRenderer';
 import { apiClient } from '@/lib/api';
 
-type NewsletterItem = {
+type CronHealth = {
+  status: 'healthy' | 'running' | 'failed';
+  is_currently_running: boolean;
+  last_successful_db_record: string | null;
+  last_cron_execution: string | null;
+  last_error: string | null;
+};
+
+type NewsletterDraft = {
   id: string;
   title: string;
-  slug: string;
+  content: string;
   status: string;
-  type?: string;
-  generation_method?: string;
   created_at: string;
-  updated_at?: string;
+};
+
+type ReviewResult = {
+  structure_check: { passed: boolean; issues: string[] };
+  tone_check: { passed: boolean; issues: string[] };
+  hallucination_check: { passed: boolean; issues: string[] };
+  reference_check: { passed: boolean; issues: string[] };
+  overall_score: number;
 };
 
 export default function NewsletterAdminPage() {
-  const router = useRouter();
-
-  const [items, setItems] = useState<NewsletterItem[]>([]);
+  const [cronHealth, setCronHealth] = useState<CronHealth | null>(null);
+  const [todayDraft, setTodayDraft] = useState<NewsletterDraft | null>(null);
+  const [content, setContent] = useState('');
+  const [reviewResults, setReviewResults] = useState<ReviewResult | null>(null);
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isForceRunning, setIsForceRunning] = useState(false);
-  const [showRegenerateModal, setShowRegenerateModal] = useState(false);
-  const [regenerateKeyword, setRegenerateKeyword] = useState('');
-  const [search, setSearch] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  const loadNewsletters = async () => {
+  const lastReviewedDraftId = useRef<string | null>(null);
+
+  const loadInitialData = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
+
     try {
-      const response = await apiClient.getBlogs();
-      const blogs = Array.isArray(response?.blogs) ? response.blogs : [];
+      const [health, newslettersResponse] = await Promise.all([
+        apiClient.getNewsletterCronHealth(),
+        apiClient.getNewsletters(),
+      ]);
 
-      const newsletters = blogs
-        .filter((b: any) => {
-          const type = String(b?.type || '').toLowerCase();
-          const generationMethod = String(b?.generation_method || '').toLowerCase();
-          const title = String(b?.title || '').toLowerCase();
+      const newsletters = Array.isArray(newslettersResponse?.newsletters)
+        ? newslettersResponse.newsletters
+        : [];
 
+      const now = new Date();
+      const todayDraftFromList = newsletters
+        .filter((item: any) => {
+          const createdAt = item?.created_at ? new Date(item.created_at) : null;
           return (
-            type === 'newsletter' ||
-            generationMethod.includes('newsletter') ||
-            title.includes('newsletter') ||
-            title.includes('briefing')
+            item?.status === 'draft' &&
+            !!createdAt &&
+            createdAt.toDateString() === now.toDateString()
           );
         })
         .sort(
           (a: any, b: any) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
+        )[0];
 
-      setItems(newsletters);
-    } catch (error) {
-      console.error('Failed to load newsletters:', error);
-      setItems([]);
+      const latestDraft =
+        todayDraftFromList ||
+        newsletters
+          .filter((item: any) => item?.status === 'draft')
+          .sort(
+            (a: any, b: any) =>
+              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )[0] ||
+        null;
+
+      setCronHealth(health);
+      setTodayDraft(latestDraft);
+      setContent(latestDraft?.content || '');
+      setReviewResults(null);
+      lastReviewedDraftId.current = null;
+    } catch (err: any) {
+      console.error('Failed loading newsletter dashboard data:', err);
+      setError(err?.response?.data?.error || 'Failed to load newsletter dashboard data');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadNewsletters();
   }, []);
 
-  const filteredItems = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return items;
+  const runReview = useCallback(async (markdown: string) => {
+    if (!markdown || markdown.trim().length < 50) {
+      setReviewResults(null);
+      return;
+    }
 
-    return items.filter((item) => {
-      return (
-        item.title?.toLowerCase().includes(q) ||
-        item.slug?.toLowerCase().includes(q) ||
-        item.status?.toLowerCase().includes(q)
-      );
-    });
-  }, [items, search]);
-
-  const handleForceRun = async () => {
-    setIsForceRunning(true);
-    setShowRegenerateModal(false);
+    setIsReviewing(true);
     try {
-      await apiClient.forceRunNewsletter(regenerateKeyword);
-      setRegenerateKeyword('');
-      await loadNewsletters();
-    } catch (error) {
-      console.error('Force run failed:', error);
-      alert('Failed to generate newsletter. Check backend logs.');
+      const result = await apiClient.reviewBlog(markdown);
+      setReviewResults(result as ReviewResult);
+    } catch (err) {
+      console.error('Newsletter auto-review failed:', err);
+      setReviewResults(null);
     } finally {
-      setIsForceRunning(false);
+      setIsReviewing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
+
+  useEffect(() => {
+    if (!todayDraft?.id || !todayDraft?.content) {
+      return;
+    }
+
+    if (lastReviewedDraftId.current === todayDraft.id) {
+      return;
+    }
+
+    lastReviewedDraftId.current = todayDraft.id;
+    void runReview(todayDraft.content);
+  }, [todayDraft, runReview]);
+
+  const handleRegenerate = async () => {
+    setIsGenerating(true);
+    try {
+      await apiClient.regenerateTodayNewsletter();
+      await loadInitialData();
+    } catch (err: any) {
+      console.error('Failed to regenerate newsletter:', err);
+      setError(err?.response?.data?.error || 'Regeneration failed');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
-  const openEditor = (id: string) => {
-    router.push(`/admin/newsletter/${id}`);
+  const handlePublish = async () => {
+    if (!todayDraft?.id || isPublishing) {
+      return;
+    }
+
+    setIsPublishing(true);
+    setError(null);
+
+    try {
+      await apiClient.publishNewsletter(todayDraft.id, {
+        title: todayDraft.title,
+        content,
+      });
+      await loadInitialData();
+    } catch (err: any) {
+      console.error('Failed to publish newsletter:', err);
+      setError(err?.response?.data?.error || 'Publish failed');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const formatTime = (value: string | null) => {
+    if (!value) return 'N/A';
+    return new Date(value).toLocaleString();
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <Loader2 className="animate-spin text-primary-600 mb-4" size={40} />
-        <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-xs">Loading Newsletters...</p>
-      </div>
-    );
-  }
-
-  if (isForceRunning) {
-    return (
-      <div className="fixed inset-0 bg-slate-900 z-[100] flex flex-col items-center justify-center text-white p-6">
-        <div className="max-w-md text-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-            className="w-20 h-20 border-4 border-primary-500 border-t-transparent rounded-full mx-auto mb-8"
-          />
-          <h2 className="text-3xl font-black mb-4 tracking-tight">Generating Newsletter</h2>
-          <p className="text-slate-400 font-medium leading-relaxed">
-            AI is building a new newsletter draft. This can take a few seconds.
-          </p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 size={36} className="animate-spin text-primary-600" />
       </div>
     );
   }
 
   return (
-    <div className="p-8 max-w-[1400px] mx-auto font-outfit min-h-screen bg-slate-50/10">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-10 gap-6">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-xl bg-primary-600 flex items-center justify-center text-white">
-              <Mail size={18} />
-            </div>
-            <span className="text-[10px] font-black text-primary-600 uppercase tracking-widest">Newsletter Control Center</span>
-          </div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">All Newsletters</h1>
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">
-            Click any newsletter to edit and publish
+    <div className="p-8 max-w-[1500px] mx-auto space-y-8">
+      {isGenerating && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/90 flex flex-col items-center justify-center text-white px-6 text-center">
+          <Loader2 size={48} className="animate-spin mb-6 text-primary-500" />
+          <h2 className="text-3xl font-black mb-3">Regenerating Today&apos;s Edition</h2>
+          <p className="text-slate-300 font-medium max-w-xl">
+            Scanning RSS feeds and writing new draft... This takes about 15 seconds.
           </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowRegenerateModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-primary-600 transition-all shadow-sm active:scale-95"
-          >
-            <RefreshCw size={14} />
-            Generate Newsletter
-          </button>
-
-          <button
-            onClick={() => router.push('/admin/newsletter/new')}
-            className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all shadow-sm active:scale-95"
-          >
-            <Plus size={14} />
-            New Manual
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white border border-slate-100 rounded-[2rem] p-4 mb-6 shadow-sm">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search newsletters by title, slug, status..."
-            className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
-          />
-        </div>
-      </div>
-
-      {filteredItems.length === 0 ? (
-        <div className="bg-white border-2 border-dashed border-slate-200 rounded-[2rem] p-16 text-center">
-          <h2 className="text-2xl font-black text-slate-900 mb-3">No newsletters found</h2>
-          <p className="text-slate-400 font-medium">Generate one using the button above.</p>
-        </div>
-      ) : (
-        <div className="bg-white border border-slate-100 rounded-[2rem] overflow-hidden shadow-sm">
-          <div className="grid grid-cols-12 px-6 py-4 border-b border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400">
-            <div className="col-span-5">Title</div>
-            <div className="col-span-2">Status</div>
-            <div className="col-span-3">Created</div>
-            <div className="col-span-2 text-right">Action</div>
-          </div>
-
-          {filteredItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => openEditor(item.id)}
-              className="w-full text-left grid grid-cols-12 px-6 py-4 border-b border-slate-50 last:border-b-0 hover:bg-slate-50 transition-colors"
-            >
-              <div className="col-span-5 pr-4">
-                <p className="text-sm font-black text-slate-900 line-clamp-1">{item.title || 'Untitled Newsletter'}</p>
-                <p className="text-[11px] font-bold text-slate-400 mt-1 line-clamp-1">/{item.slug}</p>
-              </div>
-              <div className="col-span-2">
-                <span
-                  className={`inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                    item.status === 'published'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-amber-100 text-amber-700'
-                  }`}
-                >
-                  {item.status}
-                </span>
-              </div>
-              <div className="col-span-3 flex items-center gap-2 text-sm font-bold text-slate-500">
-                <Clock3 size={14} className="text-slate-300" />
-                {new Date(item.created_at).toLocaleString()}
-              </div>
-              <div className="col-span-2 flex justify-end items-center gap-2 text-primary-600 font-black uppercase tracking-widest text-[10px]">
-                <Pencil size={14} />
-                Edit
-              </div>
-            </button>
-          ))}
         </div>
       )}
 
-      <AnimatePresence>
-        {showRegenerateModal && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-              onClick={() => setShowRegenerateModal(false)}
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-white rounded-[2rem] p-8 max-w-lg w-full relative z-[120] shadow-2xl"
-            >
-              <div className="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-6">
-                <AlertTriangle size={28} />
-              </div>
-              <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">Generate New Newsletter?</h3>
-              <p className="text-slate-500 font-medium leading-relaxed mb-6">
-                This will create a new newsletter draft. Existing newsletters are not deleted.
-              </p>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-slate-900">Daily Tech Newsletter</h1>
+          <p className="text-slate-500 text-sm font-medium mt-1">Automation dashboard and draft editor</p>
+        </div>
+        <button
+          onClick={handleRegenerate}
+          disabled={isGenerating}
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-900 text-white font-bold hover:bg-primary-600 transition disabled:opacity-50"
+        >
+          <RefreshCw size={16} className={isGenerating ? 'animate-spin' : ''} />
+          Regenerate Today&apos;s Edition
+        </button>
+      </div>
 
-              <div className="mb-6">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">
-                  Optional Keyword
-                </label>
-                <input
-                  type="text"
-                  value={regenerateKeyword}
-                  onChange={(e) => setRegenerateKeyword(e.target.value)}
-                  placeholder="e.g. MCP servers, vector databases, AI agents"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400"
-                />
-                <p className="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-widest">
-                  Leave empty for automatic trend mode.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={handleForceRun}
-                  className="w-full py-4 bg-red-500 text-white rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-red-600 transition-all shadow-xl shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <RefreshCw size={16} />
-                  Confirm Generation
-                </button>
-                <button
-                  onClick={() => setShowRegenerateModal(false)}
-                  className="w-full py-4 bg-slate-50 text-slate-500 rounded-xl font-black uppercase tracking-widest text-[11px] hover:bg-slate-100 transition-all active:scale-95"
-                >
-                  Cancel
-                </button>
-              </div>
-            </motion.div>
-          </div>
+      <div
+        className={`rounded-2xl px-5 py-4 border flex items-center gap-3 ${
+          cronHealth?.is_currently_running
+            ? 'bg-blue-50 border-blue-200 text-blue-800'
+            : cronHealth?.status === 'failed'
+              ? 'bg-red-50 border-red-200 text-red-800'
+              : 'bg-green-50 border-green-200 text-green-800'
+        }`}
+      >
+        {cronHealth?.is_currently_running ? (
+          <>
+            <Activity size={18} className="animate-pulse" />
+            <span className="font-bold">Cron is currently generating...</span>
+          </>
+        ) : cronHealth?.status === 'failed' ? (
+          <>
+            <AlertTriangle size={18} />
+            <span className="font-bold">Automation failed:</span>
+            <span>{cronHealth?.last_error || 'Unknown error'}</span>
+          </>
+        ) : (
+          <>
+            <CheckCircle2 size={18} />
+            <span className="font-bold">
+              Automation Active - Last run: {formatTime(cronHealth?.last_cron_execution || null)}
+            </span>
+          </>
         )}
-      </AnimatePresence>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-slate-200 px-5 py-4 text-sm text-slate-600">
+        <span className="font-semibold">Last successful DB record:</span>{' '}
+        {formatTime(cronHealth?.last_successful_db_record || null)}
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium">
+          {error}
+        </div>
+      )}
+
+      {!todayDraft ? (
+        <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center">
+          <h2 className="text-2xl font-black text-slate-900 mb-2">No draft generated for today yet</h2>
+          <p className="text-slate-500 mb-6">Trigger the automation manually to create today&apos;s draft.</p>
+          <button
+            onClick={handleRegenerate}
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary-600 text-white font-black hover:bg-primary-700 transition"
+          >
+            <RefreshCw size={18} />
+            Force Run Automation
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+          <div className={`xl:col-span-8 space-y-4 ${isGenerating ? 'pointer-events-none opacity-40' : ''}`}>
+            <div className="bg-white rounded-2xl border border-slate-200 p-5">
+              <h2 className="text-xl font-black text-slate-900">{todayDraft.title || 'Untitled Newsletter'}</h2>
+              <p className="text-slate-500 text-sm">Draft created at: {formatTime(todayDraft.created_at)}</p>
+            </div>
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+              <TipTapEditor content={content} onChange={setContent} />
+            </div>
+          </div>
+
+          <div className="xl:col-span-4 space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-black text-slate-900">AI Review Checklist</h3>
+                {isReviewing && <Loader2 size={18} className="animate-spin text-primary-600" />}
+              </div>
+
+              {!reviewResults ? (
+                <p className="text-sm text-slate-500">No review yet. Loading auto-review...</p>
+              ) : (
+                <div className="space-y-3">
+                  {[
+                    { key: 'structure_check', label: 'Structure Check' },
+                    { key: 'tone_check', label: 'Tone Check' },
+                    { key: 'hallucination_check', label: 'Hallucination Check' },
+                    { key: 'reference_check', label: 'Reference Check' },
+                  ].map((item) => {
+                    const result = (reviewResults as any)[item.key];
+                    return (
+                      <div
+                        key={item.key}
+                        className={`rounded-xl px-4 py-3 border text-sm font-medium ${
+                          result?.passed
+                            ? 'bg-green-50 border-green-200 text-green-700'
+                            : 'bg-red-50 border-red-200 text-red-700'
+                        }`}
+                      >
+                        {result?.passed ? 'PASS' : 'FAIL'} - {item.label}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="mt-5 pt-5 border-t border-slate-100">
+                <p className="text-sm text-slate-600 font-semibold mb-3">
+                  Overall Score: {reviewResults?.overall_score ?? 'N/A'}
+                </p>
+                <button
+                  onClick={handlePublish}
+                  disabled={isPublishing || isGenerating}
+                  className="w-full px-4 py-3 rounded-xl font-black text-sm uppercase tracking-wider bg-slate-900 text-white"
+                >
+                  {isPublishing ? 'Publishing...' : 'Publish'}
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200 p-6">
+              <h3 className="text-lg font-black text-slate-900 mb-4">Live Preview</h3>
+              <div className="max-h-[480px] overflow-auto">
+                <NewsletterRenderer content={content} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

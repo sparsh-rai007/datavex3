@@ -52,6 +52,18 @@ async function migrate() {
     console.log('✅ Blog generation columns ensured');
 
     await pool.query(`
+      CREATE TABLE IF NOT EXISTS newsletters (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        title VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'sent')),
+        sent_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log("✅ Newsletters table ensured");
+
+    await pool.query(`
   CREATE TABLE IF NOT EXISTS social_credentials (
     id SERIAL PRIMARY KEY,
     platform VARCHAR(30) NOT NULL,     -- linkedin, reddit, instagram

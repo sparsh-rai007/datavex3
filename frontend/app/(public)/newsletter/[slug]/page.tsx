@@ -125,21 +125,28 @@ export default function BlogDetailPage() {
     setMounted(true);
     async function loadBlog() {
       try {
-        const data = await apiClient.getPublicBlog(slug);
+        const data = await apiClient.getPublicNewsletter(slug);
         if (data) {
-          if (data.external_url) {
-            window.open(data.external_url, '_blank');
-            router.back();
-            return;
-          }
           setBlog(data);
 
-          // Fetch recommendations (other blogs)
+          // Fetch recommendations (other newsletters)
           try {
-            const allBlogs = await apiClient.getPublicBlogs();
-            // Filter current blog and take 3
-            const filtered = (allBlogs || [])
-              .filter((b: any) => b.slug !== slug)
+            const allNewsletters = await apiClient.getPublicNewsletters();
+            const filtered = (allNewsletters || [])
+              .filter((n: any) => String(n.id) !== String(slug))
+              .map((n: any) => {
+                const plain = String(n?.content || "")
+                  .replace(/[#>*`_\-\[\]\(\)]/g, " ")
+                  .replace(/\s+/g, " ")
+                  .trim();
+                return {
+                  id: String(n.id),
+                  slug: String(n.id),
+                  title: n.title || "Untitled Newsletter",
+                  excerpt: plain.slice(0, 180) || "Daily technical newsletter briefing.",
+                  created_at: n.created_at,
+                };
+              })
               .slice(0, 3);
             setRecommendations(filtered);
           } catch (recErr) {

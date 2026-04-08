@@ -157,6 +157,37 @@ class ApiClient {
     return response.data as { newsletter: any };
   }
 
+  async getNewsletterCronHealth() {
+    const response = await this.client.get("/newsletter/cron-health");
+    return response.data as {
+      status: "healthy" | "running" | "failed";
+      is_currently_running: boolean;
+      last_successful_db_record: string | null;
+      last_cron_execution: string | null;
+      last_error: string | null;
+    };
+  }
+
+  async getNewsletters() {
+    const response = await this.client.get("/newsletters");
+    return response.data as { newsletters: any[] };
+  }
+
+  async regenerateTodayNewsletter() {
+    try {
+      const response = await this.client.post("/newsletter/force-run");
+      return response.data as { newsletter: any };
+    } catch {
+      const fallback = await this.client.post("/newsletter/generate-daily");
+      return fallback.data as { newsletter: any };
+    }
+  }
+
+  async publishNewsletter(id: string, payload?: { title?: string; content?: string }) {
+    const response = await this.client.put(`/newsletters/${id}/publish`, payload || {});
+    return response.data as { newsletter: any };
+  }
+
   async editSnippet(original_text: string, instruction: string) {
     const response = await this.client.post('/blog/edit-snippet', { original_text, instruction });
     return response.data as { rewritten_text: string };
@@ -185,6 +216,20 @@ class ApiClient {
 
   async getPublicBlog(slug: string) {
     const response = await this.client.get(`/blogs/public/${slug}`, {
+      withCredentials: false,
+    });
+    return response.data;
+  }
+
+  async getPublicNewsletters() {
+    const response = await this.client.get('/newsletters/public/all', {
+      withCredentials: false,
+    });
+    return response.data.newsletters;
+  }
+
+  async getPublicNewsletter(id: string) {
+    const response = await this.client.get(`/newsletters/public/${id}`, {
       withCredentials: false,
     });
     return response.data;

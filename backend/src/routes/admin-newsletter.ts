@@ -1,7 +1,7 @@
 import express from "express";
 import { authenticateToken, requireRole } from "../middleware/auth";
 import { pool } from "../db/connection";
-import { generateDailyNewsletter } from "../services/dailyNewsletterService";
+import { runDailyNewsletter } from "../services/dailyNewsletterService";
 
 const router = express.Router();
 
@@ -12,35 +12,15 @@ router.get(
   requireRole("admin"),
   async (_req, res) => {
     try {
-      let result;
-      try {
-        result = await pool.query(
-          `SELECT *
-           FROM blogs
-           WHERE type = 'newsletter'
-             AND created_at >= CURRENT_DATE
-           ORDER BY
-             CASE WHEN status = 'draft' THEN 0 ELSE 1 END,
-             created_at DESC
-           LIMIT 1`
-        );
-      } catch (error: any) {
-        // Backward compatibility if blogs.type has not been migrated yet.
-        if (error?.code !== "42703") {
-          throw error;
-        }
-
-        result = await pool.query(
-          `SELECT *
-           FROM blogs
-           WHERE generation_method IN ('ai_newsletter', 'newsletter')
-             AND created_at >= CURRENT_DATE
-           ORDER BY
-             CASE WHEN status = 'draft' THEN 0 ELSE 1 END,
-             created_at DESC
-           LIMIT 1`
-        );
-      }
+      const result = await pool.query(
+        `SELECT *
+         FROM newsletters
+         WHERE created_at >= CURRENT_DATE
+         ORDER BY
+           CASE WHEN status = 'draft' THEN 0 ELSE 1 END,
+           created_at DESC
+         LIMIT 1`
+      );
 
       return res.status(200).json({
         draft: result.rows[0] || null,
@@ -59,24 +39,17 @@ router.post(
   "/trigger",
   authenticateToken,
   requireRole("admin"),
-  async (req, res) => {
+  async (_req, res) => {
     try {
-      const keyword =
-        typeof req.body?.keyword === "string" ? req.body.keyword.trim() : "";
-
-      const draft = await generateDailyNewsletter({
-        keyword: keyword || undefined,
-      });
+      const draft = await runDailyNewsletter();
 
       return res.status(201).json({
         message: "Daily newsletter generated successfully",
-        mode: keyword ? "keyword" : "automatic",
+        mode: "automatic",
         newsletter: {
           id: draft.id,
           title: draft.title,
-          slug: draft.slug,
           status: draft.status,
-          type: draft.type,
           created_at: draft.created_at,
         },
       });

@@ -90,18 +90,26 @@ router.post(
       // ── Generate Unique Slug ──────────────────────────────────
       const slug = slugify(result.title) + "-" + Date.now();
 
-      // Just return the generated content without saving to DB yet.
-      // This allows the frontend to populate the form and the user to finalize the save.
-      // It also prevents "duplicate slug" errors when the frontend eventually calls the create API.
+      const saved = await pool.query(
+        `INSERT INTO blogs (
+          title, slug, content, status, generation_method, source_reference, author_id
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *`,
+        [
+          result.title,
+          slug,
+          result.content,
+          "draft",
+          result.generationMethod,
+          result.sourceReference,
+          authorId,
+        ]
+      );
+
       return res.status(200).json({
         message: "Blog content generated successfully",
-        blog: {
-          title: result.title,
-          slug: slug,
-          content: result.content,
-          generation_method: result.generationMethod,
-          source_reference: result.sourceReference
-        },
+        blog: saved.rows[0],
       });
     } catch (error: any) {
       console.error("❌ Blog generation error:", error.message);
