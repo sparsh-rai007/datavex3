@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Edit3, Loader2, Save, ArrowLeft, Terminal, User, Briefcase, BarChart, GraduationCap, ChevronDown, Share2, Info } from 'lucide-react';
+import { Sparkles, Edit3, Loader2, Save, ArrowLeft, Terminal, User, Briefcase, BarChart, GraduationCap, ChevronDown, Share2, Info, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import TipTapEditor from '@/components/TipTapEditor';
 import NewsletterRenderer from '@/components/NewsletterRenderer';
 import ShareModal from '@/components/ShareModal';
@@ -332,15 +332,50 @@ export default function NewBlogPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 relative z-10">
-                  {['structure_check', 'tone_check', 'hallucination_check', 'reference_check'].map(key => {
+                <div className="space-y-3 relative z-10">
+                  {[
+                    { key: 'structure_check', label: 'Structure Check' },
+                    { key: 'tone_check', label: 'Tone Check' },
+                    { key: 'hallucination_check', label: 'Hallucination Check' },
+                    { key: 'reference_check', label: 'Reference Check' },
+                  ].map(({ key, label }) => {
                     const res = reviewReport[key];
+                    const issues: string[] = res?.issues || [];
                     return (
-                      <div key={key} className={`p-5 rounded-3xl bg-slate-50 border border-slate-100 flex flex-col items-center text-center transition-all hover:shadow-lg ${res?.passed ? 'opacity-100' : 'border-red-200 bg-red-50/30'}`}>
-                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">{key.replace('_', ' ')}</p>
-                        {res?.passed ? <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">Protocol Pass</p> : <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">Critical Optimization</p>}
+                      <div key={key} className={`rounded-2xl border transition-all ${
+                        res?.passed
+                          ? 'bg-green-50/40 border-green-100'
+                          : 'bg-red-50/40 border-red-200'
+                      }`}>
+                        <div className="flex items-center justify-between px-5 py-3">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{label}</p>
+                          {res?.passed ? (
+                            <div className="flex items-center gap-1.5 text-green-600">
+                              <CheckCircle2 size={13} />
+                              <span className="text-[9px] font-black uppercase tracking-widest">Pass</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 text-red-600">
+                              <XCircle size={13} />
+                              <span className="text-[9px] font-black uppercase tracking-widest">Failed</span>
+                            </div>
+                          )}
+                        </div>
+                        {!res?.passed && issues.length > 0 && (
+                          <div className="px-5 pb-4 space-y-1.5 border-t border-red-100">
+                            <p className="text-[8px] font-black uppercase tracking-widest text-red-400 pt-3 mb-2 flex items-center gap-1.5">
+                              <AlertTriangle size={10} /> Why it failed
+                            </p>
+                            {issues.map((issue, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <div className="w-1 h-1 rounded-full bg-red-400 mt-1.5 shrink-0" />
+                                <p className="text-[10px] text-red-700 font-medium leading-snug">{issue}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )
+                    );
                   })}
                 </div>
 

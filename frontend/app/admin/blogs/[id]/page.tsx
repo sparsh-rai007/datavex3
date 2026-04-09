@@ -7,7 +7,7 @@ import TipTapEditor from '@/components/TipTapEditor';
 import NewsletterRenderer from '@/components/NewsletterRenderer';
 import ShareModal from '@/components/ShareModal';
 import { useForm } from 'react-hook-form';
-import { ArrowLeft, Save, Sparkles, Loader2, Share2, BarChart, Terminal, Info, Edit3, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Save, Sparkles, Loader2, Share2, BarChart, Terminal, Info, Edit3, ChevronDown, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function EditBlogPage() {
@@ -200,20 +200,51 @@ export default function EditBlogPage() {
                          A-SCORE: {reviewReport.overall_score}/100
                       </div>
                    </div>
-                   <div className="grid grid-cols-2 gap-4 relative z-10">
-                      {['structure_check', 'tone_check', 'hallucination_check', 'reference_check'].map((key) => (
-                         <div key={key} className={`p-4 rounded-2xl bg-slate-50 border ${reviewReport[key]?.passed ? 'border-slate-100' : 'border-red-200 bg-red-50/20'}`}>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">{key.replace('_', ' ')}</p>
-                            {reviewReport[key]?.passed ? (
-                               <div className="flex items-center gap-2 text-green-600">
-                                  <CheckCircle2 size={12} />
-                                  <span className="text-[10px] font-black uppercase tracking-widest">Protocol Pass</span>
-                               </div>
-                            ) : (
-                               <span className="text-[10px] font-black uppercase tracking-widest text-red-600">Review Required</span>
+                   <div className="space-y-3 relative z-10">
+                      {[
+                        { key: 'structure_check', label: 'Structure Check' },
+                        { key: 'tone_check', label: 'Tone Check' },
+                        { key: 'hallucination_check', label: 'Hallucination Check' },
+                        { key: 'reference_check', label: 'Reference Check' },
+                      ].map(({ key, label }) => {
+                        const res = reviewReport[key];
+                        const issues: string[] = res?.issues || [];
+                        return (
+                          <div key={key} className={`rounded-2xl border transition-all ${
+                            res?.passed
+                              ? 'bg-green-50/40 border-green-100'
+                              : 'bg-red-50/40 border-red-200'
+                          }`}>
+                            <div className={`flex items-center justify-between px-5 py-3`}>
+                              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{label}</p>
+                              {res?.passed ? (
+                                <div className="flex items-center gap-1.5 text-green-600">
+                                  <CheckCircle2 size={13} />
+                                  <span className="text-[9px] font-black uppercase tracking-widest">Pass</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1.5 text-red-600">
+                                  <XCircle size={13} />
+                                  <span className="text-[9px] font-black uppercase tracking-widest">Failed</span>
+                                </div>
+                              )}
+                            </div>
+                            {!res?.passed && issues.length > 0 && (
+                              <div className="px-5 pb-4 space-y-1.5 border-t border-red-100">
+                                <p className="text-[8px] font-black uppercase tracking-widest text-red-400 pt-3 mb-2 flex items-center gap-1.5">
+                                  <AlertTriangle size={10} /> Why it failed
+                                </p>
+                                {issues.map((issue, i) => (
+                                  <div key={i} className="flex items-start gap-2">
+                                    <div className="w-1 h-1 rounded-full bg-red-400 mt-1.5 shrink-0" />
+                                    <p className="text-[10px] text-red-700 font-medium leading-snug">{issue}</p>
+                                  </div>
+                                ))}
+                              </div>
                             )}
-                         </div>
-                      ))}
+                          </div>
+                        );
+                      })}
                    </div>
                    <div className="mt-8 pt-8 border-t border-slate-50 flex items-center justify-between">
                       <button type="button" onClick={() => setShowShareModal(true)} className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[9px] hover:bg-primary-600 shadow-xl transition-all active:scale-95 flex items-center gap-2">
