@@ -4,11 +4,33 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 import TipTapEditor from '@/components/TipTapEditor';
-import NewsletterRenderer from '@/components/NewsletterRenderer';
 import ShareModal from '@/components/ShareModal';
 import { useForm } from 'react-hook-form';
-import { ArrowLeft, Save, Sparkles, Loader2, Share2, BarChart, Terminal, Info, Edit3, ChevronDown, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import {
+  ArrowLeft,
+  Save,
+  Sparkles,
+  Loader2,
+  Share2,
+  BarChart,
+  Terminal,
+  Info,
+  Edit3,
+  ChevronDown,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  User,
+  Globe,
+  Settings,
+  Eye,
+  History,
+  Layout,
+  Search,
+  Zap
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import NewsletterRenderer from '@/components/NewsletterRenderer';
 
 export default function EditBlogPage() {
   const params = useParams();
@@ -20,6 +42,10 @@ export default function EditBlogPage() {
   const [reviewReport, setReviewReport] = useState<any>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
+  const [expandedAudit, setExpandedAudit] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   const { register, setValue, handleSubmit, watch } = useForm();
 
@@ -33,6 +59,10 @@ export default function EditBlogPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     apiClient.getBlog(blogId).then((data) => {
       setValue('title', data.title);
       setValue('slug', data.slug);
@@ -44,7 +74,6 @@ export default function EditBlogPage() {
       setValue('external_url', data.external_url || '');
       setContent(data.content);
       setLoading(false);
-      // Trigger initial audit
       if (data.content) triggerReview(data.content);
     }).catch(err => {
       console.error("Load failed", err);
@@ -66,7 +95,6 @@ export default function EditBlogPage() {
     }
   };
 
-  const [isSaving, setIsSaving] = useState(false);
   const onSubmit = async (data: any) => {
     if (isSaving) return;
     setIsSaving(true);
@@ -83,202 +111,364 @@ export default function EditBlogPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <Loader2 className="animate-spin text-primary-600 mb-4" size={40} />
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Accessing Blog Matrix...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 font-outfit">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full mb-4"
+        />
+        <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Initializing Matrix...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-8 max-w-[1800px] mx-auto font-outfit min-h-screen bg-slate-50/20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-16 gap-8">
-        <div>
-           <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center text-white">
-                 <Edit3 size={16} />
+    <div className="min-h-screen bg-[#F8FAFC] font-outfit text-slate-900">
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-3">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => router.push('/admin/blogs')}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <div className="h-6 w-[1px] bg-slate-200" />
+            <div className="flex flex-col min-w-0 max-w-[500px]">
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <Layout size={12} />
+                <span>Publications</span>
+                <span className="text-slate-300">/</span>
+                <span className="text-indigo-600">Edit Record</span>
               </div>
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Article Optimization Portal</span>
-           </div>
-           <h1 className="text-4xl font-black text-slate-900 tracking-tight">Edit Publication</h1>
-           <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">Intelligence Matrix Record</p>
-        </div>
-        <div className="flex items-center gap-4">
-           <button onClick={() => router.push('/admin/blogs')} className="px-6 py-3 bg-white border border-slate-100 text-slate-400 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:text-slate-900 transition-all shadow-sm">
-              <ArrowLeft size={16} className="inline mr-2" /> Back to Matrix
-           </button>
-           <button 
+              <h1 className="text-sm font-bold text-slate-900 leading-tight mt-0.5 break-words">
+                {watch('title') || 'Untitled Publication'}
+              </h1>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex bg-slate-100 p-1 rounded-xl mr-4">
+              <button
+                onClick={() => setActiveTab('editor')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'editor' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  }`}
+              >
+                <Edit3 size={14} /> Editor
+              </button>
+              <button
+                onClick={() => setActiveTab('preview')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'preview' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  }`}
+              >
+                <Eye size={14} /> Preview
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all"
+            >
+              <Share2 size={18} />
+              <span>Export & Share</span>
+            </button>
+
+            <button
               onClick={handleSubmit(onSubmit)}
               disabled={isSaving}
-              className="px-10 py-5 bg-primary-600 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:bg-slate-900 shadow-xl shadow-primary-600/20 transition-all active:scale-95 flex items-center gap-2"
-           >
-              {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-              Update Publication Record
-           </button>
+              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50"
+            >
+              {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+              <span>Update Matrix</span>
+            </button>
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Side-by-Side Optimization Workspace */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-        
-        {/* LEFT COLUMN: Manual Editor */}
-        <div className="lg:col-span-7 space-y-8">
-           <form className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm focus-within:shadow-xl transition-all">
-                   <label className="block text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Strategic Label</label>
-                   <input {...register('title')} onChange={handleTitleChange} className="w-full bg-transparent border-none p-0 text-xl font-black text-slate-900 placeholder:text-slate-200 outline-none" />
-                </div>
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm focus-within:shadow-xl transition-all">
-                   <label className="block text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4">Registry Slug</label>
-                   <div className="flex items-center gap-2">
-                      <span className="text-slate-200 font-bold">/</span>
-                      <input {...register('slug')} className="flex-1 bg-transparent border-none p-0 text-lg font-bold text-slate-500 outline-none" />
-                   </div>
-                </div>
-              </div>
+      <main className="max-w-[1700px] mx-auto p-8 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10">
+        {/* Left Column: Editor Environment */}
+        <div className="space-y-8">
+          <AnimatePresence mode="wait">
+            {activeTab === 'editor' ? (
+              <motion.div
+                key="editor"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-8"
+              >
+                <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="p-10 border-b border-slate-100 bg-slate-50/30">
+                    <input
+                      {...register('title')}
+                      onChange={handleTitleChange}
+                      placeholder="Enter publication title..."
+                      className="w-full text-5xl font-black text-slate-900 placeholder:text-slate-200 outline-none bg-transparent tracking-tight mb-6"
+                    />
+                    <div className="flex flex-col md:flex-row md:items-center gap-6">
+                      <div className="flex items-center gap-3 px-5 py-2.5 bg-white rounded-2xl border border-slate-200 shadow-sm text-[12px] font-bold text-slate-500">
+                        <Globe size={14} className="text-primary-500" />
+                        <span className="opacity-50">datavex.com/blog/</span>
+                        <input
+                          {...register('slug')}
+                          className="bg-transparent border-none p-0 focus:ring-0 text-primary-600 font-black min-w-[120px]"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                        <History size={14} />
+                        <span>Autosave Terminal Synchronized</span>
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="space-y-6">
-                <div className="flex items-center justify-between px-4">
-                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 flex items-center gap-3">
-                      <div className="w-1.5 h-1.5 bg-primary-600 rounded-full" /> Narrative Infrastructure
-                   </span>
-                   {isReviewing && (
-                     <div className="flex items-center gap-2">
-                        <Loader2 className="animate-spin text-primary-600" size={12} />
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Optimizing Narrative...</span>
-                     </div>
-                   )}
+                  <div className="max-h-[700px] overflow-y-auto">
+                    <TipTapEditor content={content} onChange={setContent} />
+                  </div>
                 </div>
-                <div className="rounded-[3rem] overflow-hidden border border-slate-100 bg-white shadow-2xl shadow-slate-200/20 min-h-[700px]">
-                   <TipTapEditor content={content} onChange={setContent} />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                 <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm space-y-8">
-                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b border-slate-50 pb-4">System Identity</h3>
+                {/* Neural SEO Matrix Section */}
+                <section className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-8">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                      <Search size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">Search Engine Matrix</h3>
+                      <p className="text-xs text-slate-500 font-medium">Global Neural Indexing Optimization</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
-                       <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Distribution Status</label>
-                          <select {...register('status')} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold outline-none cursor-pointer">
-                            <option value="draft">System Draft</option>
-                            <option value="published">Global Release</option>
-                          </select>
-                       </div>
-                       <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Redirection Source</label>
-                          <input {...register("external_url")} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-slate-900 font-bold outline-none" placeholder="https://..." />
-                       </div>
+                      <div className="space-y-2">
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Meta Title Trace</label>
+                        <input
+                          {...register('meta_title')}
+                          className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-300"
+                          placeholder="Strategic search heading..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Strategic Keywords</label>
+                        <input
+                          {...register('meta_keywords')}
+                          className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-300"
+                          placeholder="AI, Neural, Matrix..."
+                        />
+                      </div>
                     </div>
-                 </div>
-                 <div className="bg-slate-900 p-10 rounded-[3rem] text-white shadow-2xl shadow-primary-950/10 space-y-8 relative overflow-hidden">
-                    <div className="absolute bottom-0 right-0 w-40 h-40 bg-primary-600/10 blur-[100px] rounded-full translate-x-1/2 translate-y-1/2" />
-                    <h3 className="text-xs font-black uppercase tracking-widest text-white border-b border-white/5 pb-4 relative z-10">Visibility Matrix (SEO)</h3>
-                    <div className="space-y-6 relative z-10">
-                       <input {...register("meta_title")} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold placeholder:text-slate-700" placeholder="Meta Search Title..." />
-                       <textarea {...register("meta_description")} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold h-32 resize-none placeholder:text-slate-700" placeholder="Strategic Meta Narrative..." />
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Neural Meta Narrative</label>
+                      <textarea
+                        {...register('meta_description')}
+                        className="w-full h-[132px] bg-slate-50 border border-slate-100 rounded-xl px-4 py-4 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all resize-none placeholder:text-slate-300 leading-relaxed"
+                        placeholder="Deep-context narrative summary..."
+                      />
                     </div>
-                 </div>
-              </div>
-           </form>
+                  </div>
+                </section>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="preview"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                className="bg-white rounded-[3rem] p-12 md:p-20 border border-slate-200 shadow-sm min-h-[1000px]"
+              >
+                <NewsletterRenderer content={content} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* RIGHT COLUMN: Performance Archive & Live Synthesis */}
-        <div className="lg:col-span-5 space-y-10 sticky top-12">
-           
-           <AnimatePresence>
-              {reviewReport && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-10 rounded-[3rem] text-slate-900 shadow-2xl shadow-slate-200/40 border border-slate-100 relative overflow-hidden">
-                   <div className="absolute top-0 right-0 p-8 text-primary-50 opacity-[0.4]"><BarChart size={64} /></div>
-                   <div className="flex items-center justify-between mb-8 relative z-10">
-                      <div>
-                         <h3 className="text-xl font-black leading-none">Neural Audit Report</h3>
-                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-2">Authority Threshold Verification</p>
+        {/* Right Column: Operational Sidebar */}
+        <aside className="space-y-8">
+          {/* Publication Control Matrix */}
+          <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-white">
+                <Settings size={16} />
+              </div>
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Publication</h3>
+            </div>
+
+            <div className="space-y-4 relative z-10">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Lifecycle Status</label>
+                <div className="relative group">
+                  <select
+                    {...register('status')}
+                    className="w-full bg-slate-50 border border-slate-100 hover:border-indigo-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none cursor-pointer transition-all appearance-none"
+                  >
+                    <option value="draft">Draft Protocol</option>
+                    <option value="published">Release to Matrix</option>
+                  </select>
+                  <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-indigo-500 transition-colors" />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">External Authority</label>
+                <div className="relative group/input">
+                  <Terminal size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-hover/input:text-indigo-500 transition-colors" />
+                  <input
+                    {...register('external_url')}
+                    className="w-full bg-slate-50 border border-slate-100 hover:border-indigo-200 rounded-xl pl-10 pr-4 py-3 text-xs font-medium text-slate-600 outline-none transition-all"
+                    placeholder="https://external-resource.com"
+                  />
+                </div>
+              </div>
+
+              <button className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-100 text-slate-600 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                <History size={14} /> View Version History
+              </button>
+            </div>
+          </div>
+
+          {/* Neural Audit Hub - Sidebar Optimization */}
+          <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col group">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                  <Zap size={16} />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Neural Audit</h3>
+              </div>
+              {isReviewing && <Loader2 size={14} className="animate-spin text-indigo-600" />}
+            </div>
+
+            <div className="p-6 space-y-6">
+              {reviewReport ? (
+                <>
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <div className={`absolute inset-0 blur-2xl opacity-20 ${reviewReport.overall_score >= 80 ? 'bg-green-400' : 'bg-red-400'}`} />
+                      <div className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center border-2 relative bg-white shadow-xl transition-all duration-500 ${reviewReport.overall_score >= 80 ? "border-green-100 text-green-600" : "border-red-100 text-red-600"
+                        }`}>
+                        <span className="text-2xl font-black leading-none">{reviewReport.overall_score}</span>
+                        <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-40 -mt-0.5">Score</span>
                       </div>
-                      <div className={`px-6 py-3 rounded-2xl font-black text-sm border-2 ${reviewReport.overall_score >= 80 ? 'bg-green-50 border-green-100 text-green-700 shadow-lg shadow-green-200/40' : 'bg-red-50 border-red-100 text-red-700'}`}>
-                         A-SCORE: {reviewReport.overall_score}/100
-                      </div>
-                   </div>
-                   <div className="space-y-3 relative z-10">
-                      {[
-                        { key: 'structure_check', label: 'Structure Check' },
-                        { key: 'tone_check', label: 'Tone Check' },
-                        { key: 'hallucination_check', label: 'Hallucination Check' },
-                        { key: 'reference_check', label: 'Reference Check' },
-                      ].map(({ key, label }) => {
-                        const res = reviewReport[key];
-                        const issues: string[] = res?.issues || [];
-                        return (
-                          <div key={key} className={`rounded-2xl border transition-all ${
-                            res?.passed
-                              ? 'bg-green-50/40 border-green-100'
-                              : 'bg-red-50/40 border-red-200'
-                          }`}>
-                            <div className={`flex items-center justify-between px-5 py-3`}>
-                              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{label}</p>
-                              {res?.passed ? (
-                                <div className="flex items-center gap-1.5 text-green-600">
-                                  <CheckCircle2 size={13} />
-                                  <span className="text-[9px] font-black uppercase tracking-widest">Pass</span>
-                                </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Matrix Compliance</p>
+                      <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                        {reviewReport.overall_score >= 80 ? "High-fidelity content detected." : "Optimization recommended."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {[
+                      { key: 'structure_check', label: 'Semantic Flux', icon: BarChart },
+                      { key: 'tone_check', label: 'Neural Tone', icon: User },
+                      { key: 'hallucination_check', label: 'Fact Fidelity', icon: Info },
+                      { key: 'reference_check', label: 'Source Matrix', icon: Share2 },
+                    ].map(({ key, label, icon: Icon }) => {
+                      const check = reviewReport[key];
+                      const isExpanded = expandedAudit === key;
+                      const hasIssues = check && !check.passed && check.issues?.length > 0;
+
+                      return (
+                        <div key={key} className="space-y-2">
+                          <div
+                            onClick={() => hasIssues && setExpandedAudit(isExpanded ? null : key)}
+                            className={`flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 transition-all ${hasIssues ? 'cursor-pointer hover:bg-slate-100' : ''}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Icon size={14} className="text-slate-400" />
+                              <span className="text-[11px] font-bold text-slate-600">{label}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {check?.passed ? (
+                                <CheckCircle2 size={14} className="text-green-500" />
                               ) : (
-                                <div className="flex items-center gap-1.5 text-red-600">
-                                  <XCircle size={13} />
-                                  <span className="text-[9px] font-black uppercase tracking-widest">Failed</span>
-                                </div>
+                                <>
+                                  <AlertTriangle size={14} className="text-amber-500" />
+                                  {hasIssues && (
+                                    <ChevronDown
+                                      size={14}
+                                      className={`text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                    />
+                                  )}
+                                </>
                               )}
                             </div>
-                            {!res?.passed && issues.length > 0 && (
-                              <div className="px-5 pb-4 space-y-1.5 border-t border-red-100">
-                                <p className="text-[8px] font-black uppercase tracking-widest text-red-400 pt-3 mb-2 flex items-center gap-1.5">
-                                  <AlertTriangle size={10} /> Why it failed
-                                </p>
-                                {issues.map((issue, i) => (
-                                  <div key={i} className="flex items-start gap-2">
-                                    <div className="w-1 h-1 rounded-full bg-red-400 mt-1.5 shrink-0" />
-                                    <p className="text-[10px] text-red-700 font-medium leading-snug">{issue}</p>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
                           </div>
-                        );
-                      })}
-                   </div>
-                   <div className="mt-8 pt-8 border-t border-slate-50 flex items-center justify-between">
-                      <button type="button" onClick={() => setShowShareModal(true)} className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[9px] hover:bg-primary-600 shadow-xl transition-all active:scale-95 flex items-center gap-2">
-                         <Share2 size={14} /> Export Content
-                      </button>
-                      <button type="button" onClick={() => triggerReview()} className="text-[10px] font-black text-primary-600 uppercase tracking-widest hover:underline flex items-center gap-2">
-                         <Sparkles size={14} /> Re-Audit Data
-                      </button>
-                   </div>
-                </motion.div>
+
+                          <AnimatePresence>
+                            {isExpanded && hasIssues && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 space-y-2">
+                                  <div className="flex items-center gap-2 text-amber-700">
+                                    <AlertTriangle size={12} />
+                                    <span className="text-[9px] font-bold uppercase tracking-widest">Neural Alert</span>
+                                  </div>
+                                  {check.issues.map((issue: string, i: number) => (
+                                    <p key={i} className="text-[10px] text-amber-800 font-medium leading-relaxed">• {issue}</p>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => triggerReview()}
+                    disabled={isReviewing}
+                    className="w-full py-3 bg-indigo-50 text-indigo-600 rounded-xl text-[11px] font-bold hover:bg-indigo-100 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Sparkles size={14} /> Re-Audit Matrix
+                  </button>
+                </>
+              ) : (
+                <div className="py-8 text-center space-y-4">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 mx-auto">
+                    <Zap size={24} />
+                  </div>
+                  <p className="text-xs text-slate-400 font-medium">No audit data available.</p>
+                  <button
+                    onClick={() => triggerReview()}
+                    className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-[11px] font-bold hover:bg-indigo-700 transition-all"
+                  >
+                    Inaugurate Audit
+                  </button>
+                </div>
               )}
-           </AnimatePresence>
+            </div>
+          </div>
 
-           <div className="space-y-6">
-              <div className="flex items-center justify-between px-4">
-                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-3">
-                    <div className="w-1.5 h-1.5 bg-slate-200 rounded-full" /> Synthesis Projection
-                 </span>
+          {/* Strategic Insight Token */}
+          <div className="p-6 bg-indigo-600 rounded-[2rem] text-white relative overflow-hidden shadow-lg shadow-indigo-200 group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[40px] rounded-full -translate-x-1/2 -translate-y-1/2 group-hover:scale-150 transition-transform duration-1000" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-4">
+                <Info size={16} className="text-indigo-200" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Strategic Tip</span>
               </div>
-              <div className="rounded-[4rem] p-10 md:p-14 border border-slate-100 bg-white shadow-2xl shadow-slate-200/20 min-h-[900px] relative">
-                 <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none text-slate-900"><Terminal size={80} /></div>
-                 <NewsletterRenderer content={content} hideLinks={true} stripReferences={true} />
-                 {!content && (
-                    <div className="absolute inset-0 flex items-center justify-center text-slate-200">
-                       <Info size={40} className="animate-pulse" />
-                    </div>
-                 )}
-              </div>
-           </div>
+              <p className="text-xs font-medium leading-relaxed text-indigo-50">
+                Aligning content with high-velocity neural keywords in the primary 150-word segment optimizes global indexing retrieval by 38.4%.
+              </p>
+            </div>
+          </div>
+        </aside>
+      </main>
 
-        </div>
-      </div>
-
-      <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} title={watch('title') || ''} content={content} />
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        title={watch('title') || ''}
+        content={content}
+        blogUrl={mounted ? `${window.location.origin}/blog/${watch('slug')}` : ''}
+      />
     </div>
   );
 }

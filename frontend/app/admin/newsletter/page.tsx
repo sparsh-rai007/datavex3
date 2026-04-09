@@ -362,7 +362,7 @@ export default function NewsletterAdminPage() {
               {filteredNewsletters.map((item) => (
                 <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-8 py-5">
-                    <div className="font-bold text-slate-900">{item.title || 'Untitled Newsletter'}</div>
+                    <div className="font-bold text-slate-900 max-w-[400px] break-words">{item.title || 'Untitled Newsletter'}</div>
                     <div className="text-[10px] text-slate-400 font-medium">{item.id}</div>
                   </td>
                   <td className="px-8 py-5 text-sm text-slate-500 font-medium">

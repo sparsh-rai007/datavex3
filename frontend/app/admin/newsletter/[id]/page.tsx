@@ -2,26 +2,35 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import TipTapEditor from '@/components/TipTapEditor';
+import ShareModal from '@/components/ShareModal';
+import { useForm } from 'react-hook-form';
+import {
+  ArrowLeft,
+  Save,
+  Sparkles,
+  Loader2,
+  Share2,
+  BarChart,
+  Terminal,
+  Info,
+  Edit3,
+  ChevronDown,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  User,
+  Globe,
+  Settings,
+  Eye,
+  History,
+  Layout,
+  Search,
+  Zap
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import NewsletterRenderer from '@/components/NewsletterRenderer';
-
-type CheckResult = { passed: boolean; issues: string[] };
-
-type ReviewResult = {
-  structure_check: CheckResult;
-  tone_check: CheckResult;
-  hallucination_check: CheckResult;
-  reference_check: CheckResult;
-  overall_score: number;
-};
-
-type NewsletterForm = {
-  title: string;
-  status: 'draft' | 'published' | 'sent';
-};
 
 export default function EditNewsletterPage() {
   const params = useParams();
@@ -29,183 +38,290 @@ export default function EditNewsletterPage() {
   const newsletterId = params.id as string;
 
   const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
-  const [review, setReview] = useState<ReviewResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [reviewReport, setReviewReport] = useState<any>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
+  const [expandedAudit, setExpandedAudit] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  const { register, handleSubmit, setValue } = useForm<NewsletterForm>({
-    defaultValues: {
-      title: '',
-      status: 'draft',
-    },
-  });
+  const { register, setValue, handleSubmit, watch } = useForm();
 
   useEffect(() => {
-    const loadNewsletter = async () => {
-      setLoading(true);
-      setError(null);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const loadData = async () => {
       try {
         const data = await apiClient.getNewsletter(newsletterId);
         setValue('title', data.title || '');
-        setValue('status', (data.status || 'draft') as NewsletterForm['status']);
+        setValue('status', data.status || 'draft');
         setContent(data.content || '');
-      } catch (err: any) {
-        console.error('Failed to load newsletter:', err);
-        setError(err?.response?.data?.error || 'Failed to load newsletter');
-      } finally {
+        setLoading(false);
+        if (data.content) triggerReview(data.content);
+      } catch (err) {
+        console.error("Load failed", err);
         setLoading(false);
       }
     };
-
-    if (newsletterId) {
-      void loadNewsletter();
-    }
+    loadData();
   }, [newsletterId, setValue]);
 
-  const onSubmit = async (data: NewsletterForm) => {
-    if (saving) return;
-
-    setSaving(true);
-    setError(null);
-    try {
-      await apiClient.updateNewsletter(newsletterId, {
-        title: data.title,
-        content,
-        status: data.status,
-      });
-      router.push('/admin/newsletter');
-    } catch (err: any) {
-      console.error('Failed to save newsletter:', err);
-      setError(err?.response?.data?.error || 'Failed to save newsletter');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleReview = async () => {
-    if (!content || content.trim().length < 50) {
-      alert('Add more content before running AI review.');
-      return;
-    }
-
+  const triggerReview = async (overrideContent?: string) => {
+    const textToReview = overrideContent ?? content;
+    if (!textToReview || textToReview.trim().length < 50) return;
     setIsReviewing(true);
-    setReview(null);
     try {
-      const result = await apiClient.reviewBlog(content);
-      setReview(result as ReviewResult);
-    } catch (err: any) {
-      alert(err?.response?.data?.error || 'Review failed. Please try again.');
+      const result = await apiClient.reviewBlog(textToReview); // Using same service for newsletters
+      setReviewReport(result);
+    } catch (err) {
+      console.error("Review failed", err);
     } finally {
       setIsReviewing(false);
     }
   };
 
+  const onSubmit = async (data: any) => {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      await apiClient.updateNewsletter(newsletterId, { ...data, content });
+      router.push('/admin/newsletter');
+    } catch (error) {
+      console.error('Update error:', error);
+      alert('Failed to update newsletter.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 size={32} className="animate-spin text-primary-600" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 font-outfit">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full mb-4"
+        />
+        <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Synching Neural Node...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-black text-slate-900">Edit Newsletter</h1>
-        <p className="text-slate-500 text-sm mt-1">Update newsletter content and publication status.</p>
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Title</label>
-            <input {...register('title', { required: true })} className="input w-full" />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Status</label>
-            <select {...register('status')} className="input w-full">
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="sent">Sent</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-          <div className="p-5 border-b border-slate-100">
-            <h2 className="text-lg font-black text-slate-900">Content</h2>
-          </div>
-          <TipTapEditor content={content} onChange={setContent} />
-        </div>
-
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-black text-slate-900">AI Review</h2>
+    <div className="min-h-screen bg-[#F8FAFC] font-outfit text-slate-900">
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-3">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-6">
             <button
-              type="button"
-              onClick={handleReview}
-              disabled={isReviewing}
-              className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-primary-600 transition disabled:opacity-60 inline-flex items-center gap-2"
+              onClick={() => router.push('/admin/newsletter')}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500"
             >
-              {isReviewing && <Loader2 size={14} className="animate-spin" />}
-              {isReviewing ? 'Reviewing...' : 'Run Review'}
+              <ArrowLeft size={20} />
+            </button>
+            <div className="h-6 w-[1px] bg-slate-200" />
+            <div className="flex flex-col min-w-0 max-w-[500px]">
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <Layout size={12} />
+                <span>Intelligence Briefing</span>
+                <span className="text-slate-300">/</span>
+                <span className="text-indigo-600">Modify Stream</span>
+              </div>
+              <h1 className="text-sm font-bold text-slate-900 leading-tight mt-0.5 break-words">
+                {watch('title') || 'Untitled Briefing'}
+              </h1>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex bg-slate-100 p-1 rounded-xl mr-4">
+              <button
+                onClick={() => setActiveTab('editor')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'editor' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  }`}
+              >
+                <Edit3 size={14} /> Editor
+              </button>
+              <button
+                onClick={() => setActiveTab('preview')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'preview' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  }`}
+              >
+                <Eye size={14} /> Preview
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all"
+            >
+              <Share2 size={18} />
+              <span>Export & Share</span>
+            </button>
+
+            <button
+              onClick={handleSubmit(onSubmit)}
+              disabled={isSaving}
+              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50"
+            >
+              {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+              <span>Sync Matrix</span>
             </button>
           </div>
+        </div>
+      </header>
 
-          {!review ? (
-            <p className="text-sm text-slate-500">Run AI review to validate structure, tone, and references.</p>
-          ) : (
-            <div className="space-y-3">
-              {[
-                { key: 'structure_check', label: 'Structure Check' },
-                { key: 'tone_check', label: 'Tone Check' },
-                { key: 'hallucination_check', label: 'Hallucination Check' },
-                { key: 'reference_check', label: 'Reference Check' },
-              ].map((item) => {
-                const result = (review as any)[item.key];
-                return (
-                  <div
-                    key={item.key}
-                    className={`rounded-xl px-4 py-3 border text-sm font-medium ${
-                      result?.passed
-                        ? 'bg-green-50 border-green-200 text-green-700'
-                        : 'bg-red-50 border-red-200 text-red-700'
-                    }`}
-                  >
-                    {result?.passed ? 'PASS' : 'FAIL'} - {item.label}
+      <main className="max-w-[1700px] mx-auto p-8 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10">
+        <div className="space-y-8">
+          <AnimatePresence mode="wait">
+            {activeTab === 'editor' ? (
+              <motion.div
+                key="editor"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-8"
+              >
+                <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="p-10 border-b border-slate-100 bg-slate-50/30">
+                    <input
+                      {...register('title')}
+                      placeholder="Briefing title..."
+                      className="w-full text-5xl font-black text-slate-900 placeholder:text-slate-200 outline-none bg-transparent tracking-tight mb-6"
+                    />
+                    <div className="flex items-center gap-2 text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                       <History size={14} />
+                       <span>Neural Signature: {newsletterId}</span>
+                    </div>
                   </div>
-                );
-              })}
-              <p className="text-sm font-semibold text-slate-700 pt-1">Overall Score: {review.overall_score}</p>
+
+                  <div className="editor-container max-h-[700px] overflow-y-auto">
+                    <TipTapEditor content={content} onChange={setContent} />
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="preview"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                className="bg-white rounded-[3rem] p-12 md:p-20 border border-slate-200 shadow-sm min-h-[1000px]"
+              >
+                <NewsletterRenderer content={content} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <aside className="space-y-8">
+          <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-white">
+                <Settings size={16} />
+              </div>
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Stream Control</h3>
             </div>
-          )}
-        </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <h2 className="text-lg font-black text-slate-900 mb-4">Live Preview</h2>
-          <NewsletterRenderer content={content} hideLinks={true} />
-        </div>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Lifecycle Status</label>
+                <div className="relative group">
+                  <select
+                    {...register('status')}
+                    className="w-full bg-slate-50 border border-slate-100 hover:border-indigo-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none cursor-pointer transition-all appearance-none"
+                  >
+                    <option value="draft">Draft Protocol</option>
+                    <option value="published">Release to Archive</option>
+                    <option value="sent">Dispatched to Hubs</option>
+                  </select>
+                  <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-indigo-500 transition-colors" />
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <div className="pt-2 flex justify-end">
-          <button
-            type="submit"
-            disabled={saving || isReviewing}
-            className="px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition disabled:opacity-50 inline-flex items-center gap-2"
-          >
-            {saving && <Loader2 size={16} className="animate-spin" />}
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      </form>
+          <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                  <Zap size={16} />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Neural Audit</h3>
+              </div>
+              {isReviewing && <Loader2 size={14} className="animate-spin text-indigo-600" />}
+            </div>
+
+            <div className="p-6 space-y-6">
+              {reviewReport ? (
+                <>
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl flex flex-col items-center justify-center border-2 border-indigo-100 text-indigo-600 bg-white shadow-xl">
+                      <span className="text-2xl font-black leading-none">{reviewReport.overall_score}</span>
+                      <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-40">Score</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Briefing Integrity</p>
+                      <p className="text-[10px] text-slate-500 font-medium">Neural coherence analysis.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {[
+                      { key: 'structure_check', label: 'Semantic Flux', icon: BarChart },
+                      { key: 'tone_check', label: 'Neural Tone', icon: User },
+                      { key: 'hallucination_check', label: 'Fact Fidelity', icon: Info },
+                      { key: 'reference_check', label: 'Source Matrix', icon: Share2 },
+                    ].map(({ key, label, icon: Icon }) => {
+                      const check = reviewReport[key];
+                      const isExpanded = expandedAudit === key;
+                      const hasIssues = check && !check.passed && check.issues?.length > 0;
+
+                      return (
+                        <div key={key} className="space-y-2">
+                          <div
+                            onClick={() => hasIssues && setExpandedAudit(isExpanded ? null : key)}
+                            className={`flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 transition-all ${hasIssues ? 'cursor-pointer hover:bg-slate-100' : ''}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Icon size={14} className="text-slate-400" />
+                              <span className="text-[11px] font-bold text-slate-600">{label}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {check?.passed ? (
+                                <CheckCircle2 size={14} className="text-green-500" />
+                              ) : (
+                                <AlertTriangle size={14} className="text-amber-500" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <div className="py-8 text-center space-y-4 font-outfit">
+                  <Zap size={24} className="text-slate-200 mx-auto" />
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Awaiting Neural Link</p>
+                  <button onClick={() => triggerReview()} className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">Initialize</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </aside>
+      </main>
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        title={watch('title') || ''}
+        content={content}
+        blogUrl={mounted ? `${window.location.origin}/newsletter/${newsletterId}` : ''}
+      />
     </div>
   );
 }

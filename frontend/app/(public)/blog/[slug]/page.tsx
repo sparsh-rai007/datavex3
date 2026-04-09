@@ -310,7 +310,7 @@ export default function BlogDetailPage() {
                       <div className="h-px flex-1 bg-slate-100/50" />
                     </div>
                     
-                    <h3 className="text-xl font-black text-slate-900 mb-4 group-hover:text-primary-600 transition-colors line-clamp-2 leading-tight tracking-tight">
+                    <h3 className="text-xl font-black text-slate-900 mb-4 group-hover:text-primary-600 transition-colors leading-tight tracking-tight">
                       {rec.title}
                     </h3>
                     

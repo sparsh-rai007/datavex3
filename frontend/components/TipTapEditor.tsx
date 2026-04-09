@@ -219,7 +219,7 @@ export default function TipTapMarkdownEditor({ content, onChange }: any) {
       )}
 
       {/* ═══ EDITOR CONTENT ═══ */}
-      <div className="bg-white transition-colors duration-500">
+      <div className="bg-white transition-colors duration-500 h-[750px] overflow-y-auto custom-scrollbar">
         <EditorContent editor={editor} />
       </div>
     </div>

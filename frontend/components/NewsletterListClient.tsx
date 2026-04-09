@@ -31,6 +31,8 @@ interface NewsletterListClientProps {
   blogs: BlogPost[];
   contentType?: 'blog' | 'newsletter';
   basePath?: '/blog' | '/newsletter';
+  title?: React.ReactNode;
+  subtitle?: string;
 }
 
 const CATEGORIES = ['All Records', 'AI Strategy', 'Neural Systems', 'Security Protocol', 'Enterprise Synthesis', 'Tactical Analysis'];
@@ -39,6 +41,8 @@ export default function NewsletterListClient({
   blogs,
   contentType = 'newsletter',
   basePath,
+  title,
+  subtitle
 }: NewsletterListClientProps) {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState('All Records');
@@ -94,11 +98,15 @@ export default function NewsletterListClient({
                 </div>
                 <span className="text-[10px] font-black text-primary-600 uppercase tracking-[0.4em]">Neural Synthesis Archive</span>
               </div>
-              <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-8 tracking-tight leading-[0.95]">
-                Today's <span className="text-primary-600">Synthetic</span> Briefing Core
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 mb-8 tracking-tight leading-[1.1] md:leading-[1.05]">
+                {title || (
+                  <>
+                    Today's <span className="text-primary-600">Synthetic</span> Briefing Core
+                  </>
+                )}
               </h1>
-              <p className="text-xl md:text-2xl text-slate-400 font-medium leading-relaxed max-w-2xl">
-                Deep architectural analysis and tactical intelligence for the next generation of AI-driven enterprises.
+              <p className="text-lg md:text-xl text-slate-400 font-medium leading-relaxed max-w-3xl">
+                {subtitle || "Deep architectural analysis and tactical intelligence for the next generation of AI-driven enterprises."}
               </p>
             </motion.div>
           </div>
@@ -208,7 +216,7 @@ export default function NewsletterListClient({
                     <div className="flex items-center gap-4 mb-8 text-[11px] font-black text-slate-300 uppercase tracking-widest">
                       <span className="flex items-center gap-2"><TrendingUp size={14} className="text-primary-600/50" /> {new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                     </div>
-                    <h3 className="text-2xl font-black text-slate-900 mb-6 group-hover:text-primary-600 transition-colors line-clamp-2 leading-[1.2] tracking-tight">
+                    <h3 className="text-2xl font-black text-slate-900 mb-6 group-hover:text-primary-600 transition-colors leading-[1.2] tracking-tight">
                       {post.title}
                     </h3>
                     <p className="text-slate-400 font-medium text-base mb-10 line-clamp-3 leading-relaxed">

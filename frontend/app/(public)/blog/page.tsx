@@ -23,7 +23,16 @@ export default async function BlogPage() {
 
   return (
     <PublicWrapper>
-      <NewsletterListClient blogs={blogs} basePath="/blog" />
+      <NewsletterListClient 
+        blogs={blogs} 
+        basePath="/blog" 
+        title={
+          <>
+            Insights for the Modern Web <span className="text-primary-600"></span><span className="text-primary-600"></span>  <span className="text-primary-600"></span>.
+          </>
+        }
+        subtitle="The definitive guide for enterprise leaders navigating the synthesis of neural architectures and high-velocity systems."
+      />
     </PublicWrapper>
   );
 }

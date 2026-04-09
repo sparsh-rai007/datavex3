@@ -91,7 +91,7 @@ export default function AdminBlogsPage() {
                 {filteredBlogs.map((blog) => (
                   <tr key={blog.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-8 py-5">
-                      <div className="font-bold text-slate-900">{blog.title}</div>
+                      <div className="font-bold text-slate-900 max-w-[400px] break-words">{blog.title}</div>
                       <div className="text-[10px] text-slate-400 font-medium">/{blog.slug}</div>
                     </td>
                     <td className="px-8 py-5 text-sm text-slate-500 font-medium">

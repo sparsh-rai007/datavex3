@@ -2,7 +2,7 @@
 
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Link as LinkIcon, Edit3, Loader2, Save, ArrowLeft, Terminal, User, Briefcase, BarChart, GraduationCap, ChevronDown, Share2 } from 'lucide-react';
 import TipTapEditor from '@/components/TipTapEditor';
@@ -35,8 +35,12 @@ export default function NewNewsletterPage() {
   const [isReviewing, setIsReviewing] = useState(false);
   const [reviewReport, setReviewReport] = useState<any>(null);
 
-  // ── Share Modal State ──
   const [showShareModal, setShowShareModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { register, handleSubmit, watch, setValue } = useForm({
     defaultValues: {
@@ -441,7 +445,7 @@ export default function NewNewsletterPage() {
             )}
           </AnimatePresence>
 
-          <div className="rounded-[3rem] overflow-hidden border border-slate-100 bg-white shadow-2xl shadow-slate-200/20">
+          <div className="rounded-[3rem] overflow-hidden border border-slate-100 bg-white shadow-2xl shadow-slate-200/20 max-h-[700px] overflow-y-auto">
             <TipTapEditor content={content} onChange={setContent} />
           </div>
         </div>
@@ -553,6 +557,7 @@ export default function NewNewsletterPage() {
         onClose={() => setShowShareModal(false)}
         title={watch('title') || ''}
         content={content}
+        blogUrl={mounted && blogId ? `${window.location.origin}/newsletter/${blogId}` : ''}
       />
     </div>
   );
