@@ -25,17 +25,22 @@ function getGroqClient(): Groq {
 // Types
 // ---------------------------------------------------------------------------
 
+export interface AuditIssue {
+  message: string;
+  location_snippet: string;
+}
+
 export interface CheckResult {
   passed: boolean;
-  issues: string[];
+  issues: AuditIssue[];
 }
 
 export interface ReviewResult {
-  structure_check:      CheckResult;
-  tone_check:           CheckResult;
-  hallucination_check:  CheckResult;
-  reference_check:      CheckResult;
-  overall_score:        number;
+  structure_check: CheckResult;
+  tone_check: CheckResult;
+  hallucination_check: CheckResult;
+  reference_check: CheckResult;
+  overall_score: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -65,20 +70,22 @@ router.post(
     console.log(`🔍 [Blog Review] Auditing draft (${content.length.toLocaleString()} chars)...`);
     console.log("=".repeat(60));
 
-    const systemPrompt = `You are a highly critical technical blog editor. Review the provided markdown blog draft. You must evaluate the text on four strict criteria:
+    const systemPrompt = `You are a Senior Technical Editor. Review the provided blog content and return a JSON audit.
 
-1. **Structure (structure_check):** Look for broken Markdown. Are there unclosed code blocks? Are headings mashed together with paragraphs? Are image tags malformed?
-2. **AI Tone (tone_check):** Does this read like a robot wrote it? Flag robotic filler phrases like 'In conclusion', 'Delve into', 'It is important to note', or overly generic corporate speak.
-3. **Hallucinations (hallucination_check):** Flag any technically inaccurate statements, fake statistics, or logic flaws.
-4. **References (reference_check):** Ensure that EVERY main section ends with a blockquote reference formatted exactly like this: \`> Source: [Title](URL)\`. 
+CRITICAL REQUIREMENT: > For every issue identified, you must provide a location_snippet.
 
-You MUST output your review strictly in the following JSON format. If a check passes, leave the issues array empty.
+The location_snippet must be VERBATIM (exactly as written in the text).
+
+It must be between 6 to 10 words long to ensure it is unique within the document.
+
+Do not paraphrase; if the text says 'The system is optimally functional,' do not return 'system is functional.'
+
+Output Format:
 {
-  "structure_check": { "passed": boolean, "issues": ["list of specific formatting errors"] },
-  "tone_check": { "passed": boolean, "issues": ["list of robotic phrases found"] },
-  "hallucination_check": { "passed": boolean, "issues": ["list of factual red flags"] },
-  "reference_check": { "passed": boolean, "issues": ["list of sections missing the blockquote reference"] },
-  "overall_score": <number 1-100>
+"structure_check": { "passed": boolean, "issues": [{ "message": string, "location_snippet": string }] },
+"tone_check": { "passed": boolean, "issues": [{ "message": string, "location_snippet": string }] },
+"hallucination_check": { "passed": boolean, "issues": [{ "message": string, "location_snippet": string }] },
+"overall_score": number
 }`;
 
     try {
@@ -110,11 +117,11 @@ You MUST output your review strictly in the following JSON format. If a check pa
 
       // Defensive normalisation
       const safe: ReviewResult = {
-        structure_check:     normaliseCheck(parsed?.structure_check),
-        tone_check:          normaliseCheck(parsed?.tone_check),
+        structure_check: normaliseCheck(parsed?.structure_check),
+        tone_check: normaliseCheck(parsed?.tone_check),
         hallucination_check: normaliseCheck(parsed?.hallucination_check),
-        reference_check:     normaliseCheck(parsed?.reference_check),
-        overall_score:       typeof parsed?.overall_score === "number"
+        reference_check: { passed: true, issues: [] },
+        overall_score: typeof parsed?.overall_score === "number"
           ? Math.min(100, Math.max(1, Math.round(parsed.overall_score)))
           : 50,
       };
@@ -123,10 +130,9 @@ You MUST output your review strictly in the following JSON format. If a check pa
         safe.structure_check,
         safe.tone_check,
         safe.hallucination_check,
-        safe.reference_check,
       ].filter(c => c.passed).length;
 
-      console.log(`📊 [Blog Review] Score: ${safe.overall_score}/100 | Checks passed: ${totalPassed}/4`);
+      console.log(`📊 [Blog Review] Score: ${safe.overall_score}/100 | Checks passed: ${totalPassed}/3`);
       return res.status(200).json(safe);
 
     } catch (err: any) {
@@ -297,12 +303,12 @@ You MUST output your response strictly in the following JSON format:
 
       // Defensive normalisation
       const safe = {
-        linkedin_post:   appendLinkWithinLimit(typeof parsed?.linkedin_post === "string" ? parsed.linkedin_post : "", blogUrl, LINKEDIN_LIMIT),
-        medium_post:     appendLinkWithinLimit(typeof parsed?.medium_post === "string" ? parsed.medium_post : truncated, blogUrl, MEDIUM_LIMIT),
-        x_post:          appendLinkWithinLimit(typeof parsed?.x_post === "string" ? parsed.x_post : "", blogUrl, X_LIMIT),
-        medium_title:    typeof parsed?.medium_title === "string" ? parsed.medium_title : title,
+        linkedin_post: appendLinkWithinLimit(typeof parsed?.linkedin_post === "string" ? parsed.linkedin_post : "", blogUrl, LINKEDIN_LIMIT),
+        medium_post: appendLinkWithinLimit(typeof parsed?.medium_post === "string" ? parsed.medium_post : truncated, blogUrl, MEDIUM_LIMIT),
+        x_post: appendLinkWithinLimit(typeof parsed?.x_post === "string" ? parsed.x_post : "", blogUrl, X_LIMIT),
+        medium_title: typeof parsed?.medium_title === "string" ? parsed.medium_title : title,
         medium_subtitle: typeof parsed?.medium_subtitle === "string" ? parsed.medium_subtitle : "",
-        tags:            Array.isArray(parsed?.tags) ? parsed.tags.filter((t: any) => typeof t === "string").slice(0, 5) : [],
+        tags: Array.isArray(parsed?.tags) ? parsed.tags.filter((t: any) => typeof t === "string").slice(0, 5) : [],
       };
 
       console.log(`📊 [Blog Repurpose] LinkedIn: ${safe.linkedin_post.length}/${LINKEDIN_LIMIT} | Medium: ${safe.medium_post.length}/${MEDIUM_LIMIT} | X: ${safe.x_post.length}/${X_LIMIT} | Tags: ${safe.tags.join(", ")}`);
@@ -327,7 +333,10 @@ You MUST output your response strictly in the following JSON format:
 function normaliseCheck(raw: any): CheckResult {
   return {
     passed: typeof raw?.passed === "boolean" ? raw.passed : true,
-    issues: Array.isArray(raw?.issues) ? raw.issues.filter((i: any) => typeof i === "string") : [],
+    issues: Array.isArray(raw?.issues) ? raw.issues.map((i: any) => ({
+      message: typeof i?.message === "string" ? i.message : String(i?.message || i || ""),
+      location_snippet: typeof i?.location_snippet === "string" ? i.location_snippet : ""
+    })).filter((i: any) => i.message) : [],
   };
 }
 

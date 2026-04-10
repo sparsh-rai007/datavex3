@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { BubbleMenu, FloatingMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
@@ -10,6 +10,7 @@ import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 import FloatingMenuExtension from '@tiptap/extension-floating-menu';
 import { Markdown } from 'tiptap-markdown';
 import { motion, AnimatePresence } from 'framer-motion';
+import gsap from 'gsap';
 import {
   Bold,
   Italic,
@@ -36,11 +37,10 @@ const ToolbarBtn = ({ onClick, active, icon: Icon, label, size = 15 }: any) => (
   <button
     type="button"
     onMouseDown={(e) => { e.preventDefault(); onClick(); }}
-    className={`p-1.5 rounded-lg transition-all duration-150 flex items-center justify-center ${
-      active
-        ? 'bg-white text-slate-900 shadow-sm'
-        : 'text-slate-500 hover:bg-white/80 hover:text-slate-800'
-    }`}
+    className={`p-1.5 rounded-lg transition-all duration-150 flex items-center justify-center ${active
+      ? 'bg-white text-slate-900 shadow-sm'
+      : 'text-slate-500 hover:bg-white/80 hover:text-slate-800'
+      }`}
     title={label}
   >
     <Icon size={size} strokeWidth={active ? 2.5 : 2} />
@@ -50,11 +50,86 @@ const ToolbarBtn = ({ onClick, active, icon: Icon, label, size = 15 }: any) => (
 // ─── Divider between button groups ───
 const Sep = () => <div className="w-px h-5 bg-slate-200/60 mx-0.5" />;
 
-export default function TipTapMarkdownEditor({ content, onChange }: any) {
+export interface AuditIssue {
+  id?: string;
+  message: string;
+  location_snippet: string;
+}
+
+const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
   const [mounted, setMounted] = useState(false);
   const [aiInstruction, setAiInstruction] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [showAiInput, setShowAiInput] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    navigateToIssue: (issue: AuditIssue) => {
+      if (!editor) return;
+
+      const doc = editor.state.doc;
+      let foundPos = -1;
+      let matchedQuery = "";
+
+      // Setup resilient search queries
+      const queries = [];
+      if (issue.location_snippet) queries.push(issue.location_snippet);
+
+      // Fallback 1: extract single/double quoted text from the message
+      const quoteMatch = issue.message?.match(/['"]([^'"]+)['"]/);
+      if (quoteMatch) queries.push(quoteMatch[1]);
+
+      // Fallback 2: The message itself
+      if (issue.message) queries.push(issue.message);
+
+      // Fallback 3: ProseMirror node-crosser (Target first significant multi-word fragment if split by bolding)
+      if (issue.location_snippet) {
+        const words = issue.location_snippet.split(/[^a-zA-Z0-9]+/).filter(w => w.length > 3);
+        if (words.length > 1) queries.push(words.slice(0, 2).join(' ')); // first phrase
+        if (words.length > 0) queries.push(words[0]); // extreme fallback (just get me to the paragraph)
+      }
+
+      for (const query of queries) {
+        if (!query || foundPos !== -1) continue;
+        const normalizedQuery = query.toLowerCase().trim();
+        if (!normalizedQuery) continue;
+
+        doc.descendants((node, pos) => {
+          if (foundPos !== -1) return false;
+          if (node.isText) {
+            const textContent = (node.text || '').toLowerCase();
+            const index = textContent.indexOf(normalizedQuery);
+            if (index !== -1) {
+              foundPos = pos + index;
+              matchedQuery = query.trim();
+              return false;
+            }
+          }
+          return true;
+        });
+      }
+
+      if (foundPos !== -1) {
+        editor.commands.setTextSelection({ from: foundPos, to: foundPos + matchedQuery.length });
+        editor.commands.focus();
+
+        setTimeout(() => {
+          const dom = editor.view.domAtPos(foundPos).node as HTMLElement;
+          if (dom) {
+            const element = dom.nodeType === 3 ? dom.parentElement : dom;
+            if (element) {
+              // Use native scrollIntoView which inherently handles nested overflow containers
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+              gsap.fromTo(element,
+                { backgroundColor: 'rgba(253, 224, 71, 0.6)', scale: 1.02 },
+                { backgroundColor: 'transparent', scale: 1, duration: 2, ease: 'power2.out', delay: 0.1 }
+              );
+            }
+          }
+        }, 50);
+      }
+    }
+  }));
 
   useEffect(() => {
     setMounted(true);
@@ -183,55 +258,60 @@ export default function TipTapMarkdownEditor({ content, onChange }: any) {
         <FormatButtons />
       </div>
 
-      {/* ═══ PERSISTENT GUTTER TOOLBAR — follows the cursor ═══ */}
-      {editor && (
+      {/* ═══ HOVER-TRIGGERED GUTTER TOOLBAR (Notion Style) ═══ */}
+      {editor && editor.view && (
         <FloatingMenu
           editor={editor}
-          tippyOptions={{ 
-            duration: 100, 
-            offset: [0, 10], // Aligned with standard BubbleMenu height
-            placement: 'top' 
-          }}
-          className="z-50"
-          shouldShow={({ state }) => {
+          // @ts-ignore - TipTap version specific prop definition
+          tippyOptions={{ duration: 150, offset: [-30, 0], placement: 'left-start' }}
+          className="z-50 flex items-center group relative h-8"
+          shouldShow={({ state, editor: innerEditor }) => {
             const { selection } = state;
-            // Always show the full menu in the gutter for the active line
-            return selection.empty && selection.$from.parent.type.name === 'paragraph';
+            return (
+              innerEditor.isFocused &&
+              selection.empty &&
+              selection.$from.parent.type.name === 'paragraph' &&
+              selection.$from.parent.textContent === ''
+            );
           }}
         >
-          <div className="flex flex-col bg-white border border-slate-200/80 rounded-xl shadow-2xl shadow-slate-900/10 overflow-hidden backdrop-blur-xl transition-all duration-300">
-            <div className="flex items-center gap-0.5 p-1 max-w-[90vw] flex-wrap bg-white/95">
-              <FormatButtons compact wrapWith={runCommand} />
-              <Sep />
-              <button
-                type="button"
-                onMouseDown={(e) => { e.preventDefault(); runCommand(() => setShowAiInput(!showAiInput)); }}
-                className={`p-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                  showAiInput
-                    ? 'bg-primary-600 text-white'
-                    : 'text-primary-600 hover:bg-primary-50'
-                }`}
-                title="AI Rewrite / Generate"
-              >
-                <Sparkles size={14} />
-                <span className="text-[9px] font-black uppercase tracking-wider">AI</span>
-              </button>
-            </div>
+          {/* Default Plus Icon */}
+          <div className="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-900 bg-white hover:bg-slate-100 transition-colors cursor-pointer group-hover:bg-slate-100 border border-slate-200 shadow-sm opacity-50 group-hover:opacity-100">
+            <Plus size={14} className="transition-transform duration-300 group-hover:rotate-90" />
+          </div>
 
-            {/* AI input row embedded — expands when toggled */}
+          {/* Expands on Hover */}
+          <div className="absolute left-8 opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-200 origin-left flex items-center gap-2">
+            <div className="flex bg-white border border-slate-200/80 rounded-xl shadow-xl shadow-slate-900/10 p-1 backdrop-blur-xl shrink-0">
+               <div className="flex items-center gap-0.5 flex-nowrap">
+                 <FormatButtons compact wrapWith={runCommand} />
+                 <Sep />
+                 <button
+                   type="button"
+                   onMouseDown={(e) => { e.preventDefault(); runCommand(() => setShowAiInput(!showAiInput)); }}
+                   className={`p-1.5 rounded-lg transition-all flex items-center gap-1.5 ${showAiInput ? 'bg-primary-600 text-white' : 'text-primary-600 hover:bg-primary-50'}`}
+                   title="AI Generate"
+                 >
+                   <Sparkles size={14} />
+                   <span className="text-[9px] font-black uppercase tracking-wider">AI</span>
+                 </button>
+               </div>
+            </div>
+            
+            {/* AI Input Row - Animating Horizontally */}
             <AnimatePresence>
               {showAiInput && (
                 <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="flex flex-col border-t border-slate-100 bg-slate-50 overflow-hidden"
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 'auto', opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  className="flex border border-slate-200 bg-white rounded-xl shadow-xl overflow-hidden shrink-0"
                 >
-                  <div className="flex items-center gap-2 px-3 py-2 min-w-[340px]">
+                  <div className="flex items-center gap-2 p-1 min-w-[300px]">
                     <input
                       type="text"
-                      className="flex-1 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium text-slate-800 placeholder:text-slate-400"
-                      placeholder="Ask AI to write or edit..."
+                      className="flex-1 bg-slate-50 border border-slate-100 rounded-md px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary-500 font-medium text-slate-800 placeholder:text-slate-400"
+                      placeholder="Ask AI to write..."
                       value={aiInstruction}
                       onChange={e => setAiInstruction(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleAiEdit(); }}
@@ -242,9 +322,9 @@ export default function TipTapMarkdownEditor({ content, onChange }: any) {
                       type="button"
                       onClick={handleAiEdit}
                       disabled={isAiLoading || !aiInstruction.trim()}
-                      className="p-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 shadow-sm transition-colors"
+                      className="p-1.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition"
                     >
-                      {isAiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                      {isAiLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                     </button>
                   </div>
                 </motion.div>
@@ -268,11 +348,10 @@ export default function TipTapMarkdownEditor({ content, onChange }: any) {
             <button
               type="button"
               onMouseDown={(e) => { e.preventDefault(); setShowAiInput(!showAiInput); }}
-              className={`p-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                showAiInput
-                  ? 'bg-primary-600 text-white'
-                  : 'text-primary-600 hover:bg-primary-50'
-              }`}
+              className={`p-1.5 rounded-lg transition-all flex items-center gap-1.5 ${showAiInput
+                ? 'bg-primary-600 text-white'
+                : 'text-primary-600 hover:bg-primary-50'
+                }`}
               title="AI Rewrite"
             >
               <Sparkles size={14} />
@@ -307,9 +386,12 @@ export default function TipTapMarkdownEditor({ content, onChange }: any) {
       )}
 
       {/* ═══ EDITOR CONTENT ═══ */}
-      <div className="bg-white transition-colors duration-500 h-[750px] overflow-y-auto custom-scrollbar">
+      <div className="bg-white transition-colors duration-500 min-h-[500px]">
         <EditorContent editor={editor} />
       </div>
     </div>
   );
-}
+});
+
+TipTapMarkdownEditor.displayName = 'TipTapMarkdownEditor';
+export default TipTapMarkdownEditor;
