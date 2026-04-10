@@ -30,7 +30,7 @@ import {
   ExternalLink,
   ShieldCheck
 } from 'lucide-react';
-import TipTapEditor from '@/components/TipTapEditor';
+import TipTapEditor, { AuditIssue } from '@/components/TipTapEditor';
 import { apiClient } from '@/lib/api';
 import NewsletterRenderer from '@/components/NewsletterRenderer';
 

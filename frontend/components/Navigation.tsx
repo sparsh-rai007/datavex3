@@ -50,6 +50,7 @@ export default function Navigation() {
     { href: '/blog', label: 'Blogs' },
     { href: '/contact', label: 'Contact' },
     { href: '/consultation', label: 'Consultation' },
+    
   ];
 
   const isActive = (href: string) => {
