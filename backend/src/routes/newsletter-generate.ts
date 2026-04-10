@@ -35,6 +35,31 @@ router.post(
 );
 
 /**
+ * POST /api/newsletter/force-run
+ * Alias for generate-daily — the frontend calls this first.
+ */
+router.post(
+  "/force-run",
+  authenticateToken,
+  requireRole("admin", "editor"),
+  async (_req: AuthRequest, res: Response) => {
+    try {
+      const draft = await runDailyNewsletter();
+
+      return res.status(201).json({
+        message: "Newsletter force-generated successfully",
+        newsletter: draft,
+      });
+    } catch (error: any) {
+      console.error("Newsletter force-run error:", error.message);
+      return res.status(500).json({
+        error: error.message || "Failed to force-generate newsletter",
+      });
+    }
+  }
+);
+
+/**
  * GET /api/newsletter/cron-health
  * Returns current scheduler/runtime health for newsletter automation.
  */

@@ -201,8 +201,8 @@ class ApiClient {
     return response.data as { newsletter: any };
   }
 
-  async editSnippet(original_text: string, instruction: string) {
-    const response = await this.client.post('/blog/edit-snippet', { original_text, instruction });
+  async editSnippet(original_text: string, instruction: string, full_content?: string) {
+    const response = await this.client.post('/blog/edit-snippet', { original_text, instruction, full_content });
     return response.data as { rewritten_text: string };
   }
 

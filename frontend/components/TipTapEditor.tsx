@@ -28,6 +28,8 @@ import {
   ListOrdered,
   Minus,
   Plus,
+  Link2,
+  Globe,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 
@@ -50,11 +52,18 @@ const ToolbarBtn = ({ onClick, active, icon: Icon, label, size = 15 }: any) => (
 // ─── Divider between button groups ───
 const Sep = () => <div className="w-px h-5 bg-slate-200/60 mx-0.5" />;
 
+// ─── URL detection helper ───
+const URL_PATTERN = /https?:\/\/[^\s,;)}\]]+/gi;
+const detectUrls = (text: string) => text.match(URL_PATTERN) || [];
+
 export default function TipTapMarkdownEditor({ content, onChange }: any) {
   const [mounted, setMounted] = useState(false);
   const [aiInstruction, setAiInstruction] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [showAiInput, setShowAiInput] = useState(false);
+
+  const detectedUrls = detectUrls(aiInstruction);
+  const hasUrl = detectedUrls.length > 0;
 
   useEffect(() => {
     setMounted(true);
@@ -114,13 +123,27 @@ export default function TipTapMarkdownEditor({ content, onChange }: any) {
     if (!editor || !aiInstruction.trim()) return;
 
     const { from, to } = editor.state.selection;
-    const text = editor.state.doc.textBetween(from, to, ' ');
-    if (!text) return;
+    const selectedText = editor.state.doc.textBetween(from, to, ' ');
+    const isGenerateMode = !selectedText;
+
+    // Get the full blog content so AI knows what's already written
+    // @ts-ignore - TipTap storage types are dynamic
+    const fullContent = editor.storage.markdown.getMarkdown() || '';
 
     setIsAiLoading(true);
     try {
-      const { rewritten_text } = await apiClient.editSnippet(text, aiInstruction);
-      editor.chain().focus().insertContent(rewritten_text).run();
+      const { rewritten_text } = await apiClient.editSnippet(
+        selectedText || '',
+        aiInstruction,
+        fullContent
+      );
+      if (isGenerateMode) {
+        // No selection — insert generated content at cursor position
+        editor.chain().focus().insertContent(rewritten_text).run();
+      } else {
+        // Has selection — replace the selected text
+        editor.chain().focus().insertContent(rewritten_text).run();
+      }
       setAiInstruction('');
       setShowAiInput(false);
     } catch (err: any) {
@@ -227,25 +250,37 @@ export default function TipTapMarkdownEditor({ content, onChange }: any) {
                   exit={{ height: 0, opacity: 0 }}
                   className="flex flex-col border-t border-slate-100 bg-slate-50 overflow-hidden"
                 >
-                  <div className="flex items-center gap-2 px-3 py-2 min-w-[340px]">
-                    <input
-                      type="text"
-                      className="flex-1 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium text-slate-800 placeholder:text-slate-400"
-                      placeholder="Ask AI to write or edit..."
-                      value={aiInstruction}
-                      onChange={e => setAiInstruction(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') handleAiEdit(); }}
-                      disabled={isAiLoading}
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAiEdit}
-                      disabled={isAiLoading || !aiInstruction.trim()}
-                      className="p-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 shadow-sm transition-colors"
-                    >
-                      {isAiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                    </button>
+                  <div className="flex flex-col gap-1.5 px-3 py-2 min-w-[380px]">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        className={`flex-1 bg-white border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 font-medium text-slate-800 placeholder:text-slate-400 transition-colors ${
+                          hasUrl ? 'border-teal-300 focus:ring-teal-500/30' : 'border-slate-200 focus:ring-primary-500'
+                        }`}
+                        placeholder="Ask AI to edit, or paste a URL to scrape..."
+                        value={aiInstruction}
+                        onChange={e => setAiInstruction(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') handleAiEdit(); }}
+                        disabled={isAiLoading}
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAiEdit}
+                        disabled={isAiLoading || !aiInstruction.trim()}
+                        className={`p-1.5 rounded-lg shadow-sm transition-colors text-white ${
+                          hasUrl ? 'bg-teal-600 hover:bg-teal-700' : 'bg-primary-600 hover:bg-primary-700'
+                        }`}
+                      >
+                        {isAiLoading ? <Loader2 size={14} className="animate-spin" /> : hasUrl ? <Globe size={14} /> : <Sparkles size={14} />}
+                      </button>
+                    </div>
+                    {hasUrl && (
+                      <div className="flex items-center gap-1.5 text-[9px] font-bold text-teal-600 uppercase tracking-wider">
+                        <Link2 size={10} />
+                        <span>{isAiLoading ? 'Scraping page content...' : `${detectedUrls.length} URL${detectedUrls.length > 1 ? 's' : ''} detected — will scrape & rewrite`}</span>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
@@ -282,25 +317,37 @@ export default function TipTapMarkdownEditor({ content, onChange }: any) {
 
           {/* AI instruction row — only when toggled */}
           {showAiInput && (
-            <div className="flex items-center gap-2 px-2 py-2 bg-slate-50 border-t border-slate-100">
-              <input
-                type="text"
-                className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium text-slate-800 placeholder:text-slate-400 min-w-[220px]"
-                placeholder="e.g. Make this more concise..."
-                value={aiInstruction}
-                onChange={e => setAiInstruction(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleAiEdit(); }}
-                disabled={isAiLoading}
-                autoFocus
-              />
-              <button
-                type="button"
-                onClick={handleAiEdit}
-                disabled={isAiLoading || !aiInstruction.trim()}
-                className="p-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-40 transition-colors shadow-sm"
-              >
-                {isAiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-              </button>
+            <div className="flex flex-col gap-1.5 px-2 py-2 bg-slate-50 border-t border-slate-100">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  className={`flex-1 bg-white border rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 font-medium text-slate-800 placeholder:text-slate-400 min-w-[220px] transition-colors ${
+                    hasUrl ? 'border-teal-300 focus:ring-teal-500/30' : 'border-slate-200 focus:ring-primary-500'
+                  }`}
+                  placeholder="Paste a URL or type instructions..."
+                  value={aiInstruction}
+                  onChange={e => setAiInstruction(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleAiEdit(); }}
+                  disabled={isAiLoading}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={handleAiEdit}
+                  disabled={isAiLoading || !aiInstruction.trim()}
+                  className={`p-1.5 rounded-lg disabled:opacity-40 transition-colors shadow-sm text-white ${
+                    hasUrl ? 'bg-teal-600 hover:bg-teal-700' : 'bg-primary-600 hover:bg-primary-700'
+                  }`}
+                >
+                  {isAiLoading ? <Loader2 size={14} className="animate-spin" /> : hasUrl ? <Globe size={14} /> : <Sparkles size={14} />}
+                </button>
+              </div>
+              {hasUrl && (
+                <div className="flex items-center gap-1.5 text-[9px] font-bold text-teal-600 uppercase tracking-wider px-1">
+                  <Link2 size={10} />
+                  <span>{isAiLoading ? 'Scraping page content...' : `${detectedUrls.length} URL${detectedUrls.length > 1 ? 's' : ''} detected — will scrape & rewrite`}</span>
+                </div>
+              )}
             </div>
           )}
         </BubbleMenu>
