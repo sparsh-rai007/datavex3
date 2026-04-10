@@ -5,21 +5,15 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
-  FileText,
-  Users,
-  Briefcase,
   Calendar,
-  Library,
-  Globe,
   User,
+  LogOut,
   ChevronLeft,
   ChevronRight,
-  LogOut,
-  Settings,
-  Bell,
-  Mail
+  Briefcase
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/lib/auth';
 
 interface NavItem {
   href: string;
@@ -28,28 +22,17 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/posts', label: 'Posts', icon: FileText },
-  { href: '/admin/leads', label: 'Leads', icon: Users },
-  { href: '/admin/jobs', label: 'Jobs', icon: Briefcase },
-  { href: '/admin/bookings', label: 'Bookings', icon: Calendar },
-  { href: '/admin/newsletter', label: 'Daily Newsletter', icon: Mail },
-  { href: '/admin/blogs', label: 'Blogs', icon: Library },
-  { href: '/admin/settings/social', label: 'Social Integrations', icon: Globe },
-  { href: '/admin/users', label: 'Users', icon: User },
-  { href: '/admin/employees', label: 'Employees', icon: Users },
-  { href: '/admin/leaves', label: 'Leaves', icon: Calendar },
+  { href: '/employee/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/employee/leaves', label: 'Leave App', icon: Calendar },
 ];
 
-export default function AdminSidebar() {
+export default function EmployeeSidebar() {
   const pathname = usePathname();
+  const { logout, user } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const isActive = (href: string) => {
-    if (href === '/admin/dashboard') {
-      return pathname === '/admin/dashboard';
-    }
-    return pathname?.startsWith(href);
+    return pathname === href;
   };
 
   return (
@@ -57,7 +40,7 @@ export default function AdminSidebar() {
       initial={false}
       animate={{ width: isCollapsed ? '80px' : '260px' }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="bg-white shadow-sm border-r sticky top-0 h-screen flex flex-col z-50 selection:bg-indigo-100 selection:text-indigo-900"
+      className="bg-white shadow-sm border-r sticky top-0 h-screen flex flex-col z-50"
     >
       {/* Header */}
       <div className="p-6 flex items-center justify-between overflow-hidden">
@@ -69,9 +52,11 @@ export default function AdminSidebar() {
               exit={{ opacity: 0, x: -10 }}
               className="flex items-center gap-2"
             >
-
-              <span className="text-xl font-black text-gray-900 tracking-tight">
-                DATAVEX
+              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-xs">
+                DX
+              </div>
+              <span className="text-lg font-black text-gray-900 tracking-tight">
+                STAFF
               </span>
             </motion.div>
           )}
@@ -85,8 +70,19 @@ export default function AdminSidebar() {
         </button>
       </div>
 
+      {/* Profile Summary if not collapsed */}
+      {!isCollapsed && (
+        <div className="px-6 py-4 mb-4">
+          <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100/50">
+            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1">Active Operator</p>
+            <p className="text-sm font-bold text-gray-900 truncate">{user?.firstName} {user?.lastName}</p>
+            <p className="text-[10px] font-bold text-indigo-600 truncate">{user?.employeeId}</p>
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
-      <nav className="flex-1 px-3 space-y-1.5 mt-4 overflow-y-auto overflow-x-hidden custom-scrollbar">
+      <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto custom-scrollbar">
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (
@@ -117,22 +113,28 @@ export default function AdminSidebar() {
 
               {active && (
                 <motion.div
-                  layoutId="active-pill"
+                  layoutId="active-pill-employee"
                   className="absolute left-0 w-1 h-6 bg-indigo-600 rounded-r-full"
                 />
-              )}
-
-              {isCollapsed && (
-                <div className="absolute left-full ml-4 px-3 py-2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-all shadow-xl whitespace-nowrap z-50">
-                  {item.label}
-                </div>
               )}
             </Link>
           );
         })}
       </nav>
 
-
+      {/* Footer / Logout */}
+      <div className="p-4 border-t border-gray-50">
+        <button
+          onClick={logout}
+          className={`
+            w-full flex items-center gap-3 px-3.5 py-3.5 rounded-xl text-rose-500 hover:bg-rose-50 transition-all font-bold text-xs uppercase tracking-widest
+            ${isCollapsed ? 'justify-center' : ''}
+          `}
+        >
+          <LogOut size={20} />
+          {!isCollapsed && <span>Logout</span>}
+        </button>
+      </div>
     </motion.aside>
   );
 }

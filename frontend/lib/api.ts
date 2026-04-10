@@ -297,6 +297,33 @@ class ApiClient {
     return (await this.client.put(`/admin/users/${id}/role`, { role })).data;
   }
 
+  // Employee Management
+  async createEmployee(data: { name: string; email: string; employeeId: string; department: string }) {
+    const response = await this.client.post('/admin/employees', data);
+    return response.data;
+  }
+
+  async getEmployees() {
+    const response = await this.client.get('/admin/employees');
+    return response.data;
+  }
+
+  // Leave Management
+  async getLeaves() {
+    const response = await this.client.get('/leaves');
+    return response.data;
+  }
+
+  async submitLeaveRequest(data: { startDate: string; endDate: string; reason: string }) {
+    const response = await this.client.post('/leaves', data);
+    return response.data;
+  }
+
+  async updateLeaveStatus(id: string, status: 'approved' | 'rejected') {
+    const response = await this.client.put(`/leaves/${id}/status`, { status });
+    return response.data;
+  }
+
   // Auth endpoints
   async login(email: string, password: string) {
     const response = await this.client.post('/auth/login', { email, password });
