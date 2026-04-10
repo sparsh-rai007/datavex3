@@ -35,7 +35,7 @@ router.post(
     }
 
     const { name, email, employeeId, department } = req.body;
-    
+
     // Split name into first and last
     const nameParts = name.trim().split(' ');
     const firstName = nameParts[0];
@@ -109,3 +109,10 @@ router.get('/', authenticateToken, requireRole('admin'), async (req: AuthRequest
 });
 
 export default router;
+res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+export default router;
+
+
