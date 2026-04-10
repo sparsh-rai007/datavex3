@@ -363,47 +363,6 @@ export default function NewBlogPage() {
 
         {/* Right Column: Operational Sidebar */}
         <aside className="space-y-8">
-          {/* Tone Matrix Selection (Only if AI mode) */}
-          {mode !== 'manual' && (
-            <div className="bg-slate-900 p-8 rounded-[2.5rem] border border-white/5 shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 text-primary-600/10 group-hover:text-primary-600/20 transition-colors duration-700"><User size={80} /></div>
-              <label className="block text-[10px] font-black text-primary-400 uppercase tracking-widest mb-6 ml-2 relative z-10">Voicing Protocol</label>
-              <div className="relative z-10">
-                <button
-                  type="button"
-                  onClick={() => setIsToneDropdownOpen(!isToneDropdownOpen)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold flex items-center justify-between hover:bg-white/10 transition-all shadow-inner"
-                >
-                  <div className="flex items-center gap-3">
-                    <currentTone.icon size={16} className="text-primary-400" />
-                    <span className="text-sm font-black tracking-tight">{currentTone.label}</span>
-                  </div>
-                  <ChevronDown size={16} className={isToneDropdownOpen ? 'rotate-180' : ''} />
-                </button>
-                <AnimatePresence>
-                  {isToneDropdownOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute top-full left-0 right-0 mt-3 bg-slate-950 border border-white/10 rounded-[2rem] overflow-hidden z-50 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
-                    >
-                      {TONES.map(t => (
-                        <button key={t.id} onClick={() => { setSelectedTone(t.id); setIsToneDropdownOpen(false); }} className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all ${selectedTone === t.id ? 'bg-primary-600 text-white' : 'text-slate-400 hover:bg-white/5'}`}>
-                          <t.icon size={18} />
-                          <div className="text-left">
-                             <span className="block text-[11px] font-black uppercase tracking-widest">{t.label}</span>
-                             <span className="block text-[9px] font-bold opacity-40 uppercase tracking-widest mt-1">{t.desc}</span>
-                          </div>
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          )}
-
            {/* Publication Control Matrix */}
           <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-6 relative overflow-hidden group">
             <div className="flex items-center gap-3 mb-6 relative z-10">
@@ -414,6 +373,25 @@ export default function NewBlogPage() {
             </div>
             
             <div className="space-y-4 relative z-10">
+              {/* Added Tone Selector here as a normal dropdown */}
+              {mode !== 'manual' && (
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Voicing Protocol</label>
+                  <div className="relative group/tone">
+                    <select 
+                      value={selectedTone}
+                      onChange={(e) => setSelectedTone(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-100 hover:border-indigo-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none cursor-pointer transition-all appearance-none"
+                    >
+                      {TONES.map(t => (
+                        <option key={t.id} value={t.id}>{t.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover/tone:text-indigo-500 transition-colors" />
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Lifecycle Status</label>
                 <div className="relative group">
@@ -428,17 +406,7 @@ export default function NewBlogPage() {
                 </div>
               </div>
               
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">External Authority</label>
-                <div className="relative group/input">
-                  <Terminal size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-hover/input:text-indigo-500 transition-colors" />
-                  <input 
-                    {...register('external_url')}
-                    className="w-full bg-slate-50 border border-slate-100 hover:border-indigo-200 rounded-xl pl-10 pr-4 py-3 text-xs font-medium text-slate-600 outline-none transition-all shadow-inner"
-                    placeholder="https://external-resource.com"
-                  />
-                </div>
-              </div>
+              
             </div>
           </div>
 
@@ -563,18 +531,7 @@ export default function NewBlogPage() {
           </div>
 
           {/* Strategic Insight Token */}
-          <div className="p-6 bg-indigo-600 rounded-[2rem] text-white relative overflow-hidden shadow-lg shadow-indigo-200 group">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[40px] rounded-full -translate-x-1/2 -translate-y-1/2 group-hover:scale-150 transition-transform duration-1000" />
-             <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-4">
-                   <Info size={16} className="text-indigo-200" />
-                   <span className="text-[10px] font-bold uppercase tracking-widest">Strategic Tip</span>
-                </div>
-                <p className="text-xs font-medium leading-relaxed text-indigo-50">
-                   Synthesizing high-authority external URL references within the first narrative block establishes a semantic anchor point, increasing neural indexing trust by 42%.
-                </p>
-             </div>
-          </div>
+          
         </aside>
       </main>
     <ShareModal

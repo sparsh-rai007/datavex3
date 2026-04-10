@@ -308,21 +308,9 @@ export default function EditBlogPage() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">External Authority</label>
-                <div className="relative group/input">
-                  <Terminal size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-hover/input:text-indigo-500 transition-colors" />
-                  <input
-                    {...register('external_url')}
-                    className="w-full bg-slate-50 border border-slate-100 hover:border-indigo-200 rounded-xl pl-10 pr-4 py-3 text-xs font-medium text-slate-600 outline-none transition-all"
-                    placeholder="https://external-resource.com"
-                  />
-                </div>
-              </div>
+              
 
-              <button className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-100 text-slate-600 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
-                <History size={14} /> View Version History
-              </button>
+              
             </div>
           </div>
 
@@ -443,20 +431,6 @@ export default function EditBlogPage() {
                   </button>
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Strategic Insight Token */}
-          <div className="p-6 bg-indigo-600 rounded-[2rem] text-white relative overflow-hidden shadow-lg shadow-indigo-200 group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[40px] rounded-full -translate-x-1/2 -translate-y-1/2 group-hover:scale-150 transition-transform duration-1000" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-4">
-                <Info size={16} className="text-indigo-200" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Strategic Tip</span>
-              </div>
-              <p className="text-xs font-medium leading-relaxed text-indigo-50">
-                Aligning content with high-velocity neural keywords in the primary 150-word segment optimizes global indexing retrieval by 38.4%.
-              </p>
             </div>
           </div>
         </aside>
