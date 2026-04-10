@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { RefreshCw, Loader2, CheckCircle2, AlertTriangle, Activity, Edit2, Search } from 'lucide-react';
+import { RefreshCw, Loader2, CheckCircle2, AlertTriangle, Activity, Edit2, Search, ChevronDown } from 'lucide-react';
 import TipTapEditor from '@/components/TipTapEditor';
 import NewsletterRenderer from '@/components/NewsletterRenderer';
 import { apiClient } from '@/lib/api';
@@ -43,6 +43,7 @@ export default function NewsletterAdminPage() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedCheck, setExpandedCheck] = useState<string | null>(null);
 
   const lastReviewedDraftId = useRef<string | null>(null);
 
@@ -276,51 +277,118 @@ export default function NewsletterAdminPage() {
           </div>
 
           <div className="xl:col-span-4 space-y-6">
-            <div className="bg-white rounded-2xl border border-slate-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-black text-slate-900">AI Review Checklist</h3>
-                {isReviewing && <Loader2 size={18} className="animate-spin text-primary-600" />}
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 overflow-hidden">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                    <Activity size={16} />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Neural Audit</h3>
+                </div>
+                {isReviewing && <Loader2 size={14} className="animate-spin text-indigo-600" />}
               </div>
 
               {!reviewResults ? (
-                <p className="text-sm text-slate-500">No review yet. Loading auto-review...</p>
+                <div className="py-6 text-center space-y-3">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 mx-auto">
+                    <Activity size={20} />
+                  </div>
+                  <p className="text-xs text-slate-400 font-medium">Loading auto-review...</p>
+                </div>
               ) : (
-                <div className="space-y-3">
-                  {[
-                    { key: 'structure_check', label: 'Structure Check' },
-                    { key: 'tone_check', label: 'Tone Check' },
-                    { key: 'hallucination_check', label: 'Hallucination Check' },
-                    { key: 'reference_check', label: 'Reference Check' },
-                  ].map((item) => {
-                    const result = (reviewResults as any)[item.key];
-                    return (
-                      <div
-                        key={item.key}
-                        className={`rounded-xl px-4 py-3 border text-sm font-medium ${
-                          result?.passed
-                            ? 'bg-green-50 border-green-200 text-green-700'
-                            : 'bg-red-50 border-red-200 text-red-700'
-                        }`}
-                      >
-                        {result?.passed ? 'PASS' : 'FAIL'} - {item.label}
-                      </div>
-                    );
-                  })}
+                <div className="space-y-5">
+                  {/* Score indicator */}
+                  <div className="flex items-center gap-4">
+                    <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center border-2 bg-white shadow-lg transition-all ${
+                      reviewResults.overall_score >= 80 ? "border-green-100 text-green-600" : "border-red-100 text-red-600"
+                    }`}>
+                      <span className="text-xl font-black leading-none">{reviewResults.overall_score}</span>
+                      <span className="text-[7px] font-black uppercase tracking-[0.15em] opacity-40">Score</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Content Quality</p>
+                      <p className="text-[10px] text-slate-500 font-medium">
+                        {reviewResults.overall_score >= 80 ? "High-fidelity content." : "Optimization recommended."}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Check items with expandable issues */}
+                  <div className="space-y-2">
+                    {[
+                      { key: 'structure_check', label: 'Structure Check' },
+                      { key: 'tone_check', label: 'Tone Check' },
+                      { key: 'hallucination_check', label: 'Hallucination Check' },
+                      { key: 'reference_check', label: 'Reference Check' },
+                    ].map((item) => {
+                      const result = (reviewResults as any)[item.key];
+                      const hasIssues = result && !result.passed && result.issues?.length > 0;
+
+                      return (
+                        <div key={item.key} className="space-y-1.5">
+                          <div
+                            onClick={() => hasIssues && setExpandedCheck(expandedCheck === item.key ? null : item.key)}
+                            className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                              result?.passed
+                                ? 'bg-green-50/50 border-green-100'
+                                : 'bg-red-50/30 border-red-200'
+                            } ${hasIssues ? 'cursor-pointer hover:bg-red-50/50' : ''}`}
+                          >
+                            <span className={`text-[11px] font-bold ${result?.passed ? 'text-green-700' : 'text-red-700'}`}>
+                              {item.label}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              {result?.passed ? (
+                                <CheckCircle2 size={14} className="text-green-500" />
+                              ) : (
+                                <>
+                                  <AlertTriangle size={14} className="text-red-500" />
+                                  {hasIssues && (
+                                    <ChevronDown
+                                      size={14}
+                                      className={`text-slate-400 transition-transform ${expandedCheck === item.key ? 'rotate-180' : ''}`}
+                                    />
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {expandedCheck === item.key && hasIssues && (
+                            <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 space-y-1.5">
+                              <div className="flex items-center gap-1.5 text-amber-700 mb-1">
+                                <AlertTriangle size={10} />
+                                <span className="text-[8px] font-bold uppercase tracking-widest">Why it failed</span>
+                              </div>
+                              {result.issues.map((issue: string, i: number) => (
+                                <p key={i} className="text-[10px] text-amber-800 font-medium leading-relaxed">• {issue}</p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Re-audit + publish */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => content && runReview(content)}
+                      disabled={isReviewing}
+                      className="flex-1 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-bold hover:bg-indigo-100 transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <RefreshCw size={12} /> Re-Audit
+                    </button>
+                    <button
+                      onClick={handlePublish}
+                      disabled={isPublishing || isGenerating}
+                      className="flex-1 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-wider bg-slate-900 text-white hover:bg-indigo-600 transition-all"
+                    >
+                      {isPublishing ? 'Publishing...' : 'Publish'}
+                    </button>
+                  </div>
                 </div>
               )}
-
-              <div className="mt-5 pt-5 border-t border-slate-100">
-                <p className="text-sm text-slate-600 font-semibold mb-3">
-                  Overall Score: {reviewResults?.overall_score ?? 'N/A'}
-                </p>
-                <button
-                  onClick={handlePublish}
-                  disabled={isPublishing || isGenerating}
-                  className="w-full px-4 py-3 rounded-xl font-black text-sm uppercase tracking-wider bg-slate-900 text-white"
-                >
-                  {isPublishing ? 'Publishing...' : 'Publish'}
-                </button>
-              </div>
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-200 p-6">

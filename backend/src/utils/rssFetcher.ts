@@ -9,7 +9,8 @@ const TOP_ITEMS_PER_FEED = 5;
 
 const RSS_FEEDS: string[] = [
   "https://hnrss.org/frontpage",
-  "https://techcrunch.com/category/artificial-intelligence/feed/",
+  "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+  "https://feeds.arstechnica.com/arstechnica/technology-lab",
   "https://dev.to/feed",
 ];
 

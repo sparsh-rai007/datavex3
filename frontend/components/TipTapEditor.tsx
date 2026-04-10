@@ -10,7 +10,6 @@ import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 import FloatingMenuExtension from '@tiptap/extension-floating-menu';
 import { Markdown } from 'tiptap-markdown';
 import { motion, AnimatePresence } from 'framer-motion';
-import gsap from 'gsap';
 import {
   Bold,
   Italic,
@@ -29,6 +28,8 @@ import {
   ListOrdered,
   Minus,
   Plus,
+  Link2,
+  Globe,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 
@@ -50,6 +51,10 @@ const ToolbarBtn = ({ onClick, active, icon: Icon, label, size = 15 }: any) => (
 // ─── Divider between button groups ───
 const Sep = () => <div className="w-px h-5 bg-slate-200/60 mx-0.5" />;
 
+// ─── URL detection helper ───
+const URL_PATTERN = /https?:\/\/[^\s,;)}\]]+/gi;
+const detectUrls = (text: string) => text.match(URL_PATTERN) || [];
+
 export interface AuditIssue {
   id?: string;
   message: string;
@@ -63,74 +68,8 @@ const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
   const [showAiInput, setShowAiInput] = useState(false);
   const [isGutterOpen, setIsGutterOpen] = useState(false);
 
-  useImperativeHandle(ref, () => ({
-    navigateToIssue: (issue: AuditIssue) => {
-      if (!editor) return;
-
-      const doc = editor.state.doc;
-      let foundPos = -1;
-      let matchedQuery = "";
-
-      // Setup resilient search queries
-      const queries = [];
-      if (issue.location_snippet) queries.push(issue.location_snippet);
-
-      // Fallback 1: extract single/double quoted text from the message
-      const quoteMatch = issue.message?.match(/['"]([^'"]+)['"]/);
-      if (quoteMatch) queries.push(quoteMatch[1]);
-
-      // Fallback 2: The message itself
-      if (issue.message) queries.push(issue.message);
-
-      // Fallback 3: ProseMirror node-crosser (Target first significant multi-word fragment if split by bolding)
-      if (issue.location_snippet) {
-        const words = issue.location_snippet.split(/[^a-zA-Z0-9]+/).filter(w => w.length > 3);
-        if (words.length > 1) queries.push(words.slice(0, 2).join(' ')); // first phrase
-        if (words.length > 0) queries.push(words[0]); // extreme fallback (just get me to the paragraph)
-      }
-
-      for (const query of queries) {
-        if (!query || foundPos !== -1) continue;
-        const normalizedQuery = query.toLowerCase().trim();
-        if (!normalizedQuery) continue;
-
-        doc.descendants((node, pos) => {
-          if (foundPos !== -1) return false;
-          if (node.isText) {
-            const textContent = (node.text || '').toLowerCase();
-            const index = textContent.indexOf(normalizedQuery);
-            if (index !== -1) {
-              foundPos = pos + index;
-              matchedQuery = query.trim();
-              return false;
-            }
-          }
-          return true;
-        });
-      }
-
-      if (foundPos !== -1) {
-        editor.commands.setTextSelection({ from: foundPos, to: foundPos + matchedQuery.length });
-        editor.commands.focus();
-
-        setTimeout(() => {
-          const dom = editor.view.domAtPos(foundPos).node as HTMLElement;
-          if (dom) {
-            const element = dom.nodeType === 3 ? dom.parentElement : dom;
-            if (element) {
-              // Use native scrollIntoView which inherently handles nested overflow containers
-              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-              gsap.fromTo(element,
-                { backgroundColor: 'rgba(253, 224, 71, 0.6)', scale: 1.02 },
-                { backgroundColor: 'transparent', scale: 1, duration: 2, ease: 'power2.out', delay: 0.1 }
-              );
-            }
-          }
-        }, 50);
-      }
-    }
-  }));
+  const detectedUrls = detectUrls(aiInstruction);
+  const hasUrl = detectedUrls.length > 0;
 
   useEffect(() => {
     setMounted(true);
@@ -194,13 +133,27 @@ const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
     if (!editor || !aiInstruction.trim()) return;
 
     const { from, to } = editor.state.selection;
-    const text = editor.state.doc.textBetween(from, to, ' ');
-    if (!text) return;
+    const selectedText = editor.state.doc.textBetween(from, to, ' ');
+    const isGenerateMode = !selectedText;
+
+    // Get the full blog content so AI knows what's already written
+    // @ts-ignore - TipTap storage types are dynamic
+    const fullContent = editor.storage.markdown.getMarkdown() || '';
 
     setIsAiLoading(true);
     try {
-      const { rewritten_text } = await apiClient.editSnippet(text, aiInstruction);
-      editor.chain().focus().insertContent(rewritten_text).run();
+      const { rewritten_text } = await apiClient.editSnippet(
+        selectedText || '',
+        aiInstruction,
+        fullContent
+      );
+      if (isGenerateMode) {
+        // No selection — insert generated content at cursor position
+        editor.chain().focus().insertContent(rewritten_text).run();
+      } else {
+        // Has selection — replace the selected text
+        editor.chain().focus().insertContent(rewritten_text).run();
+      }
       setAiInstruction('');
       setShowAiInput(false);
     } catch (err: any) {
@@ -326,7 +279,7 @@ const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
                     <input
                       type="text"
                       className="flex-1 bg-transparent py-1.5 text-xs focus:outline-none font-medium text-slate-800 placeholder:text-slate-400"
-                      placeholder="Ask AI..."
+                      placeholder="Ask AI to write or edit..."
                       value={aiInstruction}
                       onChange={e => setAiInstruction(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleAiEdit(); }}
@@ -339,7 +292,7 @@ const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
                       disabled={isAiLoading || !aiInstruction.trim()}
                       className="w-6 h-6 rounded-full bg-primary-600 text-white flex items-center justify-center hover:bg-primary-700 transition shrink-0 m-1"
                     >
-                      {isAiLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                      {isAiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                     </button>
                   </div>
                 </motion.div>
@@ -376,25 +329,37 @@ const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
 
           {/* AI instruction row — only when toggled */}
           {showAiInput && (
-            <div className="flex items-center gap-2 px-2 py-2 bg-slate-50 border-t border-slate-100">
-              <input
-                type="text"
-                className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium text-slate-800 placeholder:text-slate-400 min-w-[220px]"
-                placeholder="e.g. Make this more concise..."
-                value={aiInstruction}
-                onChange={e => setAiInstruction(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleAiEdit(); }}
-                disabled={isAiLoading}
-                autoFocus
-              />
-              <button
-                type="button"
-                onClick={handleAiEdit}
-                disabled={isAiLoading || !aiInstruction.trim()}
-                className="p-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-40 transition-colors shadow-sm"
-              >
-                {isAiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-              </button>
+            <div className="flex flex-col gap-1.5 px-2 py-2 bg-slate-50 border-t border-slate-100">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  className={`flex-1 bg-white border rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 font-medium text-slate-800 placeholder:text-slate-400 min-w-[220px] transition-colors ${
+                    hasUrl ? 'border-teal-300 focus:ring-teal-500/30' : 'border-slate-200 focus:ring-primary-500'
+                  }`}
+                  placeholder="Paste a URL or type instructions..."
+                  value={aiInstruction}
+                  onChange={e => setAiInstruction(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleAiEdit(); }}
+                  disabled={isAiLoading}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={handleAiEdit}
+                  disabled={isAiLoading || !aiInstruction.trim()}
+                  className={`p-1.5 rounded-lg disabled:opacity-40 transition-colors shadow-sm text-white ${
+                    hasUrl ? 'bg-teal-600 hover:bg-teal-700' : 'bg-primary-600 hover:bg-primary-700'
+                  }`}
+                >
+                  {isAiLoading ? <Loader2 size={14} className="animate-spin" /> : hasUrl ? <Globe size={14} /> : <Sparkles size={14} />}
+                </button>
+              </div>
+              {hasUrl && (
+                <div className="flex items-center gap-1.5 text-[9px] font-bold text-teal-600 uppercase tracking-wider px-1">
+                  <Link2 size={10} />
+                  <span>{isAiLoading ? 'Scraping page content...' : `${detectedUrls.length} URL${detectedUrls.length > 1 ? 's' : ''} detected — will scrape & rewrite`}</span>
+                </div>
+              )}
             </div>
           )}
         </BubbleMenu>
