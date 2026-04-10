@@ -66,6 +66,7 @@ const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
   const [aiInstruction, setAiInstruction] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [showAiInput, setShowAiInput] = useState(false);
+  const [isGutterOpen, setIsGutterOpen] = useState(false);
 
   const detectedUrls = detectUrls(aiInstruction);
   const hasUrl = detectedUrls.length > 0;
@@ -92,9 +93,13 @@ const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
     content: content || "",
     immediatelyRender: false,
     onUpdate: ({ editor }: { editor: any }) => {
+      setIsGutterOpen(false);
       // @ts-ignore - TipTap storage types are dynamic
       const md = editor.storage.markdown.getMarkdown();
       onChange(md);
+    },
+    onSelectionUpdate: () => {
+      setIsGutterOpen(false);
     },
     editorProps: {
       attributes: {
@@ -228,42 +233,52 @@ const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
             );
           }}
         >
-          {/* Default Plus Icon */}
-          <div className="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-900 bg-white hover:bg-slate-100 transition-colors cursor-pointer group-hover:bg-slate-100 border border-slate-200 shadow-sm opacity-50 group-hover:opacity-100">
-            <Plus size={14} className="transition-transform duration-300 group-hover:rotate-90" />
-          </div>
+          <div className="flex items-center gap-2 relative">
+            {/* Base Toggle Button */}
+            <button
+              onMouseDown={(e) => { e.preventDefault(); setIsGutterOpen(!isGutterOpen); }}
+              className={`w-7 h-7 rounded-full flex items-center justify-center transition-all bg-white border shrink-0 z-10 hover:shadow-sm ${isGutterOpen ? 'border-slate-800 text-slate-800' : 'border-slate-300 text-slate-500 hover:text-slate-800 hover:border-slate-800 opacity-60 hover:opacity-100'}`}
+            >
+              <Plus size={16} strokeWidth={1.5} className={`transition-transform duration-300 ${isGutterOpen ? 'rotate-45' : ''}`} />
+            </button>
 
-          {/* Expands on Hover */}
-          <div className="absolute left-8 opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-200 origin-left flex items-center gap-2">
-            <div className="flex bg-white border border-slate-200/80 rounded-xl shadow-xl shadow-slate-900/10 p-1 backdrop-blur-xl shrink-0">
-               <div className="flex items-center gap-0.5 flex-nowrap">
-                 <FormatButtons compact wrapWith={runCommand} />
-                 <Sep />
-                 <button
-                   type="button"
-                   onMouseDown={(e) => { e.preventDefault(); runCommand(() => setShowAiInput(!showAiInput)); }}
-                   className={`p-1.5 rounded-lg transition-all flex items-center gap-1.5 ${showAiInput ? 'bg-primary-600 text-white' : 'text-primary-600 hover:bg-primary-50'}`}
-                   title="AI Generate"
-                 >
-                   <Sparkles size={14} />
-                   <span className="text-[9px] font-black uppercase tracking-wider">AI</span>
-                 </button>
-               </div>
-            </div>
+            {/* Click-Triggered Horizontal Expanding Menu */}
+            <AnimatePresence>
+              {isGutterOpen && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0, scale: 0.9, originX: 0 }}
+                  animate={{ opacity: 1, width: 'auto', scale: 1 }}
+                  exit={{ opacity: 0, width: 0, scale: 0.9 }}
+                  className="flex items-center gap-0.5 px-1 py-1 bg-white border border-slate-200/80 rounded-xl shadow-xl backdrop-blur-xl shrink-0 absolute left-9 overflow-hidden flex-nowrap min-w-max"
+                >
+                  <FormatButtons compact wrapWith={(fn) => { runCommand(fn); setIsGutterOpen(false); }} />
+                  <Sep />
+                  <button
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); setShowAiInput(!showAiInput); setIsGutterOpen(false); }}
+                    className={`p-1.5 rounded-lg transition-all flex items-center gap-1.5 ${showAiInput ? 'bg-primary-600 text-white' : 'text-primary-600 hover:bg-primary-50'}`}
+                    title="AI Generate"
+                  >
+                    <Sparkles size={14} />
+                    <span className="text-[9px] font-black uppercase tracking-wider">AI</span>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
             
-            {/* AI Input Row - Animating Horizontally */}
+            {/* AI Input Row */}
             <AnimatePresence>
               {showAiInput && (
                 <motion.div
                   initial={{ width: 0, opacity: 0 }}
                   animate={{ width: 'auto', opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
-                  className="flex border border-slate-200 bg-white rounded-xl shadow-xl overflow-hidden shrink-0"
+                  className="flex border border-slate-200 bg-white rounded-full shadow-xl overflow-hidden shrink-0 absolute left-[calc(100%+8px)]"
                 >
-                  <div className="flex items-center gap-2 px-3 py-2 min-w-[340px]">
+                  <div className="flex items-center gap-2 pr-1 pl-3 min-w-[280px]">
                     <input
                       type="text"
-                      className="flex-1 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium text-slate-800 placeholder:text-slate-400"
+                      className="flex-1 bg-transparent py-1.5 text-xs focus:outline-none font-medium text-slate-800 placeholder:text-slate-400"
                       placeholder="Ask AI to write or edit..."
                       value={aiInstruction}
                       onChange={e => setAiInstruction(e.target.value)}
@@ -275,7 +290,7 @@ const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
                       type="button"
                       onClick={handleAiEdit}
                       disabled={isAiLoading || !aiInstruction.trim()}
-                      className="p-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 shadow-sm transition-colors"
+                      className="w-6 h-6 rounded-full bg-primary-600 text-white flex items-center justify-center hover:bg-primary-700 transition shrink-0 m-1"
                     >
                       {isAiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                     </button>
