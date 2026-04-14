@@ -78,7 +78,7 @@ export default function BlogBrutalistList({ blogs }: { blogs: BlogPost[] }) {
                 <span className="text-[10px] font-mono text-brand-600 uppercase tracking-[0.4em]">01 / Central Intelligence</span>
               </div>
               <h1 className="font-serif text-6xl md:text-8xl font-medium leading-[0.9] tracking-tight mb-0">
-                Today's <span className="italic">Synthetic</span> Briefing.
+                Fresh <span className="italic">Stories &</span> Insights. 
               </h1>
             </div>
             <div className="lg:col-span-4 pb-2">
