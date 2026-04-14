@@ -98,48 +98,78 @@ export default function LeaveAppPage() {
     const firstDay = getFirstDayOfMonth(year, month);
     const days = [];
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayString = today.toISOString().split('T')[0];
+
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-16 border-r border-b border-indigo-100/30 bg-slate-50/50" />);
+      days.push(<div key={`empty-${i}`} className="h-12 border-r border-b border-indigo-100/30 bg-slate-50/50" />);
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       const dateString = date.toISOString().split('T')[0];
-      const dayLeaves = leaves.filter(l => l.start_date <= dateString && l.end_date >= dateString);
-      const isToday = new Date().toISOString().split('T')[0] === dateString;
-      const hasLeave = dayLeaves.length > 0;
+      
+      const dayLeaves = leaves.filter(l => {
+        const start = l.start_date.split('T')[0];
+        const end = l.end_date.split('T')[0];
+        return start <= dateString && end >= dateString;
+      });
+
+      const isToday = todayString === dateString;
+      const isPast = date < today;
+
+      // Currently on Leave: Approved and date is TODAY
+      const isOnLeave = dayLeaves.some(l => l.status === 'approved' && isToday);
+      // Previously taken: Approved and in the past
+      const hasTaken = dayLeaves.some(l => l.status === 'approved' && isPast);
+      // Upcoming: Pending or Approved and in the future
+      const hasUpcoming = dayLeaves.some(l => (l.status === 'approved' || l.status === 'pending') && !isPast && !isOnLeave);
+      const hasRejected = dayLeaves.some(l => l.status === 'rejected');
 
       days.push(
         <motion.div
           key={day}
-          whileHover={{ backgroundColor: hasLeave ? '#ffe4e6' : '#f5f7ff', opacity: 0.8 }}
+          whileHover={{ backgroundColor: '#f8fafc' }}
           onClick={() => handleDateClick(date)}
-          className={`h-16 p-2 border-r border-b border-indigo-100/30 cursor-pointer transition-colors relative group ${
-            hasLeave ? 'bg-rose-50/80' :
-            isToday ? 'bg-indigo-50/50' : 'bg-white'
+          className={`h-12 p-1.5 border-r border-b border-indigo-100/30 cursor-pointer transition-colors relative group ${
+            isOnLeave ? 'bg-indigo-600 ring-2 ring-inset ring-indigo-400/30' :
+            hasUpcoming ? 'bg-indigo-50/60' :
+            hasTaken ? 'bg-slate-100/70' :
+            isToday ? 'bg-indigo-600/5' : 'bg-white'
           }`}
         >
-          <span className={`text-sm font-serif ${
-            hasLeave ? 'text-rose-600 font-medium' :
-            isToday ? 'text-indigo-600 font-bold underline decoration-indigo-200 underline-offset-4' : 'text-slate-900/40'
-          }`}>
-            {day.toString().padStart(2, '0')}
-          </span>
+          <div className="flex justify-between items-start">
+            <span className={`text-xs font-serif ${
+              isOnLeave ? 'text-white font-bold' :
+              hasUpcoming ? 'text-indigo-600 font-bold' :
+              hasTaken ? 'text-slate-500 font-medium' :
+              isToday ? 'text-indigo-600 font-bold underline decoration-indigo-200 underline-offset-4' : 'text-slate-900/30'
+            }`}>
+              {day.toString().padStart(2, '0')}
+            </span>
+            
+            {isOnLeave && <div className="px-1.5 py-0.5 bg-white/20 rounded text-[6px] font-black text-white uppercase tracking-tighter">Current</div>}
+            {hasTaken && <CheckCircle2 size={10} className="text-slate-400" />}
+            {hasUpcoming && <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />}
+          </div>
           
           <div className="mt-1 flex flex-wrap gap-1">
             {dayLeaves.map(l => (
               <div 
                 key={l.id} 
-                className={`w-1.5 h-1.5 rounded-full ${
-                  l.status === 'approved' ? 'bg-rose-600' : 
-                  l.status === 'rejected' ? 'bg-rose-400' : 'bg-rose-300'
+                className={`w-1 h-1 rounded-full ${
+                  isOnLeave ? 'bg-white/40' :
+                  l.status === 'approved' ? 'bg-indigo-600' : 
+                  l.status === 'rejected' ? 'bg-rose-400' : 'bg-amber-400'
                 }`} 
+                title={`${l.status}: ${l.reason}`}
               />
             ))}
           </div>
 
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Plus size={16} className={hasLeave ? "text-rose-600" : "text-indigo-600"} />
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            <Plus size={16} className={isOnLeave ? "text-white/20" : "text-indigo-600/30"} />
           </div>
         </motion.div>
       );
@@ -179,9 +209,9 @@ export default function LeaveAppPage() {
 
           {/* Editorial Calendar Architecture */}
           <div className="mb-24 bg-white border border-indigo-100 rounded-3xl overflow-hidden shadow-2xl shadow-indigo-100/50">
-            <div className="flex items-center justify-between p-10 border-b border-indigo-50">
+            <div className="flex items-center justify-between p-6 border-b border-indigo-50">
               <div className="flex items-center gap-6">
-                <h3 className="text-4xl font-serif italic text-slate-950 tracking-tighter">
+                <h3 className="text-2xl font-serif italic text-slate-950 tracking-tighter">
                   {currentMonth.toLocaleString('default', { month: 'long' })} <span className="not-italic font-light text-slate-900/20">{currentMonth.getFullYear()}</span>
                 </h3>
               </div>
@@ -203,11 +233,39 @@ export default function LeaveAppPage() {
             
             <div className="grid grid-cols-7">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="py-3 text-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 border-r border-b border-indigo-50/50 last:border-r-0 bg-slate-50/30">
+                <div key={day} className="py-2 text-center text-[8px] font-black uppercase tracking-[0.3em] text-slate-950/30 border-r border-b border-indigo-50/50 last:border-r-0 bg-slate-50/30">
                   {day}
                 </div>
               ))}
               {renderCalendar()}
+            </div>
+
+            {/* Calendar Legend */}
+            <div className="p-6 bg-slate-50/50 border-t border-indigo-50 flex flex-wrap gap-8 justify-center">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded bg-indigo-600 shadow-sm" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">On Leave (Today)</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 rounded-md bg-slate-100 border border-indigo-100 flex items-center justify-center">
+                  <CheckCircle2 size={10} className="text-slate-400" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Previously Taken</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 rounded-md bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Upcoming / Applied</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pending</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Rejected</span>
+              </div>
             </div>
           </div>
 

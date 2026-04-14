@@ -136,10 +136,10 @@ export default function AdminLeavesPage() {
             <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
               <CalendarIcon size={16} />
             </div>
-            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.4em]">Absence Synthesis Matrix</span>
+            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.4em]">Absence Matrix</span>
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-medium text-slate-950 tracking-tight leading-none">
-            Leave <span className="italic text-indigo-600">Archive</span>
+            Leave <span className="italic text-indigo-600">Requests</span>
           </h1>
           <p className="text-base md:text-lg text-slate-950/40 font-serif italic mt-4">Review and synchronize personnel departure requests.</p>
         </motion.div>
@@ -174,9 +174,9 @@ export default function AdminLeavesPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-indigo-50/30 border-b border-indigo-50">
-                  <th className="px-6 md:px-10 py-6 text-[10px] font-bold text-slate-950/40 uppercase tracking-[0.3em]">Personnel Identity</th>
-                  <th className="px-6 md:px-10 py-6 text-[10px] font-bold text-slate-950/40 uppercase tracking-[0.3em]">Absence Protocol</th>
-                  <th className="px-6 md:px-10 py-6 text-[10px] font-bold text-slate-950/40 uppercase tracking-[0.3em]">Reason Horizon</th>
+                  <th className="px-6 md:px-10 py-6 text-[10px] font-bold text-slate-950/40 uppercase tracking-[0.3em]">Employee Name </th>
+                  <th className="px-6 md:px-10 py-6 text-[10px] font-bold text-slate-950/40 uppercase tracking-[0.3em]">Dates</th>
+                  <th className="px-6 md:px-10 py-6 text-[10px] font-bold text-slate-950/40 uppercase tracking-[0.3em]">Reason</th>
                   <th className="px-6 md:px-10 py-6 text-[10px] font-bold text-slate-950/40 uppercase tracking-[0.3em]">Status</th>
                   <th className="px-6 md:px-10 py-6 text-[10px] font-bold text-slate-950/40 uppercase tracking-[0.3em] text-right">Control</th>
                 </tr>
@@ -205,7 +205,7 @@ export default function AdminLeavesPage() {
                             initial={{ opacity: 0, scale: 0.9, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                            className="absolute left-8 md:left-10 top-full z-[60] pointer-events-none"
+                            className="absolute left-8 md:left-10 bottom-full mb-6 z-[60] pointer-events-none"
                           >
                             <MiniCalendar startDate={req.start_date} endDate={req.end_date} />
                           </motion.div>

@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
+import { Lock, Mail, Loader2, ArrowRight, ShieldCheck } from 'lucide-react';
 
 interface LoginForm {
   email: string;
@@ -36,7 +36,6 @@ export default function EmployeeLoginPage() {
 
     try {
       await login(data.email, data.password);
-      // Redirect is handled by auth context or useEffect above
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
     } finally {
@@ -45,45 +44,53 @@ export default function EmployeeLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] px-4 font-sans">
+    <div className="min-h-screen flex items-center justify-center bg-[#fcfcfd] px-4 font-sans selection:bg-indigo-600/20">
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-40">
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-50 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-50/50 rounded-full blur-[120px]" />
+      </div>
+
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full"
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-md w-full relative z-10"
       >
-        <div className="text-center mb-10">
-          <div className="inline-flex p-4 bg-indigo-600 rounded-3xl text-white mb-6 shadow-xl shadow-indigo-100">
-            <Lock size={32} className="stroke-[2.5]" />
-          </div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">
-            Staff Portal
+        {/* Editorial Header */}
+        <div className="text-center mb-12">
+          
+          
+          <h1 className="text-5xl md:text-6xl font-serif font-medium text-slate-950 tracking-tight leading-none mb-6">
+            Staff <span className="italic">Login</span>
           </h1>
-          <p className="text-slate-500 font-medium">
-            Enter your employee credentials to continue
+          <p className="text-slate-900/40 font-serif italic text-lg leading-relaxed max-w-[280px] mx-auto">
+            Synchronize your credentials to access the internal synthesis archive.
           </p>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/60 p-10 border border-slate-100">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-indigo-100/50 p-10 border border-indigo-50 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/30 rounded-full translate-x-16 -translate-y-16 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+          
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-10 relative z-10">
             {error && (
               <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-2xl text-sm font-bold text-center"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-rose-50 border border-rose-100 text-rose-600 px-6 py-4 rounded-[1.25rem] text-[10px] font-black uppercase tracking-widest text-center"
               >
                 {error}
               </motion.div>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-4">
               <label
                 htmlFor="email"
-                className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1"
+                className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2"
               >
-                Email Address
+                Neural Identity (Email)
               </label>
               <div className="relative">
-                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-950/10 group-focus-within:text-indigo-600 transition-colors" size={20} />
                 <input
                   id="email"
                   type="email"
@@ -94,36 +101,36 @@ export default function EmployeeLoginPage() {
                       message: 'Invalid email address',
                     },
                   })}
-                  className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-transparent rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium outline-none"
-                  placeholder="name@company.com"
+                  className="w-full pl-16 pr-8 py-5 bg-indigo-50/20 border border-indigo-50/50 rounded-2xl focus:border-indigo-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-600/5 transition-all font-serif italic text-lg"
+                  placeholder="name@arch.net"
                 />
               </div>
               {errors.email && (
-                <p className="mt-1 text-xs text-rose-600 font-bold ml-1">{errors.email.message}</p>
+                <p className="mt-1 text-[10px] text-rose-600 font-black uppercase tracking-widest ml-2">{errors.email.message}</p>
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-4">
               <label
                 htmlFor="password"
-                className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1"
+                className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2"
               >
-                Password
+                Access Sequence (Password)
               </label>
               <div className="relative">
-                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-950/10 group-focus-within:text-indigo-600 transition-colors" size={20} />
                 <input
                   id="password"
                   type="password"
                   {...register('password', {
                     required: 'Password is required',
                   })}
-                  className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-transparent rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium outline-none"
+                  className="w-full pl-16 pr-8 py-5 bg-indigo-50/20 border border-indigo-50/50 rounded-2xl focus:border-indigo-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-600/5 transition-all font-serif italic text-lg"
                   placeholder="••••••••"
                 />
               </div>
               {errors.password && (
-                <p className="mt-1 text-xs text-rose-600 font-bold ml-1">
+                <p className="mt-1 text-[10px] text-rose-600 font-black uppercase tracking-widest ml-2">
                   {errors.password.message}
                 </p>
               )}
@@ -132,26 +139,24 @@ export default function EmployeeLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group text-sm"
+              className="w-full bg-slate-950 text-white py-6 rounded-2xl font-black uppercase tracking-[0.4em] text-[10px] hover:bg-indigo-600 transition-all shadow-2xl shadow-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-4 group"
             >
               {loading ? (
                 <>
-                  <Loader2 className="animate-spin" size={20} />
-                  <span>Authenticating...</span>
+                  <Loader2 className="animate-spin" size={18} />
+                  <span>Synchronizing...</span>
                 </>
               ) : (
                 <>
-                  <span>Sign In</span>
-                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  <span>Initialize Link</span>
+                  <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform stroke-[3]" />
                 </>
               )}
             </button>
           </form>
         </div>
         
-        <p className="text-center mt-8 text-slate-400 text-sm font-medium">
-          Forgot your credentials? Contact your <span className="font-bold text-slate-600 underline cursor-pointer">HR Administrator</span>
-        </p>
+       
       </motion.div>
     </div>
   );

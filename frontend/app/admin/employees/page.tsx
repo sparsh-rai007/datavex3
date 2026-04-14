@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CredentialsOverlay from '@/components/CredentialsOverlay';
+import PersonnelCalendarModal from '@/components/PersonnelCalendarModal';
 
 // ---------------------------------------------------------------------------
 // Employees Page Component
@@ -28,6 +29,15 @@ interface Employee {
   last_name: string;
   department: string;
   is_active: boolean;
+}
+
+interface Leave {
+  id: string;
+  user_id: string;
+  start_date: string;
+  end_date: string;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
 }
 
 export default function EmployeesPage() {
@@ -45,10 +55,23 @@ export default function EmployeesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [credentials, setCredentials] = useState<{ id: string, pass: string } | null>(null);
+  const [allLeaves, setAllLeaves] = useState<Leave[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
     fetchEmployees();
+    fetchLeaves();
   }, []);
+
+  const fetchLeaves = async () => {
+    try {
+      const data = await apiClient.getLeaves();
+      setAllLeaves(data.leaves);
+    } catch (err) {
+      console.error('Failed to fetch leaves:', err);
+    }
+  };
 
   const fetchEmployees = async () => {
     setLoading(true);
@@ -160,10 +183,10 @@ export default function EmployeesPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/50 border-b border-indigo-50">
-                    <th className="px-8 py-6 text-[10px] font-black text-slate-950/40 uppercase tracking-[0.3em]">Personnel Identity</th>
-                    <th className="px-8 py-6 text-[10px] font-black text-slate-950/40 uppercase tracking-[0.3em]">Sector Protocol</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-950/40 uppercase tracking-[0.3em]">Employee Name</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-950/40 uppercase tracking-[0.3em]">Department</th>
                     <th className="px-8 py-6 text-[10px] font-black text-slate-950/40 uppercase tracking-[0.3em]">Status</th>
-                    <th className="px-8 py-6 text-[10px] font-black text-slate-950/40 uppercase tracking-[0.3em]">Matrix Control</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-slate-950/40 uppercase tracking-[0.3em]">Info</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-indigo-50/50">
@@ -192,7 +215,13 @@ export default function EmployeesPage() {
                         </span>
                       </td>
                       <td className="px-8 py-6">
-                        <button className="w-10 h-10 flex items-center justify-center rounded-xl border border-indigo-50 text-slate-200 hover:text-indigo-600 hover:bg-indigo-50 transition-all hover:scale-110 active:scale-90">
+                        <button 
+                          onClick={() => {
+                            setSelectedEmployee(emp);
+                            setIsCalendarOpen(true);
+                          }}
+                          className="w-10 h-10 flex items-center justify-center rounded-xl border border-indigo-50 text-slate-200 hover:text-indigo-600 hover:bg-indigo-50 transition-all hover:scale-110 active:scale-90"
+                        >
                           <Info size={18} className="stroke-[2.5]" />
                         </button>
                       </td>
@@ -308,6 +337,17 @@ export default function EmployeesPage() {
             />
           )}
         </AnimatePresence>
+
+        {/* Personnel Calendar Modal */}
+        <PersonnelCalendarModal
+          isOpen={isCalendarOpen}
+          onClose={() => {
+            setIsCalendarOpen(false);
+            setSelectedEmployee(null);
+          }}
+          employeeName={selectedEmployee ? `${selectedEmployee.first_name} ${selectedEmployee.last_name}` : ''}
+          leaves={allLeaves.filter(l => l.user_id === selectedEmployee?.id)}
+        />
       </main>
     </div>
   );
