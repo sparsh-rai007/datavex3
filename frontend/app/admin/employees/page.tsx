@@ -199,7 +199,7 @@ export default function EmployeesPage() {
                             <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white bg-emerald-500" />
                           </div>
                           <div>
-                            <p className="text-lg font-serif font-medium text-slate-950 group-hover:text-indigo-600 transition-colors tracking-tight">{emp.firstName || emp.first_name} {emp.lastName || emp.last_name}</p>
+                            <p className="text-lg font-serif font-medium text-slate-950 group-hover:text-indigo-600 transition-colors tracking-tight">{emp.first_name} {emp.last_name}</p>
                             <p className="text-[10px] font-black text-slate-950/30 uppercase tracking-widest mt-1">{emp.email}</p>
                           </div>
                         </div>
