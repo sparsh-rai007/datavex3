@@ -137,17 +137,17 @@ export default function EditNewsletterPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex bg-slate-100 p-1 rounded-xl mr-4">
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl mr-4 shadow-inner">
               <button
                 onClick={() => setActiveTab('editor')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'editor' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === 'editor' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
                   }`}
               >
                 <Edit3 size={14} /> Editor
               </button>
               <button
                 onClick={() => setActiveTab('preview')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeTab === 'preview' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === 'preview' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
                   }`}
               >
                 <Eye size={14} /> Preview
@@ -156,19 +156,19 @@ export default function EditNewsletterPage() {
 
             <button
               onClick={() => setShowShareModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm active:scale-95"
             >
-              <Share2 size={18} />
-              <span>Export & Share</span>
+              <Share2 size={16} />
+              <span>Export</span>
             </button>
 
             <button
               onClick={handleSubmit(onSubmit)}
               disabled={isSaving}
-              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-2 px-7 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50"
             >
-              {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-              <span>Sync Matrix</span>
+              {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              <span>Sync Briefing</span>
             </button>
           </div>
         </div>
@@ -294,20 +294,59 @@ export default function EditNewsletterPage() {
                               {check?.passed ? (
                                 <CheckCircle2 size={14} className="text-green-500" />
                               ) : (
-                                <AlertTriangle size={14} className="text-amber-500" />
+                                <>
+                                  <AlertTriangle size={14} className="text-amber-500" />
+                                  {hasIssues && (
+                                    <ChevronDown
+                                      size={14}
+                                      className={`text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                    />
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>
+
+                          <AnimatePresence>
+                            {isExpanded && hasIssues && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 space-y-2">
+                                  <div className="flex items-center gap-2 text-amber-700">
+                                    <AlertTriangle size={12} />
+                                    <span className="text-[9px] font-bold uppercase tracking-widest">Neural Alert</span>
+                                  </div>
+                                  {check.issues.map((issue: string, i: number) => (
+                                    <p key={i} className="text-[10px] text-amber-800 font-medium leading-relaxed">• {issue}</p>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       );
                     })}
                   </div>
+
+                  <button
+                    onClick={() => triggerReview()}
+                    disabled={isReviewing}
+                    className="w-full py-3 bg-indigo-50 text-indigo-600 rounded-xl text-[11px] font-bold hover:bg-indigo-100 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Sparkles size={14} /> Re-Audit Matrix
+                  </button>
                 </>
               ) : (
                 <div className="py-8 text-center space-y-4 font-outfit">
-                  <Zap size={24} className="text-slate-200 mx-auto" />
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Awaiting Neural Link</p>
-                  <button onClick={() => triggerReview()} className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">Initialize</button>
+                  <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 mx-auto">
+                    <Zap size={24} />
+                  </div>
+                  <p className="text-xs text-slate-400 font-medium">No audit data available.</p>
+                  <button onClick={() => triggerReview()} className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-[11px] font-bold hover:bg-indigo-700 transition-all">Inaugurate Audit</button>
                 </div>
               )}
             </div>

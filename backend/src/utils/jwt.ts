@@ -9,7 +9,7 @@ export interface TokenPayload {
 
 export const generateAccessToken = (payload: TokenPayload): string => {
   const secret = process.env.JWT_SECRET as Secret;
-  const expiresIn = process.env.JWT_EXPIRES_IN || '15m';
+  const expiresIn = process.env.JWT_EXPIRES_IN || '24h';
 
   if (!secret) {
     throw new Error('JWT_SECRET is not configured');

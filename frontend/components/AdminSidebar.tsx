@@ -37,6 +37,8 @@ const navItems: NavItem[] = [
   { href: '/admin/blogs', label: 'Blogs', icon: Library },
   { href: '/admin/settings/social', label: 'Social Integrations', icon: Globe },
   { href: '/admin/users', label: 'Users', icon: User },
+  { href: '/admin/employees', label: 'Employees', icon: Users },
+  { href: '/admin/leaves', label: 'Leaves', icon: Calendar },
 ];
 
 export default function AdminSidebar() {

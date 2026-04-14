@@ -45,7 +45,7 @@ class ApiClient {
 
           try {
             const response = await axios.post(
-              `${API_URL}/api/auth/refresh`,
+              `${API_URL}/auth/refresh`,
               {},
               { withCredentials: true }
             );
@@ -57,7 +57,8 @@ class ApiClient {
             return this.client(originalRequest);
           } catch (refreshError) {
             Cookies.remove('accessToken');
-            window.location.href = '/admin/login';
+            const isEmployeePath = window.location.pathname.startsWith('/employee');
+            window.location.href = isEmployeePath ? '/employee/login' : '/admin/login';
             return Promise.reject(refreshError);
           }
         }
@@ -201,8 +202,8 @@ class ApiClient {
     return response.data as { newsletter: any };
   }
 
-  async editSnippet(original_text: string, instruction: string) {
-    const response = await this.client.post('/blog/edit-snippet', { original_text, instruction });
+  async editSnippet(original_text: string, instruction: string, full_content?: string) {
+    const response = await this.client.post('/blog/edit-snippet', { original_text, instruction, full_content });
     return response.data as { rewritten_text: string };
   }
 
@@ -295,6 +296,33 @@ class ApiClient {
 
   async updateUserRole(id: string, role: string) {
     return (await this.client.put(`/admin/users/${id}/role`, { role })).data;
+  }
+
+  // Employee Management
+  async createEmployee(data: { name: string; email: string; department: string }) {
+    const response = await this.client.post('/admin/employees', data);
+    return response.data;
+  }
+
+  async getEmployees() {
+    const response = await this.client.get('/admin/employees');
+    return response.data;
+  }
+
+  // Leave Management
+  async getLeaves() {
+    const response = await this.client.get('/leaves');
+    return response.data;
+  }
+
+  async submitLeaveRequest(data: { startDate: string; endDate: string; reason: string }) {
+    const response = await this.client.post('/leaves', data);
+    return response.data;
+  }
+
+  async updateLeaveStatus(id: string, status: 'approved' | 'rejected') {
+    const response = await this.client.put(`/leaves/${id}/status`, { status });
+    return response.data;
   }
 
   // Auth endpoints
