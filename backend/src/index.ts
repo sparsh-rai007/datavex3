@@ -1,4 +1,5 @@
 import express from "express";
+// trigger reload
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -36,6 +37,8 @@ import { runDailyNewsletter } from "./services/dailyNewsletterService";
 import { runScheduledBlogGeneration } from "./services/dailyBlogService";
 import newsletterRoutes from "./routes/newsletter";
 import newsletterGenerateRoutes from "./routes/newsletter-generate";
+import adminEmployeesRoutes from "./routes/admin-employees";
+import leavesRoutes from "./routes/leaves";
 
 dotenv.config();
 
@@ -108,6 +111,8 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/admin", authenticateToken, adminRoutes);
 app.use("/api/admin/users", authenticateToken, requireRole("admin"), adminUsersRoutes);
 app.use("/api/admin/newsletter", adminNewsletterRoutes);
+app.use("/api/admin/employees", adminEmployeesRoutes);
+app.use("/api/leaves", leavesRoutes);
 
 app.use("/api/bookings", bookingsRouter);
 app.use("/api/admin/bookings", adminBookingsRoute);

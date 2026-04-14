@@ -11,6 +11,7 @@ interface User {
   firstName: string;
   lastName: string;
   role: string;
+  department?: string;
 }
 
 interface AuthContextType {
@@ -64,11 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUser(userData);
 
-    // Redirect ONLY after successful login
+    // Redirect based on role
     if (userData.role === "admin") {
       router.push("/admin/dashboard");
+    } else if (userData.role === "employee") {
+      router.push("/employee/dashboard");
     } else {
-      // Non-admin users are not allowed at all
+      // Non-admin/employee users are not allowed at all
       router.push("/");
     }
   };
@@ -77,10 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * LOGOUT
    */
   const logout = async () => {
+    const isEmployeePath = window.location.pathname.startsWith('/employee');
     await apiClient.logout();
     Cookies.remove('accessToken');
     setUser(null);
-    router.push('/admin/login');
+    router.push(isEmployeePath ? '/employee/login' : '/admin/login');
   };
 
   return (

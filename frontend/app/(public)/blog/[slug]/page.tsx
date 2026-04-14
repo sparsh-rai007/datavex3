@@ -6,6 +6,11 @@ import {
   ArrowLeft,
   Share2,
   Bookmark,
+  Clock,
+  Calendar,
+  ChevronRight,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { apiClient } from '@/lib/api';
@@ -218,130 +223,177 @@ export default function BlogDetailPage() {
       </PublicWrapper>
     );
   }
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: blog?.title,
+          text: blog?.excerpt || 'Read this article on DATAVEX',
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
 
   return (
     <PublicWrapper>
-      <div className="min-h-screen bg-white font-outfit">
+      <div className="min-h-screen bg-[#fcfcfc] text-[#111] font-sans selection:bg-primary-600/20">
         {/* Reading Progress Bar */}
         <motion.div
           className="fixed top-0 left-0 right-0 h-1 bg-primary-600 z-[60] origin-left"
           style={{ scaleX }}
         />
 
-        {/* Detail Header / Nav */}
-        <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <button
-              onClick={() => router.back()}
-              className="group flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors font-black uppercase tracking-widest text-[10px]"
-            >
-              <ArrowLeft size={14} />
-              Return to Feed
-            </button>
+        <main className="pt-24 md:pt-32 pb-40">
+          <article className="max-w-4xl mx-auto px-6">
+            {/* Header Section */}
+            <header className="mb-16 md:mb-24 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+              >
+                <div className="flex items-center justify-center gap-4 mb-8">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary-600">
+                    {blog.category || 'General'}
+                  </span>
+                  <div className="w-1 h-1 rounded-full bg-primary-600/30" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-40">
+                    {new Date(blog.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
+                </div>
 
-            <div className="flex items-center gap-4">
-              <button className="p-2 text-slate-400 hover:text-primary-600 transition-colors">
-                <Share2 size={18} />
-              </button>
-              <button className="p-2 text-slate-400 hover:text-primary-600 transition-colors">
-                <Bookmark size={18} />
-              </button>
-            </div>
-          </div>
-        </nav>
+                <h1 className={`font-serif font-medium leading-[1.1] tracking-tight mb-12 ${blog.title && blog.title.length > 60 ? 'text-4xl md:text-5xl lg:text-6xl' : 'text-5xl md:text-7xl lg:text-8xl'}`}>
+                  {blog.title}
+                </h1>
 
-        <main className="mx-auto py-24">
-          <div className="max-w-4xl mx-auto px-6">
-            {/* Release Label */}
-            <div className="flex items-center gap-4 mb-8">
-              <span className="px-4 py-1.5 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-primary-600/20">
-                {blog.category || "Intelligence Release"}
-              </span>
-              <div className="h-px flex-1 bg-slate-100" />
-            </div>
+                <p className="text-xl md:text-2xl font-serif italic opacity-60 max-w-2xl mx-auto leading-relaxed">
+                  {blog.excerpt || (blog.content ? blog.content.substring(0, 150) + '...' : '')}
+                </p>
+              </motion.div>
+            </header>
 
-            {/* Neural Title */}
-            <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight mb-16">
-              {blog.title}
-            </h1>
-
-            <div className="space-y-16">
-              {/* Metadata references removed */}
-
-              {/* Featured Matrix Image */}
-              {blog.featured_image && (
-                <div className="rounded-[3rem] overflow-hidden shadow-2xl shadow-slate-200/50 group">
+            {/* Featured Image */}
+            {blog.featured_image && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                className="mb-24 relative group"
+              >
+                <div className="aspect-[16/9] overflow-hidden rounded-sm shadow-xl shadow-black/5">
                   <img
                     src={blog.featured_image}
                     alt={blog.title}
-                    className="w-full h-auto max-h-[600px] object-cover transition-transform duration-1000 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 grayscale group-hover:grayscale-0"
                     referrerPolicy="no-referrer"
                   />
                 </div>
-              )}
+                <div className="absolute -bottom-6 -right-6 hidden md:block w-32 h-32 border-r border-b border-primary-600/20" />
+                <div className="absolute -top-6 -left-6 hidden md:block w-32 h-32 border-l border-t border-primary-600/20" />
+              </motion.div>
+            )}
 
-              {/* Rendered Intelligence Matrix */}
-              <NewsletterRenderer content={blog.content || ''} hideLinks={true} stripReferences={true} />
-            </div>
-          </div>
-          
-          {/* Recommended Intelligence Matrix */}
-          {recommendations.length > 0 && (
-            <div className="max-w-7xl mx-auto px-6 mt-32 pt-24 border-t border-slate-100">
-              <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-                <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight">More Blogs</h2>
-                 </div>
-                <div className="w-1.5 h-1.5 rounded-full bg-primary-600 animate-pulse hidden md:block" />
+            {/* Content Section */}
+            <div className="flex flex-col md:flex-row gap-16 relative">
+              {/* Sidebar Meta */}
+              <aside className="md:w-48 shrink-0">
+                <div className="sticky top-32 space-y-12">
+                  <div className="flex flex-col gap-4">
+                    <div className="w-12 h-12 rounded-full overflow-hidden grayscale hover:grayscale-0 transition-all duration-500 bg-slate-100">
+                      <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${blog.author || 'DATAVEX'}`} alt={blog.author || "Architect"} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-widest">{blog.author || 'System Architect'}</h4>
+                      <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Author</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-6 pt-8 border-t border-black/5">
+                    <button onClick={() => router.back()} className="flex items-center gap-3 opacity-40 hover:text-primary-600 hover:opacity-100 transition-colors cursor-pointer group text-left">
+                      <ArrowLeft size={14} />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Return to Feed</span>
+                    </button>
+                    <button onClick={handleShare} className="flex items-center gap-3 opacity-40 hover:text-primary-600 hover:opacity-100 transition-colors cursor-pointer group text-left">
+                      <Share2 size={14} />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Share Article</span>
+                    </button>
+                  </div>
+                </div>
+              </aside>
+
+              {/* Main Body Text */}
+              <div className="flex-1 prose prose-lg prose-slate max-w-none">
+                <div className="font-serif text-lg md:text-xl leading-relaxed opacity-80 space-y-8 first-letter:text-7xl first-letter:font-serif first-letter:float-left first-letter:mr-3 first-letter:mt-2 first-letter:text-primary-600">
+                   <NewsletterRenderer content={blog.content || ''} hideLinks={false} stripReferences={false} />
+                </div>
+                
+                {/* Custom Styled Elements for the Content */}
+                <style dangerouslySetInnerHTML={{ __html: `
+                  .prose h1, .prose h2, .prose h3 { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-style: italic; margin-top: 4rem; margin-bottom: 1.5rem; color: #1a1a1a; }
+                  .prose p { margin-bottom: 2rem; line-height: 1.8; }
+                  .prose blockquote { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.75rem; border-left: 2px solid #5a5a40; padding-left: 2rem; margin: 4rem 0; color: #5a5a40; line-height: 1.4; }
+                  .prose img { border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+                `}} />
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            </div>
+          </article>
+
+          {/* Recommendations Section */}
+          {recommendations.length > 0 && (
+            <section className="max-w-7xl mx-auto px-6 mt-40 pt-24 border-t border-black/5">
+              <div className="flex items-center justify-between mb-16">
+                <h2 className="text-4xl md:text-5xl font-serif italic">Further Reading</h2>
+                <button onClick={() => router.push('/blog')} className="group flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-primary-600">
+                  View All Articles <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
                 {recommendations.map((rec, idx) => (
                   <motion.div
                     key={rec.id}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1, duration: 0.6 }}
                     onClick={() => router.push(`/blog/${rec.slug}`)}
-                    className="group cursor-pointer bg-slate-50/50 rounded-[2.5rem] border border-slate-50 p-8 hover:bg-white hover:border-primary-100 hover:shadow-2xl hover:shadow-primary-600/5 transition-all duration-500 flex flex-col"
+                    className="group cursor-pointer"
                   >
-                    <div className="flex items-center gap-3 mb-6">
-                      
-                      <div className="h-px flex-1 bg-slate-100/50" />
+                    <div className="mb-6 overflow-hidden aspect-[4/3] bg-slate-50 relative">
+                      {rec.featured_image ? (
+                        <img 
+                          src={rec.featured_image} 
+                          alt={rec.title} 
+                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105" 
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-slate-100"><span className="font-serif italic text-slate-300">No Image</span></div>
+                      )}
                     </div>
-                    
-                    <h3 className="text-xl font-black text-slate-900 mb-4 group-hover:text-primary-600 transition-colors leading-tight tracking-tight">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-primary-600">{rec.category || 'General'}</span>
+                      <div className="w-1 h-1 rounded-full bg-primary-600/20" />
+                      <span className="text-[9px] font-bold uppercase tracking-widest opacity-30">
+                        {new Date(rec.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-serif font-medium mb-4 group-hover:text-primary-600 transition-colors leading-tight">
                       {rec.title}
                     </h3>
-                    
-                    <p className="text-slate-400 font-medium text-sm mb-8 line-clamp-3 leading-relaxed">
-                      {rec.excerpt}
+                    <p className="text-sm opacity-50 leading-relaxed line-clamp-2 italic font-serif">
+                      {rec.excerpt || (rec.content ? rec.content.substring(0, 100) : '')}
                     </p>
-                    
-                    <div className="mt-auto flex items-center justify-between pt-6 border-t border-slate-100/50">
-                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{rec.read_time || "5 Min Read"}</span>
-                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary-600 shadow-sm group-hover:bg-primary-600 group-hover:text-white transition-all">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                          <polyline points="12 5 19 12 12 19"></polyline>
-                        </svg>
-                      </div>
-                    </div>
                   </motion.div>
                 ))}
               </div>
-            </div>
+            </section>
           )}
-
-          {/* Global Footer Context */}
-          <div className="max-w-7xl mx-auto px-6 mt-40 pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
-            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">© {new Date().getFullYear()} DATAVEX.ai — ALL RIGHTS RESERVED.</p>
-            <div className="flex gap-8">
-              {['Authority', 'Synthesis', 'Integrity'].map(word => (
-                <span key={word} className="text-[9px] font-black text-slate-200 uppercase tracking-[0.4em]">{word}</span>
-              ))}
-            </div>
-          </div>
         </main>
       </div>
     </PublicWrapper>

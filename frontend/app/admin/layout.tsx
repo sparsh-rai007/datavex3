@@ -17,10 +17,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Only redirect if not on login page and not authenticated
-    if (!isLoginPage && !loading && !isAuthenticated) {
-      router.push('/admin/login');
+    if (!isLoginPage && !loading) {
+      if (!isAuthenticated) {
+        router.push('/admin/login');
+      } else if (user?.role === 'employee') {
+        router.push('/employee/dashboard');
+      }
     }
-  }, [isAuthenticated, loading, router, isLoginPage]);
+  }, [isAuthenticated, loading, router, isLoginPage, user]);
 
   // Show loading only for protected pages
   if (!isLoginPage && loading) {

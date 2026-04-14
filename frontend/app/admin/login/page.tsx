@@ -1,5 +1,5 @@
 'use client';
-import {  useEffect } from 'react';   // ✅ FIXED: Added useEffect
+import { useEffect } from 'react';   // ✅ FIXED: Added useEffect
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '@/lib/auth';
@@ -11,7 +11,7 @@ interface LoginForm {
 }
 
 export default function LoginPage() {
-  const { login , user, isAuthenticated } = useAuth();
+  const { login, user, isAuthenticated } = useAuth();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -47,11 +47,11 @@ export default function LoginPage() {
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-primary-900 mb-2">
-              Login
-            </h1>
-            <p className="text-primary-600">
-              Sign in to access your account
-            </p>
+            Login
+          </h1>
+          <p className="text-primary-600">
+            Sign in to access your account
+          </p>
 
         </div>
 
@@ -124,10 +124,10 @@ export default function LoginPage() {
         </form>
 
 
-{/* Admin credentials hint — optional */}
-<div className="mt-4 text-center text-sm text-gray-500">
-  admin@datavex.ai / Admin@123
-</div>
+        {/* Admin credentials hint — optional */}
+        <div className="mt-4 text-center text-sm text-gray-500">
+          admin@datavex.ai / Admin@123
+        </div>
         <div className="mt-6 text-center text-sm text-gray-600">
           <p>Default credentials:</p>
           <p className="font-mono text-xs mt-1">

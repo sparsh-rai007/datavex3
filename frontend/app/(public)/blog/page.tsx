@@ -1,6 +1,6 @@
-import PublicWrapper from '../wrapper';
 import { apiClient } from '@/lib/api';
-import NewsletterListClient from '@/components/NewsletterListClient';
+import BlogBrutalistList from '@/components/BlogBrutalistList';
+import PublicWrapper from '../wrapper';
 
 // Force SSR so blogs are always fetched fresh — without this, Next.js statically
 // generates this page at build time and production shows stale data forever.
@@ -15,24 +15,30 @@ export default async function BlogPage() {
   let blogs: any[] = [];
 
   try {
-    // Reverted backend returns everything from /public/all
+    // Fetch production blog matrix from the API
     blogs = await apiClient.getPublicBlogs();  
   } catch (error) {
     console.error("Blog retrieval error:", error);
   }
 
+  // Map API response accurately into the strict interface demanded by the brutualist visual design
+  const mappedBlogs = blogs.map(blog => ({
+    id: blog.id || blog._id || Math.random().toString(),
+    title: blog.title || 'Untitled Syntax',
+    slug: blog.slug || '',
+    excerpt: blog.excerpt || (blog.content ? blog.content.substring(0, 150) + '...' : 'Data excerpt unavailable.'),
+    category: blog.category || 'General',
+    author_name: blog.author || 'DATAVEX Architect',
+    created_at: blog.created_at || new Date().toISOString(),
+    featured_image: blog.featured_image || null,
+    read_time: blog.read_time || '5 min',
+    external_url: blog.external_url || null
+  }));
+
+  // Render the standalone brutalist layout inside the global site Navigation wrapper
   return (
     <PublicWrapper>
-      <NewsletterListClient 
-        blogs={blogs} 
-        basePath="/blog" 
-        title={
-          <>
-            Insights for the Modern Web <span className="text-primary-600"></span><span className="text-primary-600"></span>  <span className="text-primary-600"></span>.
-          </>
-        }
-        subtitle="The definitive guide for enterprise leaders navigating the synthesis of neural architectures and high-velocity systems."
-      />
+      <BlogBrutalistList blogs={mappedBlogs} />
     </PublicWrapper>
   );
 }
