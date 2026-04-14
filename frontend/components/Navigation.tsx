@@ -26,7 +26,8 @@ export default function Navigation() {
     pathname.startsWith('/newsletter') ||
     pathname.startsWith('/contact') ||
     pathname.startsWith('/consultation') ||
-    pathname.startsWith("/admin/login");
+    pathname.startsWith("/admin/login") ||
+    pathname.startsWith("/employee/login");
 
   // 👇 Only load auth for non-public pages
   const auth = useAuth();
@@ -111,9 +112,14 @@ export default function Navigation() {
           </div>
 
           {/* Right side (Login / User Info) */}
-
-
-          {/* Mobile menu button */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Link
+              href="/employee/login"
+              className="px-4 py-2 text-sm font-medium bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+            >
+              Employee Login
+            </Link>
+          </div>          {/* Mobile menu button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 rounded-md text-gray-700 hover:text-primary-600"
@@ -178,18 +184,11 @@ export default function Navigation() {
 
           <div className="pt-4 space-y-2 border-t">
             <Link
-              href="/contact"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-base font-medium text-primary-600"
-            >
-              Get Started
-            </Link>
-            <Link
-              href="/admin/login"
+              href="/employee/login"
               onClick={() => setMobileMenuOpen(false)}
               className="block px-3 py-2 text-base font-medium bg-primary-600 text-white rounded-md text-center"
             >
-              Login
+              Employee Login
             </Link>
           </div>
         </div>
