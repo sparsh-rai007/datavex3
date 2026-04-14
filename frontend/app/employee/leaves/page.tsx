@@ -36,6 +36,7 @@ export default function LeaveAppPage() {
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedLeaveDetail, setSelectedLeaveDetail] = useState<Leave | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [leaveForm, setLeaveForm] = useState({
@@ -79,7 +80,10 @@ export default function LeaveAppPage() {
   };
 
   const handleDateClick = (date: Date) => {
-    const dateString = date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
     setLeaveForm({
       startDate: dateString,
       endDate: dateString,
@@ -98,9 +102,13 @@ export default function LeaveAppPage() {
     const firstDay = getFirstDayOfMonth(year, month);
     const days = [];
 
+    const formatYMD = (d: Date) => {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayString = today.toISOString().split('T')[0];
+    const todayTime = today.getTime();
 
     for (let i = 0; i < firstDay; i++) {
       days.push(<div key={`empty-${i}`} className="h-12 border-r border-b border-indigo-100/30 bg-slate-50/50" />);
@@ -108,69 +116,56 @@ export default function LeaveAppPage() {
 
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
-      const dateString = date.toISOString().split('T')[0];
+      const dateTime = date.getTime();
+      const dateString = formatYMD(date);
       
       const dayLeaves = leaves.filter(l => {
-        const start = l.start_date.split('T')[0];
-        const end = l.end_date.split('T')[0];
-        return start <= dateString && end >= dateString;
+        const start = new Date(l.start_date);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(l.end_date);
+        end.setHours(0, 0, 0, 0);
+        return start.getTime() <= dateTime && end.getTime() >= dateTime;
       });
 
-      const isToday = todayString === dateString;
-      const isPast = date < today;
+      const isToday = todayTime === dateTime;
+      const isPast = dateTime < todayTime;
 
-      // Currently on Leave: Approved and date is TODAY
-      const isOnLeave = dayLeaves.some(l => l.status === 'approved' && isToday);
-      // Previously taken: Approved and in the past
-      const hasTaken = dayLeaves.some(l => l.status === 'approved' && isPast);
-      // Upcoming: Pending or Approved and in the future
-      const hasUpcoming = dayLeaves.some(l => (l.status === 'approved' || l.status === 'pending') && !isPast && !isOnLeave);
-      const hasRejected = dayLeaves.some(l => l.status === 'rejected');
+      const hasLeave = dayLeaves.length > 0;
 
       days.push(
         <motion.div
-          key={day}
-          whileHover={{ backgroundColor: '#f8fafc' }}
-          onClick={() => handleDateClick(date)}
-          className={`h-12 p-1.5 border-r border-b border-indigo-100/30 cursor-pointer transition-colors relative group ${
-            isOnLeave ? 'bg-indigo-600 ring-2 ring-inset ring-indigo-400/30' :
-            hasUpcoming ? 'bg-indigo-50/60' :
-            hasTaken ? 'bg-slate-100/70' :
-            isToday ? 'bg-indigo-600/5' : 'bg-white'
+          key={dateString}
+          whileHover={hasLeave ? {} : { backgroundColor: '#f5f7ff', opacity: 0.8 }}
+          onClick={hasLeave ? undefined : () => handleDateClick(date)}
+          className={`h-12 p-2 border-r border-b border-indigo-100/30 transition-colors relative group ${
+            hasLeave ? 'bg-rose-50/80 cursor-not-allowed' :
+            isToday ? 'bg-indigo-50/50 cursor-pointer' : 'bg-white cursor-pointer'
           }`}
         >
-          <div className="flex justify-between items-start">
-            <span className={`text-xs font-serif ${
-              isOnLeave ? 'text-white font-bold' :
-              hasUpcoming ? 'text-indigo-600 font-bold' :
-              hasTaken ? 'text-slate-500 font-medium' :
-              isToday ? 'text-indigo-600 font-bold underline decoration-indigo-200 underline-offset-4' : 'text-slate-900/30'
-            }`}>
-              {day.toString().padStart(2, '0')}
-            </span>
-            
-            {isOnLeave && <div className="px-1.5 py-0.5 bg-white/20 rounded text-[6px] font-black text-white uppercase tracking-tighter">Current</div>}
-            {hasTaken && <CheckCircle2 size={10} className="text-slate-400" />}
-            {hasUpcoming && <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />}
-          </div>
+          <span className={`text-sm font-serif ${
+            hasLeave ? 'text-rose-600 font-medium' :
+            isToday ? 'text-indigo-600 font-bold underline decoration-indigo-200 underline-offset-4' : 'text-slate-900/40'
+          }`}>
+            {day.toString().padStart(2, '0')}
+          </span>
           
           <div className="mt-1 flex flex-wrap gap-1">
             {dayLeaves.map(l => (
               <div 
                 key={l.id} 
-                className={`w-1 h-1 rounded-full ${
-                  isOnLeave ? 'bg-white/40' :
-                  l.status === 'approved' ? 'bg-indigo-600' : 
-                  l.status === 'rejected' ? 'bg-rose-400' : 'bg-amber-400'
+                className={`w-1.5 h-1.5 rounded-full ${
+                  l.status === 'approved' ? 'bg-rose-600' : 
+                  l.status === 'rejected' ? 'bg-blue-600' : 'bg-amber-400'
                 }`} 
-                title={`${l.status}: ${l.reason}`}
               />
             ))}
           </div>
 
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            <Plus size={16} className={isOnLeave ? "text-white/20" : "text-indigo-600/30"} />
-          </div>
+          {!hasLeave && (
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Plus size={16} className="text-indigo-600" />
+            </div>
+          )}
         </motion.div>
       );
     }
@@ -243,28 +238,20 @@ export default function LeaveAppPage() {
             {/* Calendar Legend */}
             <div className="p-6 bg-slate-50/50 border-t border-indigo-50 flex flex-wrap gap-8 justify-center">
               <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded bg-indigo-600 shadow-sm" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">On Leave (Today)</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-md bg-slate-100 border border-indigo-100 flex items-center justify-center">
-                  <CheckCircle2 size={10} className="text-slate-400" />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Previously Taken</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-md bg-indigo-50 border border-indigo-100 flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">Upcoming / Applied</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-rose-600">On Leave (Approved)</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pending</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-500">Pending Request</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Rejected</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded bg-rose-50 border border-rose-100" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Past / Range</span>
               </div>
             </div>
           </div>
@@ -340,9 +327,9 @@ export default function LeaveAppPage() {
                           {leave.status === 'approved' ? <CheckCircle2 size={24} /> :
                             leave.status === 'rejected' ? <XCircle size={24} /> : <Clock size={24} />}
                         </div>
-                        <div>
-                          <h4 className="text-2xl font-serif font-medium text-slate-950 mb-2 group-hover:text-indigo-600 transition-colors">{leave.reason}</h4>
-                          <p className="text-[10px] font-black text-slate-900/40 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <div className="min-w-0">
+                          <h4 className="text-2xl font-serif font-medium text-slate-950 mb-2 group-hover:text-indigo-600 transition-colors break-all line-clamp-1">{leave.reason}</h4>
+                          <p className="text-[10px] font-black text-slate-900/40 uppercase tracking-[0.2em] flex items-center gap-2 flex-wrap">
                             <CalendarIcon size={12} className="text-indigo-600/40" />
                             {new Date(leave.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} 
                             <ArrowRight size={10} className="text-indigo-600/30 mx-1" />
@@ -358,7 +345,10 @@ export default function LeaveAppPage() {
                         }`}>
                           {leave.status}
                         </span>
-                        <button className="w-10 h-10 flex border border-indigo-50 items-center justify-center rounded-full text-slate-200 hover:text-indigo-600 hover:bg-indigo-50 transition-all focus:outline-none">
+                        <button 
+                          onClick={() => setSelectedLeaveDetail(leave)}
+                          className="w-10 h-10 flex border border-indigo-50 items-center justify-center rounded-full text-slate-200 hover:text-indigo-600 hover:bg-indigo-50 transition-all focus:outline-none"
+                        >
                           <Info size={18} />
                         </button>
                       </div>
@@ -479,6 +469,90 @@ export default function LeaveAppPage() {
                     </button>
                   </div>
                 </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Leave Detail Modal - Premium Style */}
+      <AnimatePresence>
+        {selectedLeaveDetail && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedLeaveDetail(null)}
+              className="absolute inset-0 bg-slate-950/40 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative bg-white w-full max-w-lg rounded-[3rem] shadow-2xl overflow-hidden border border-indigo-50"
+            >
+              <div className={`h-4 ${
+                selectedLeaveDetail.status === 'approved' ? 'bg-rose-600' : 
+                selectedLeaveDetail.status === 'rejected' ? 'bg-blue-600' : 'bg-amber-400'
+              }`} />
+              
+              <div className="p-12">
+                <div className="flex justify-between items-start mb-10">
+                  <div>
+                    <span className={`text-[10px] font-black uppercase tracking-[0.4em] mb-4 block ${
+                      selectedLeaveDetail.status === 'approved' ? 'text-rose-600' : 
+                      selectedLeaveDetail.status === 'rejected' ? 'text-blue-600' : 'text-amber-500'
+                    }`}>
+                      {selectedLeaveDetail.status} Protocol
+                    </span>
+                    <h2 className="text-4xl font-serif italic text-slate-950">Leave Details</h2>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedLeaveDetail(null)}
+                    className="w-12 h-12 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-rose-600 transition-colors"
+                  >
+                    <XCircle size={24} />
+                  </button>
+                </div>
+
+                <div className="space-y-10">
+                  <div className="bg-slate-50/50 p-8 rounded-[2rem] border border-indigo-50/50">
+                    <p className="text-[10px] font-black text-slate-900/20 uppercase tracking-[0.3em] mb-4">Specified Reason</p>
+                    <p className="text-xl font-serif italic text-slate-950 leading-relaxed break-words">
+                      "{selectedLeaveDetail.reason}"
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                        <CalendarIcon size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-slate-900/20 uppercase tracking-widest">Departure</p>
+                        <p className="text-sm font-mono font-bold text-slate-950">{new Date(selectedLeaveDetail.start_date).toLocaleDateString('en-GB')}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                        <ArrowRight size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-slate-900/20 uppercase tracking-widest">Return</p>
+                        <p className="text-sm font-mono font-bold text-slate-950">{new Date(selectedLeaveDetail.end_date).toLocaleDateString('en-GB')}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-12 pt-10 border-t border-indigo-50">
+                  <button 
+                    onClick={() => setSelectedLeaveDetail(null)}
+                    className="w-full py-5 bg-slate-950 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.4em] hover:bg-indigo-600 transition-all shadow-xl shadow-indigo-100"
+                  >
+                    Close Protocol
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
