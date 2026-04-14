@@ -26,7 +26,6 @@ interface Employee {
   email: string;
   first_name: string;
   last_name: string;
-  employee_id: string;
   department: string;
   is_active: boolean;
 }
@@ -41,7 +40,6 @@ export default function EmployeesPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    employeeId: '',
     department: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,9 +69,9 @@ export default function EmployeesPage() {
 
     try {
       const result = await apiClient.createEmployee(formData);
-      setCredentials({ id: result.user.employeeId, pass: result.temporaryPassword });
+      setCredentials({ id: formData.email, pass: result.temporaryPassword });
       setIsModalOpen(false);
-      setFormData({ name: '', email: '', employeeId: '', department: '' });
+      setFormData({ name: '', email: '', department: '' });
       fetchEmployees();
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create employee');
@@ -84,8 +82,7 @@ export default function EmployeesPage() {
 
   const filteredEmployees = employees.filter(emp =>
     `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.employee_id.toLowerCase().includes(searchTerm.toLowerCase())
+    emp.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -185,7 +182,6 @@ export default function EmployeesPage() {
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <p className="font-mono text-sm text-slate-950 tracking-[0.2em] font-bold">{emp.employee_id}</p>
                         <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mt-1.5 underline decoration-indigo-200 underline-offset-4">{emp.department}</p>
                       </td>
                       <td className="px-8 py-6">
@@ -257,29 +253,16 @@ export default function EmployeesPage() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Operator ID</label>
-                        <input
-                          required
-                          type="text"
-                          placeholder="SYN-001"
-                          value={formData.employeeId}
-                          onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                          className="w-full px-6 py-4 bg-indigo-50/30 rounded-xl border border-indigo-50 focus:border-indigo-600 focus:outline-none font-mono text-base tracking-[0.2em] font-bold transition-all"
-                        />
-                      </div>
-                      <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Deployment Sector</label>
-                        <input
-                          required
-                          type="text"
-                          placeholder="Engineering"
-                          value={formData.department}
-                          onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                          className="w-full px-8 py-6 bg-indigo-50/30 rounded-xl border border-indigo-100 focus:border-indigo-600 focus:outline-none font-serif italic text-lg transition-all"
-                        />
-                      </div>
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Deployment Sector</label>
+                      <input
+                        required
+                        type="text"
+                        placeholder="Engineering"
+                        value={formData.department}
+                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                        className="w-full px-8 py-6 bg-indigo-50/30 rounded-xl border border-indigo-100 focus:border-indigo-600 focus:outline-none font-serif italic text-lg transition-all"
+                      />
                     </div>
 
                     {error && (
@@ -319,7 +302,7 @@ export default function EmployeesPage() {
         <AnimatePresence>
           {credentials && (
             <CredentialsOverlay
-              employeeId={credentials.id}
+              email={credentials.id}
               password={credentials.pass}
               onClose={() => setCredentials(null)}
             />

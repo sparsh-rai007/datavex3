@@ -25,7 +25,6 @@ router.post(
   [
     body('name').notEmpty().withMessage('Name is required'),
     body('email').isEmail().withMessage('Valid email is required').normalizeEmail(),
-    body('employeeId').notEmpty().withMessage('Employee ID is required'),
     body('department').notEmpty().withMessage('Department is required'),
   ],
   async (req: AuthRequest, res: Response) => {
@@ -34,7 +33,7 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, employeeId, department } = req.body;
+    const { name, email, department } = req.body;
 
     // Split name into first and last
     const nameParts = name.trim().split(' ');
@@ -48,12 +47,6 @@ router.post(
         return res.status(400).json({ error: 'User with this email already exists' });
       }
 
-      // Check if employee ID already exists
-      const empIdExists = await pool.query('SELECT id FROM users WHERE employee_id = $1', [employeeId]);
-      if (empIdExists.rows.length > 0) {
-        return res.status(400).json({ error: 'Employee ID already exists' });
-      }
-
       const temporaryPassword = generatePassword();
       const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
@@ -64,12 +57,11 @@ router.post(
           first_name, 
           last_name, 
           role, 
-          employee_id, 
           department, 
           is_active
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
-        RETURNING id, email, employee_id`,
-        [email, hashedPassword, firstName, lastName, 'employee', employeeId, department, true]
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7) 
+        RETURNING id, email`,
+        [email, hashedPassword, firstName, lastName, 'employee', department, true]
       );
 
       const newUser = result.rows[0];
@@ -79,7 +71,6 @@ router.post(
         user: {
           id: newUser.id,
           email: newUser.email,
-          employeeId: newUser.employee_id,
         },
         temporaryPassword // ONLY SENT ONCE
       });
@@ -98,18 +89,13 @@ router.post(
 router.get('/', authenticateToken, requireRole('admin'), async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT id, email, first_name, last_name, role, employee_id, department, is_active FROM users WHERE role = $1',
+      'SELECT id, email, first_name, last_name, role, department, is_active FROM users WHERE role = $1',
       ['employee']
     );
     res.json({ employees: result.rows });
   } catch (error) {
     console.error('Error fetching employees:', error);
     res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-export default router;
-res.status(500).json({ error: 'Internal server error' });
   }
 });
 

@@ -46,10 +46,7 @@ export default function EmployeeDashboard() {
 
       {/* Footer Branding */}
       <footer className="absolute bottom-12 left-0 w-full px-12 flex justify-between items-end pointer-events-none opacity-40">
-        <div className="flex flex-col gap-1">
-          <span className="text-[9px] font-black text-slate-950/20 uppercase tracking-[0.4em]">Operator ID</span>
-          <span className="text-[11px] font-black text-slate-950/40 uppercase tracking-widest">{user?.employeeId}</span>
-        </div>
+          <span className="text-[9px] font-black text-slate-950/20 uppercase tracking-[0.4em]">Sector: {user?.department}</span>
         <div className="text-[9px] font-black text-slate-950/20 uppercase tracking-[0.4em]">
           © 2026 Synthesis Arch.
         </div>

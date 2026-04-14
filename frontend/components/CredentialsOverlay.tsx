@@ -6,12 +6,12 @@ import { Copy, Check, X } from 'lucide-react';
 import { useState } from 'react';
 
 interface CredentialsOverlayProps {
-  employeeId: string;
+  email: string;
   password: string;
   onClose: () => void;
 }
 
-export default function CredentialsOverlay({ employeeId, password, onClose }: CredentialsOverlayProps) {
+export default function CredentialsOverlay({ email, password, onClose }: CredentialsOverlayProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [copiedId, setCopiedId] = useState(false);
@@ -78,11 +78,11 @@ export default function CredentialsOverlay({ employeeId, password, onClose }: Cr
         
         <div className="p-8 space-y-6">
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Employee ID</label>
+            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Employee Email</label>
             <div className="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-              <code className="flex-1 font-mono text-lg font-bold text-slate-900">{employeeId}</code>
+              <code className="flex-1 font-mono text-lg font-bold text-slate-900">{email}</code>
               <button 
-                onClick={() => copyToClipboard(employeeId, 'id')}
+                onClick={() => copyToClipboard(email, 'id')}
                 className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
               >
                 {copiedId ? <Check size={20} /> : <Copy size={20} />}

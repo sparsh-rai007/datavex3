@@ -16,7 +16,6 @@ async function migrateEmployees() {
     // 2. Add employee-specific columns to users table
     await client.query(`
       ALTER TABLE users 
-      ADD COLUMN IF NOT EXISTS employee_id VARCHAR(50) UNIQUE,
       ADD COLUMN IF NOT EXISTS department VARCHAR(100);
     `);
     console.log('✅ Employee columns added to users table');

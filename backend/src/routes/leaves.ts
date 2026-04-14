@@ -24,7 +24,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 
     if (role === 'admin') {
       query = `
-        SELECT l.*, u.first_name, u.last_name, u.employee_id, u.department 
+        SELECT l.*, u.first_name, u.last_name, u.department 
         FROM leaves l
         JOIN users u ON l.user_id = u.id
         ORDER BY l.created_at DESC

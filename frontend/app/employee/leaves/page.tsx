@@ -98,9 +98,8 @@ export default function LeaveAppPage() {
     const firstDay = getFirstDayOfMonth(year, month);
     const days = [];
 
-    // Empty slots for previous month
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-24 border-r border-b border-indigo-100/30 bg-slate-50/50" />);
+      days.push(<div key={`empty-${i}`} className="h-16 border-r border-b border-indigo-100/30 bg-slate-50/50" />);
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
@@ -108,17 +107,22 @@ export default function LeaveAppPage() {
       const dateString = date.toISOString().split('T')[0];
       const dayLeaves = leaves.filter(l => l.start_date <= dateString && l.end_date >= dateString);
       const isToday = new Date().toISOString().split('T')[0] === dateString;
+      const hasLeave = dayLeaves.length > 0;
 
       days.push(
         <motion.div
           key={day}
-          whileHover={{ backgroundColor: '#f5f7ff', opacity: 0.8 }}
+          whileHover={{ backgroundColor: hasLeave ? '#ffe4e6' : '#f5f7ff', opacity: 0.8 }}
           onClick={() => handleDateClick(date)}
-          className={`h-24 p-2 border-r border-b border-indigo-100/30 cursor-pointer transition-colors relative group ${
+          className={`h-16 p-2 border-r border-b border-indigo-100/30 cursor-pointer transition-colors relative group ${
+            hasLeave ? 'bg-rose-50/80' :
             isToday ? 'bg-indigo-50/50' : 'bg-white'
           }`}
         >
-          <span className={`text-sm font-serif ${isToday ? 'text-indigo-600 font-bold underline decoration-indigo-200 underline-offset-4' : 'text-slate-900/40'}`}>
+          <span className={`text-sm font-serif ${
+            hasLeave ? 'text-rose-600 font-medium' :
+            isToday ? 'text-indigo-600 font-bold underline decoration-indigo-200 underline-offset-4' : 'text-slate-900/40'
+          }`}>
             {day.toString().padStart(2, '0')}
           </span>
           
@@ -127,15 +131,15 @@ export default function LeaveAppPage() {
               <div 
                 key={l.id} 
                 className={`w-1.5 h-1.5 rounded-full ${
-                  l.status === 'approved' ? 'bg-indigo-600' : 
-                  l.status === 'rejected' ? 'bg-rose-400' : 'bg-indigo-600/30'
+                  l.status === 'approved' ? 'bg-rose-600' : 
+                  l.status === 'rejected' ? 'bg-rose-400' : 'bg-rose-300'
                 }`} 
               />
             ))}
           </div>
 
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Plus size={16} className="text-indigo-600" />
+            <Plus size={16} className={hasLeave ? "text-rose-600" : "text-indigo-600"} />
           </div>
         </motion.div>
       );
@@ -164,10 +168,10 @@ export default function LeaveAppPage() {
             >
              
               <h1 className="text-5xl md:text-7xl font-serif font-medium text-slate-950 mb-6 tracking-tight leading-[1.05]">
-                Absence <span className="italic">Management</span> Matrix
+                Leave <span className="italic">Management</span>
               </h1>
               <p className="text-lg text-slate-900/60 font-serif italic leading-relaxed">
-                {user?.firstName || 'Elena'}, synchronize your temporal departures by selecting a date on the matrix below.
+                {user?.firstName || 'Elena'}, request a leave by selecting a date on the calendar below.
               </p>
             </motion.div>
 
@@ -199,7 +203,7 @@ export default function LeaveAppPage() {
             
             <div className="grid grid-cols-7">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="py-5 text-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 border-r border-b border-indigo-50/50 last:border-r-0 bg-slate-50/30">
+                <div key={day} className="py-3 text-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 border-r border-b border-indigo-50/50 last:border-r-0 bg-slate-50/30">
                   {day}
                 </div>
               ))}
@@ -228,7 +232,7 @@ export default function LeaveAppPage() {
                 </div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-6xl font-serif font-light leading-none tracking-tighter text-slate-950">{stat.value.toString().padStart(2, '0')}</span>
-                  <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Units</span>
+                  <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Days</span>
                 </div>
               </motion.div>
             ))}
@@ -239,26 +243,26 @@ export default function LeaveAppPage() {
             <div className="lg:col-span-8 space-y-10">
               <div className="flex items-center justify-between border-b border-indigo-100 pb-8">
                 <h2 className="text-3xl font-serif font-medium italic text-slate-950 tracking-tight">
-                  Temporal History
+                  Leave History
                 </h2>
                 <div className="flex items-center gap-4">
                   <div className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse" />
-                  <span className="text-[10px] font-black text-slate-900/40 uppercase tracking-widest">Active Database</span>
+                  <span className="text-[10px] font-black text-slate-900/40 uppercase tracking-widest">Active</span>
                 </div>
               </div>
 
               {loading ? (
                 <div className="py-32 flex flex-col items-center justify-center gap-6 border border-dashed border-indigo-200 rounded-[2.5rem] bg-indigo-50/10">
                   <Loader2 className="animate-spin text-indigo-600" size={32} />
-                  <p className="text-[10px] font-black text-slate-900/40 uppercase tracking-[0.3em]">Synchronizing Records...</p>
+                  <p className="text-[10px] font-black text-slate-900/40 uppercase tracking-[0.3em]">Loading Records...</p>
                 </div>
               ) : leaves.length === 0 ? (
                 <div className="py-32 text-center border border-dashed border-indigo-200 rounded-[2.5rem] bg-indigo-50/10">
                   <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm">
                     <CalendarIcon size={32} className="text-slate-900/10" />
                   </div>
-                  <h3 className="text-2xl font-serif italic text-slate-950 mb-2">No Departures Found</h3>
-                  <p className="text-slate-900/40 font-serif italic max-w-xs mx-auto">Your absence history is currently void of any recorded synthesis.</p>
+                  <h3 className="text-2xl font-serif italic text-slate-950 mb-2">No Leave Requests Found</h3>
+                  <p className="text-slate-900/40 font-serif italic max-w-xs mx-auto">You haven't made any leave requests yet.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -313,19 +317,19 @@ export default function LeaveAppPage() {
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-10">
                     <ShieldCheck size={20} className="text-indigo-400" />
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Protocol Notice</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Leave Policy</h3>
                   </div>
                   <p className="text-2xl font-serif italic leading-relaxed mb-12 text-white/90">
-                    "All temporal departures must be synchronized 48 hours in advance."
+                    "All leave requests must be submitted 48 hours in advance."
                   </p>
                   <ul className="space-y-6">
                     <li className="flex items-start gap-4">
                       <div className="w-2 h-2 rounded-full bg-indigo-400 mt-1.5 shadow-[0_0_10px_rgba(129,140,248,0.5)]" />
-                      <p className="text-[11px] font-black uppercase tracking-widest text-white/40 leading-relaxed">Annual synthesis limit: 15 Units</p>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-white/40 leading-relaxed">Annual leave allowance: 15 Days</p>
                     </li>
                     <li className="flex items-start gap-4">
                       <div className="w-2 h-2 rounded-full bg-indigo-400 mt-1.5 shadow-[0_0_10px_rgba(129,140,248,0.5)]" />
-                      <p className="text-[11px] font-black uppercase tracking-widest text-white/40 leading-relaxed">Medical verification required for neural repair</p>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-white/40 leading-relaxed">Medical certificate required for sick leaves</p>
                     </li>
                   </ul>
                 </div>
@@ -356,14 +360,14 @@ export default function LeaveAppPage() {
               <div className="p-8 md:p-10">
                 <div className="mb-10 text-center">
                   
-                  <h2 className="text-3xl font-serif font-medium text-slate-950 mb-3 tracking-tight leading-none">Initiate <span className="italic">Departure</span></h2>
-                  <p className="text-slate-900/40 font-serif italic text-base">Specify your temporal window and reason for synthesis gap.</p>
+                  <h2 className="text-3xl font-serif font-medium text-slate-950 mb-3 tracking-tight leading-none">Request <span className="italic">Leave</span></h2>
+                  <p className="text-slate-900/40 font-serif italic text-base">Specify your leave dates and the reason for your absence.</p>
                 </div>
 
                 <form onSubmit={handleLeaveSubmit} className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 split-inputs">
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Start Horizon</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Start Date</label>
                       <input
                         required
                         type="date"
@@ -373,7 +377,7 @@ export default function LeaveAppPage() {
                       />
                     </div>
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">End Horizon</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">End Date</label>
                       <input
                         required
                         type="date"
@@ -388,7 +392,7 @@ export default function LeaveAppPage() {
                     <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Reason for Absence</label>
                     <textarea
                       required
-                      placeholder="e.g. Neural system calibration..."
+                      placeholder="e.g. Vacation, Sick leave..."
                       value={leaveForm.reason}
                       onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })}
                       rows={3}

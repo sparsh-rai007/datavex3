@@ -45,7 +45,7 @@ class ApiClient {
 
           try {
             const response = await axios.post(
-              `${API_URL}/api/auth/refresh`,
+              `${API_URL}/auth/refresh`,
               {},
               { withCredentials: true }
             );
@@ -57,7 +57,8 @@ class ApiClient {
             return this.client(originalRequest);
           } catch (refreshError) {
             Cookies.remove('accessToken');
-            window.location.href = '/admin/login';
+            const isEmployeePath = window.location.pathname.startsWith('/employee');
+            window.location.href = isEmployeePath ? '/employee/login' : '/admin/login';
             return Promise.reject(refreshError);
           }
         }
@@ -298,7 +299,7 @@ class ApiClient {
   }
 
   // Employee Management
-  async createEmployee(data: { name: string; email: string; employeeId: string; department: string }) {
+  async createEmployee(data: { name: string; email: string; department: string }) {
     const response = await this.client.post('/admin/employees', data);
     return response.data;
   }

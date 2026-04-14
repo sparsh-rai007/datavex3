@@ -11,7 +11,6 @@ interface User {
   firstName: string;
   lastName: string;
   role: string;
-  employeeId?: string;
   department?: string;
 }
 
@@ -81,10 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * LOGOUT
    */
   const logout = async () => {
+    const isEmployeePath = window.location.pathname.startsWith('/employee');
     await apiClient.logout();
     Cookies.remove('accessToken');
     setUser(null);
-    router.push('/admin/login');
+    router.push(isEmployeePath ? '/employee/login' : '/admin/login');
   };
 
   return (
