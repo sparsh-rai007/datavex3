@@ -299,13 +299,28 @@ class ApiClient {
   }
 
   // Employee Management
-  async createEmployee(data: { name: string; email: string; department: string }) {
+  async createEmployee(data: { name: string; email: string; department: string; password?: string }) {
     const response = await this.client.post('/admin/employees', data);
     return response.data;
   }
 
   async getEmployees() {
     const response = await this.client.get('/admin/employees');
+    return response.data;
+  }
+
+  async resetPassword(id: string, password: string) {
+    const response = await this.client.patch(`/admin/employees/${id}/reset-password`, { password });
+    return response.data;
+  }
+
+  async deleteEmployee(id: string) {
+    const response = await this.client.delete(`/admin/employees/${id}`);
+    return response.data;
+  }
+
+  async updateEmployee(id: string, data: { name?: string; email?: string; department?: string; is_active?: boolean }) {
+    const response = await this.client.put(`/admin/employees/${id}`, data);
     return response.data;
   }
 
@@ -353,6 +368,11 @@ class ApiClient {
     const { accessToken } = response.data;
     Cookies.set('accessToken', accessToken);
     return accessToken;
+  }
+
+  async changePassword(data: { currentPassword: string; newPassword: string }) {
+    const response = await this.client.patch('/auth/change-password', data);
+    return response.data;
   }
 
   // Admin endpoints

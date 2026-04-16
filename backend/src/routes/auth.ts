@@ -194,5 +194,58 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res: Response) => 
   }
 });
 
+// Change password
+router.patch(
+  '/change-password',
+  authenticateToken,
+  [
+    body('currentPassword').notEmpty().withMessage('Current password is required'),
+    body('newPassword').notEmpty().withMessage('New password is required').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  ],
+  async (req: AuthRequest, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user?.id;
+
+    try {
+      // Get user's current password hash
+      const userResult = await pool.query('SELECT password_hash FROM users WHERE id = $1', [userId]);
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const user = userResult.rows[0];
+
+      // Verify current password
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: 'Invalid current password' });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update password
+      await pool.query('UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [
+        hashedPassword,
+        userId,
+      ]);
+
+      // Invalidate all sessions except current one (optional, but safer)
+      // Here we just clear all for simplicity as per requirement "employee credentials which was given befire should not work"
+      await pool.query('DELETE FROM refresh_tokens WHERE user_id = $1', [userId]);
+
+      res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+      console.error('Change password error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
 export default router;
 
