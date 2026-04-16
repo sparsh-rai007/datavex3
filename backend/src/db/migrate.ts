@@ -3,8 +3,10 @@ import { join } from 'path';
 import bcrypt from 'bcryptjs';
 import { pool } from './connection';
 import dotenv from 'dotenv';
+import { migrateEmployees } from './migrate-employees';
 
 dotenv.config();
+
 
 async function migrate() {
   const client = await pool.connect();
@@ -99,6 +101,9 @@ async function migrate() {
     } else {
       console.log('ℹ️  Admin user already exists');
     }
+    
+    // Run employee specific migrations
+    await migrateEmployees();
     
   } catch (error) {
     console.error('❌ Migration failed:', error);
