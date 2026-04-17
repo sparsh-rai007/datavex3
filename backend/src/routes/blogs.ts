@@ -249,11 +249,11 @@ router.delete(
 router.get('/public/all', async (_req: Request, res: Response) => {
   try {
     const result = await pool.query(
-  `SELECT title, slug, excerpt, featured_image, created_at, external_url
+      `SELECT title, slug, excerpt, featured_image, created_at, external_url
    FROM blogs
    WHERE status = 'published'
    ORDER BY created_at DESC`
-);
+    );
 
 
     res.json({ blogs: result.rows });

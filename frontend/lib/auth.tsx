@@ -17,7 +17,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, role?: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -55,10 +55,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   /**
-   * ADMIN LOGIN ONLY
+   * LOGIN
    */
-  const login = async (email: string, password: string) => {
-    const response = await apiClient.login(email, password);
+  const login = async (email: string, password: string, role?: string) => {
+    const response = await apiClient.login(email, password, role);
     const userData = response.user;
 
     if (!userData) throw new Error("Login failed");

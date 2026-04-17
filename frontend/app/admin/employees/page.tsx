@@ -187,11 +187,9 @@ export default function EmployeesPage() {
             className="max-w-xl"
           >
             <h1 className="text-4xl md:text-5xl font-serif font-medium text-slate-950 tracking-tight leading-none">
-              Personnel <span className="italic text-indigo-600">Archive</span>
+              Employee <span className="italic text-indigo-600">Records</span>
             </h1>
-            <p className="text-lg text-slate-900/40 font-serif italic mt-4 leading-relaxed">
-              Synchronize new neural records and manage architecture access levels.
-            </p>
+            
           </motion.div>
 
           <motion.button
@@ -201,7 +199,7 @@ export default function EmployeesPage() {
             className="group flex items-center gap-4 bg-slate-950 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl hover:bg-slate-800 transition-all active:scale-95"
           >
             <Plus size={16} className="group-hover:rotate-90 transition-transform duration-500 stroke-[3]" />
-            Synchronize Personnel
+           Add employee
           </motion.button>
         </div>
 
@@ -233,7 +231,7 @@ export default function EmployeesPage() {
           {loading ? (
             <div className="p-32 flex flex-col items-center justify-center gap-6">
               <Loader2 className="animate-spin text-indigo-600" size={40} />
-              <p className="text-[10px] font-black text-slate-900/30 uppercase tracking-[0.4em] animate-pulse">Synchronizing Matrix...</p>
+              <p className="text-[10px] font-black text-slate-900/30 uppercase tracking-[0.4em] animate-pulse">Updating...</p>
             </div>
           ) : filteredEmployees.length === 0 ? (
             <div className="p-32 flex flex-col items-center justify-center text-center gap-6">
@@ -278,7 +276,7 @@ export default function EmployeesPage() {
                         <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] border ${
                           emp.is_active ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-rose-50 border-rose-100 text-rose-400'
                         }`}>
-                          {emp.is_active ? 'Synchronized' : 'Offline'}
+                          {emp.is_active ? 'Active' : 'Offline'}
                         </span>
                       </td>
                       <td className="px-8 py-6">
@@ -360,12 +358,11 @@ export default function EmployeesPage() {
                   <div className="mb-8 text-center">
                     
                     <h2 className="text-3xl font-serif font-medium text-slate-950 mb-3 tracking-tight leading-none uppercase">Add <span className="italic text-indigo-600">Employee</span></h2>
-                    <p className="text-slate-900/40 font-serif italic text-base">Establish a new record in the matrix.</p>
-                  </div>
+                    </div>
 
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Full Name Identity</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Full Name </label>
                       <input
                         required
                         type="text"
@@ -377,11 +374,11 @@ export default function EmployeesPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Email Horizon</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Email </label>
                       <input
                         required
                         type="email"
-                        placeholder="e.g. john@synthesis.arch"
+                        placeholder="e.g. name@datavex.ai"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="w-full px-6 py-4 bg-indigo-50/30 rounded-xl border border-indigo-50 focus:border-indigo-600 focus:outline-none focus:ring-4 focus:ring-indigo-600/5 font-serif italic text-lg transition-all"
@@ -389,7 +386,7 @@ export default function EmployeesPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Deployment Sector</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Department</label>
                       <input
                         required
                         type="text"
@@ -469,7 +466,7 @@ export default function EmployeesPage() {
 
                   <form onSubmit={handleEditSubmit} className="space-y-6">
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Full Name Identity</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Full Name </label>
                       <input
                         required
                         type="text"
@@ -480,7 +477,7 @@ export default function EmployeesPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Email Horizon</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Email </label>
                       <input
                         required
                         type="email"
@@ -491,7 +488,7 @@ export default function EmployeesPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Deployment Sector</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Department</label>
                       <input
                         required
                         type="text"

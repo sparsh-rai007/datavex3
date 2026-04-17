@@ -34,7 +34,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(data.email, data.password);
+      await login(data.email, data.password, 'admin');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login failed. Please try again.');
     } finally {

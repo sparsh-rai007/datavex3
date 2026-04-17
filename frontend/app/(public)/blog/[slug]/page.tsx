@@ -365,17 +365,7 @@ export default function BlogDetailPage() {
                     onClick={() => router.push(`/blog/${rec.slug}`)}
                     className="group cursor-pointer"
                   >
-                    <div className="mb-6 overflow-hidden aspect-[4/3] bg-slate-50 relative">
-                      {rec.featured_image ? (
-                        <img 
-                          src={rec.featured_image} 
-                          alt={rec.title} 
-                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105" 
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-slate-100"><span className="font-serif italic text-slate-300">No Image</span></div>
-                      )}
-                    </div>
+                    
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-[9px] font-bold uppercase tracking-widest text-primary-600">{rec.category || 'General'}</span>
                       <div className="w-1 h-1 rounded-full bg-primary-600/20" />

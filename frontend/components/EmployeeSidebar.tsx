@@ -26,7 +26,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '/employee/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/employee/leaves', label: 'Leave Archive', icon: Calendar },
-  { href: '/employee/settings', label: 'Security Synthesis', icon: ShieldCheck },
+  { href: '/employee/settings', label: 'Security ', icon: ShieldCheck },
 ];
 
 export default function EmployeeSidebar() {

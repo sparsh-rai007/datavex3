@@ -64,7 +64,7 @@ export default function NewsletterListClient({ blogs }: { blogs: BlogPost[] }) {
               
                  </div>
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif font-medium text-slate-900 mb-8 tracking-tight leading-[1.1] md:leading-[1.05]">
-                Today's <span className="italic">Synthetic</span> Briefing Core
+                Today's <span className="italic">key updates </span> at a glance
               </h1>
               <p className="text-lg md:text-xl text-slate-600 font-serif italic leading-relaxed max-w-3xl">
                 Deep architectural analysis and tactical intelligence for the next generation of AI-driven enterprises.
@@ -152,7 +152,7 @@ export default function NewsletterListClient({ blogs }: { blogs: BlogPost[] }) {
                 disabled={currentPage === 1}
                 className="px-6 py-3 bg-[#fcfcfc] border border-slate-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-primary-600 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm flex items-center gap-2"
               >
-                <ChevronRight size={16} className="rotate-180" /> Previous System
+                <ChevronRight size={16} className="rotate-180" /> Previous 
               </button>
 
               <div className="flex items-center gap-2">
@@ -175,7 +175,7 @@ export default function NewsletterListClient({ blogs }: { blogs: BlogPost[] }) {
                 disabled={currentPage === totalPages}
                 className="px-6 py-3 bg-[#fcfcfc] border border-slate-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-primary-600 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-sm flex items-center gap-2"
               >
-                Next System <ChevronRight size={16} />
+                Next  <ChevronRight size={16} />
               </button>
             </div>
           )}
@@ -197,44 +197,6 @@ export default function NewsletterListClient({ blogs }: { blogs: BlogPost[] }) {
             </motion.div>
           )}
 
-          {/* Future Subscription Matrix */}
-          <section className="mt-48 relative rounded-sm overflow-hidden group shadow-[0_60px_120px_-20px_rgba(0,0,0,0.1)]">
-            <div className="absolute inset-0 bg-slate-900">
-              <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#5a5a40 2px, transparent 2px)', backgroundSize: '60px 60px' }}></div>
-              <div className="absolute -top-1/2 -right-1/4 w-[80%] h-full bg-primary-600/10 blur-[200px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
-            </div>
-            <div className="relative px-10 py-32 md:p-32 text-center max-w-5xl mx-auto z-10">
-              <div className="flex justify-center gap-4 mb-10">
-                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-primary-600 group-hover:scale-110 transition-transform"><Cpu size={24} /></div>
-                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-primary-600 group-hover:scale-110 transition-transform delay-75"><Zap size={24} /></div>
-              </div>
-              <h2 className="text-5xl md:text-7xl font-serif italic text-white mb-10 tracking-tight leading-[0.95]">Authority Through <span className="text-primary-600">Synthesis</span>.</h2>
-              <p className="text-white/60 text-xl font-serif italic mb-16 leading-relaxed max-w-3xl mx-auto">
-                Join 5,000+ enterprise architects receiving our bi-weekly neural synthesis on AI strategy and technical automation.
-              </p>
-              <form className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto bg-white/5 p-3 rounded-full backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/50">
-                <input
-                  type="email"
-                  placeholder="Official Work Intelligence Address"
-                  className="flex-grow px-10 py-6 rounded-full bg-transparent text-white placeholder:text-white/20 focus:outline-none focus:ring-4 focus:ring-primary-600/10 transition-all font-bold uppercase tracking-widest text-[10px]"
-                  required
-                />
-                <button className="bg-primary-600 text-white px-12 py-6 rounded-full font-bold uppercase tracking-[0.2em] text-[11px] hover:bg-white hover:text-slate-900 transition-all shadow-2xl shadow-primary-600/30 active:scale-95">
-                  Synchronize
-                </button>
-              </form>
-              <div className="mt-12 flex items-center justify-center gap-8 py-6 border-t border-white/5 max-w-md mx-auto">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Archive Online</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-primary-600" />
-                  <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Protocol Secured</span>
-                </div>
-              </div>
-            </div>
-          </section>
         </div>
       </main>
     </div>

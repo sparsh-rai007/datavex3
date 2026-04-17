@@ -75,7 +75,7 @@ export default function BlogBrutalistList({ blogs }: { blogs: BlogPost[] }) {
           >
             <div className="lg:col-span-8">
               <div className="flex items-center gap-3 mb-8">
-                <span className="text-[10px] font-mono text-brand-600 uppercase tracking-[0.4em]">01 / Central Intelligence</span>
+                <span className="text-[10px] font-mono text-brand-600 uppercase tracking-[0.4em]">01</span>
               </div>
               <h1 className="font-serif text-6xl md:text-8xl font-medium leading-[0.9] tracking-tight mb-0">
                 Fresh <span className="italic">Stories &</span> Insights. 
@@ -119,7 +119,7 @@ export default function BlogBrutalistList({ blogs }: { blogs: BlogPost[] }) {
                 <div className="flex items-center gap-4 mb-8 text-[10px] font-mono uppercase tracking-widest text-slate-400">
                   <span className="text-brand-600">{featuredPost.category || 'General'}</span>
                   <span>/</span>
-                  <span>{featuredPost.read_time || '8 min'} read</span>
+                 
                 </div>
                 <h2 className={`font-serif font-medium mb-8 leading-tight tracking-tight transition-all ${featuredPost.title && featuredPost.title.length > 60 ? 'text-3xl md:text-4xl' : 'text-4xl md:text-5xl'}`}>
                   {featuredPost.title}
@@ -229,17 +229,13 @@ export default function BlogBrutalistList({ blogs }: { blogs: BlogPost[] }) {
 
         {/* Newsletter - Brutalist Style */}
         <section className="border-2 border-black p-12 md:p-24 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-6">
-            <Zap size={48} className="text-brand-600 opacity-20" />
-          </div>
+          
           <div className="max-w-3xl">
-            <div className="text-[10px] font-mono text-brand-600 uppercase tracking-[0.4em] mb-8">Newsletter Synchronization</div>
-            <h2 className="font-serif text-5xl md:text-7xl font-medium mb-12 leading-[0.95] tracking-tight">
-              Authority Through <span className="italic">Synthesis</span>.
+           <h2 className="font-serif text-5xl md:text-7xl font-medium mb-12 leading-[0.95] tracking-tight">
+             A simple way to  <span className="italic">stay updated</span>.
             </h2>
             <p className="text-slate-600 text-lg md:text-xl mb-16 leading-relaxed flex items-center gap-3">
-              Join 5,000+ enterprise architects receiving our bi-weekly neural synthesis on AI strategy and technical automation.
-            </p>
+             Join 5,000+ architects who get straightforward updates on AI strategy and automation.</p>
             <form className="flex flex-col sm:flex-row gap-0 border-b border-black">
               <input
                 type="email"
@@ -248,7 +244,7 @@ export default function BlogBrutalistList({ blogs }: { blogs: BlogPost[] }) {
                 required
               />
               <button className="bg-black text-white px-12 py-6 font-mono uppercase tracking-widest text-xs hover:bg-brand-600 transition-all">
-                Synchronize
+                Subscribe
               </button>
             </form>
           </div>

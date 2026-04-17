@@ -41,10 +41,10 @@ router.post(
     const lastName = nameParts.slice(1).join(' ') || '';
 
     try {
-      // Check if user already exists
-      const userExists = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+      // Check if employee already exists with this email
+      const userExists = await pool.query('SELECT id FROM users WHERE email = $1 AND role = $2', [email, 'employee']);
       if (userExists.rows.length > 0) {
-        return res.status(400).json({ error: 'User with this email already exists' });
+        return res.status(400).json({ error: 'Employee with this email already exists' });
       }
 
       // Use provided password or generate a temporary one

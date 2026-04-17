@@ -100,13 +100,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     <p className="text-sm font-bold text-gray-900 truncate">{user?.email}</p>
                   </div>
                   <button className="w-full px-4 py-3 text-left text-sm font-bold text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors flex items-center gap-3">
-                    <User size={16} /> Strategy Settings
+                    <User size={16} />  Settings
                   </button>
                   <button 
                     onClick={logout}
                     className="w-full px-4 py-3 text-left text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
                   >
-                    <LogOut size={16} /> Disconnect Session
+                    <LogOut size={16} /> LogOut
                   </button>
                 </div>
               </div>

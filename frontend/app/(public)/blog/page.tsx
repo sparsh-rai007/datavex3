@@ -16,7 +16,7 @@ export default async function BlogPage() {
 
   try {
     // Fetch production blog matrix from the API
-    blogs = await apiClient.getPublicBlogs();  
+    blogs = await apiClient.getPublicBlogs();
   } catch (error) {
     console.error("Blog retrieval error:", error);
   }

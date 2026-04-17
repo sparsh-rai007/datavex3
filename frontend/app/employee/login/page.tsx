@@ -35,7 +35,7 @@ export default function EmployeeLoginPage() {
     setLoading(true);
 
     try {
-      await login(data.email, data.password);
+      await login(data.email, data.password, 'employee');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
     } finally {
@@ -63,9 +63,7 @@ export default function EmployeeLoginPage() {
           <h1 className="text-5xl md:text-6xl font-serif font-medium text-slate-950 tracking-tight leading-none mb-6">
             Staff <span className="italic">Login</span>
           </h1>
-          <p className="text-slate-900/40 font-serif italic text-lg leading-relaxed max-w-[280px] mx-auto">
-            Synchronize your credentials to access the internal synthesis archive.
-          </p>
+          
         </div>
 
         <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-indigo-100/50 p-10 border border-indigo-50 relative overflow-hidden group">
@@ -87,7 +85,7 @@ export default function EmployeeLoginPage() {
                 htmlFor="email"
                 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2"
               >
-                Neural Identity (Email)
+                Mail-ID
               </label>
               <div className="relative">
                 <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-950/10 group-focus-within:text-indigo-600 transition-colors" size={20} />
@@ -102,7 +100,7 @@ export default function EmployeeLoginPage() {
                     },
                   })}
                   className="w-full pl-16 pr-8 py-5 bg-indigo-50/20 border border-indigo-50/50 rounded-2xl focus:border-indigo-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-600/5 transition-all font-serif italic text-lg"
-                  placeholder="name@arch.net"
+                  placeholder="name@datavex.ai"
                 />
               </div>
               {errors.email && (
@@ -115,7 +113,7 @@ export default function EmployeeLoginPage() {
                 htmlFor="password"
                 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2"
               >
-                Access Sequence (Password)
+                Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-950/10 group-focus-within:text-indigo-600 transition-colors" size={20} />
@@ -148,7 +146,7 @@ export default function EmployeeLoginPage() {
                 </>
               ) : (
                 <>
-                  <span>Initialize Link</span>
+                  <span>Login</span>
                   <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform stroke-[3]" />
                 </>
               )}

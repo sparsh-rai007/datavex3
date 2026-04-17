@@ -69,11 +69,9 @@ export default function EmployeeSettingsPage() {
           className="max-w-xl"
         >
           <h1 className="text-4xl md:text-5xl font-serif font-medium text-slate-950 tracking-tight leading-none">
-            Security <span className="italic text-indigo-600">Synthesis</span>
+            Update <span className="italic text-indigo-600">Password</span>
           </h1>
-          <p className="text-lg text-slate-900/40 font-serif italic mt-4 leading-relaxed">
-            Update your neural access keys and manage session architecture.
-          </p>
+        
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -89,14 +87,13 @@ export default function EmployeeSettingsPage() {
                   <Lock size={20} className="stroke-[2.5]" />
                </div>
                <div>
-                  <h2 className="text-xl font-serif font-medium text-slate-950">Rotate Access Key</h2>
-                  <p className="text-[10px] font-black text-slate-950/30 uppercase tracking-[0.2em] mt-1">Personnel Authentication Update</p>
-               </div>
+                  <h2 className="text-xl font-serif font-medium text-slate-950">Update Password</h2>
+                 </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Current Access Key</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Current password</label>
                 <input
                   required
                   type="password"
@@ -107,7 +104,7 @@ export default function EmployeeSettingsPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">New Access Key</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">New password</label>
                 <input
                   required
                   type="password"
@@ -118,7 +115,7 @@ export default function EmployeeSettingsPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Confirm New Key</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950/30 ml-2">Confirm Password</label>
                 <input
                   required
                   type="password"
@@ -160,7 +157,7 @@ export default function EmployeeSettingsPage() {
               >
                 {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : (
                   <>
-                    Confirm Rotation <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform stroke-[3]" />
+                    Confirm  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform stroke-[3]" />
                   </>
                 )}
               </button>

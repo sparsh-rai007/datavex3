@@ -341,8 +341,8 @@ class ApiClient {
   }
 
   // Auth endpoints
-  async login(email: string, password: string) {
-    const response = await this.client.post('/auth/login', { email, password });
+  async login(email: string, password: string, role?: string) {
+    const response = await this.client.post('/auth/login', { email, password, role });
     const { accessToken, user } = response.data;
     Cookies.set('accessToken', accessToken);
     return { user };
