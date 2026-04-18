@@ -113,7 +113,7 @@ router.get(
 router.get("/latest", async (req, res) => {
   try {
     const query = `
-      SELECT id, title, slug, excerpt, author_id, created_at, featured_image, external_url
+      SELECT id, title, slug, excerpt, content, author_id, created_at, featured_image, external_url
       FROM blogs
       WHERE status = 'published'
       ORDER BY created_at DESC
@@ -249,7 +249,7 @@ router.delete(
 router.get('/public/all', async (_req: Request, res: Response) => {
   try {
     const result = await pool.query(
-      `SELECT title, slug, excerpt, featured_image, created_at, external_url
+      `SELECT title, slug, excerpt, content, featured_image, created_at, external_url
    FROM blogs
    WHERE status = 'published'
    ORDER BY created_at DESC`

@@ -275,6 +275,21 @@ export default function NewBlogPage() {
                   </div>
                 </div>
 
+                {/* Excerpt Field */}
+                <div className="px-8 pb-8 pt-0 border-b border-slate-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 block">Short Summary (Excerpt)</label>
+                    <span className="text-[9px] text-slate-300 font-bold uppercase tracking-widest">Optional</span>
+                  </div>
+                  <textarea
+                    {...register('excerpt')}
+                    rows={2}
+                    placeholder="Short summary for the archive list..."
+                    className="w-full bg-slate-50 border border-slate-100 rounded-lg p-4 text-sm font-medium text-slate-600 focus:ring-1 focus:ring-slate-900 outline-none transition-all resize-none leading-relaxed"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-2 ml-1 italic font-medium">This will be shown on the blog list. If left blank, it will be automatically generated from the content.</p>
+                </div>
+
                 <div className="min-h-[600px]">
                   <TipTapEditor ref={editorRef} content={content} onChange={setContent} />
                 </div>

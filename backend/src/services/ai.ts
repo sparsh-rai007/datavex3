@@ -167,15 +167,15 @@ When responding, always speak confidently as the official DataVex AI assistant.
   private getMockResponse(prompt: string): string {
     // Simple keyword-based mock responses
     if (prompt.toLowerCase().includes('seo')) {
-      return 'Mock SEO suggestion: Consider adding more relevant keywords, improving meta descriptions, and optimizing for featured snippets.';
+      return 'Consider adding more relevant keywords, improving meta descriptions, and optimizing for featured snippets.';
     }
     if (prompt.toLowerCase().includes('content')) {
-      return 'Mock content suggestion: Try adding a compelling introduction, use more examples, and include a clear call-to-action.';
+      return 'Try adding a compelling introduction, use more examples, and include a clear call-to-action.';
     }
     if (prompt.toLowerCase().includes('score')) {
       return '85'; // Mock lead score
     }
-    return 'Mock AI response: This is a placeholder response. Configure your AI API key to get real suggestions.';
+    return 'This is a placeholder response. Configure your AI API key to get real suggestions.';
   }
 
   /**

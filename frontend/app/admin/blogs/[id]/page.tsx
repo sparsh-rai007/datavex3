@@ -60,6 +60,7 @@ export default function EditBlogPage() {
       setValue('meta_title', data.meta_title || '');
       setValue('meta_description', data.meta_description || '');
       setValue('meta_keywords', data.meta_keywords || '');
+      setValue('excerpt', data.excerpt || '');
       setContent(data.content || '');
       setLoading(false);
       if (data.content) triggerReview(data.content);
@@ -200,6 +201,18 @@ export default function EditBlogPage() {
                       placeholder="url-slug"
                     />
                   </div>
+                </div>
+
+                {/* Excerpt Field */}
+                <div className="px-8 pb-8 pt-0 border-b border-slate-100">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 block mb-2">Short Summary (Excerpt)</label>
+                  <textarea
+                    {...register('excerpt')}
+                    rows={2}
+                    placeholder="Short summary for the archive list..."
+                    className="w-full bg-slate-50 border border-slate-100 rounded-lg p-4 text-sm font-medium text-slate-600 focus:ring-1 focus:ring-slate-900 outline-none transition-all resize-none leading-relaxed"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-2 ml-1 italic font-medium">This will be shown on the main blog archive before users click into the full record.</p>
                 </div>
 
                 <div className="min-h-[600px]">
