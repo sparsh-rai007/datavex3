@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { apiClient } from '@/lib/api';
+import Image from 'next/image';
+import datavexIcon from '@/app/public/datavexicon.png';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -103,8 +105,8 @@ export default function Chatbot() {
 
     try {
       const history = messages
-      .filter((m, i) => !(i === 0 && m.role === "assistant"))
-      .map(m => ({ role: m.role, content: m.content }));
+        .filter((m, i) => !(i === 0 && m.role === "assistant"))
+        .map(m => ({ role: m.role, content: m.content }));
 
       const response = await apiClient.chat(userMessage, history);
       setMessages((prev) => [...prev, { role: 'assistant', content: response.response || response.message }]);
@@ -176,14 +178,18 @@ export default function Chatbot() {
             {messages.map((message, index) => (
               <div
                 key={index}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} gap-2 items-end`}
               >
+                {message.role === 'assistant' && (
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                    <Image src={datavexIcon} alt="DataVex Avatar" className="w-full h-full object-cover" />
+                  </div>
+                )}
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === 'user'
+                  className={`max-w-[80%] rounded-lg p-3 ${message.role === 'user'
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-900'
-                  }`}
+                    }`}
                 >
                   {renderMessage(message.content)}
 
@@ -205,7 +211,10 @@ export default function Chatbot() {
               </div>
             )}
             {loading && (
-              <div className="flex justify-start">
+              <div className="flex justify-start gap-2 items-end">
+                <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                  <Image src={datavexIcon} alt="DataVex Avatar" className="w-full h-full object-cover" />
+                </div>
                 <div className="bg-gray-100 rounded-lg p-3">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
