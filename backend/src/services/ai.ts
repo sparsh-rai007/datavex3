@@ -7,7 +7,7 @@
 
 
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ override: true });
 
 const _aiProvider = process.env.AI_PROVIDER;
 console.log("AI Provider:", _aiProvider ?? 'not-set');
@@ -18,6 +18,7 @@ const USAGE_FILE = path.join(__dirname, '../data/usage.json');
 const MONTHLY_LIMIT = 5; // $5 limit
 
 import axios from 'axios';
+import Groq from 'groq-sdk';
 import { companyProfile } from '../data/companyprofile';
 
 
@@ -39,9 +40,9 @@ class AIService {
     constructor() {
       
   this.config = {
-    provider: (process.env.AI_PROVIDER as any) || "openai",
+    provider: (process.env.AI_PROVIDER as any) || "groq",
     apiKey:
-      process.env.OPENAI_API_KEY ,
+      process.env.AI_PROVIDER === "openai" ? process.env.OPENAI_API_KEY : process.env.GROQ_API_KEY,
     model:
       process.env.AI_MODEL 
   };
@@ -129,6 +130,23 @@ When responding, always speak confidently as the official DataVex AI assistant.
       this.updateUsage(0.01);
 
       return response.data.choices?.[0]?.message?.content || "";
+    }
+
+    // ============================
+    // 🤖 GROQ
+    // ============================
+    if (this.config.provider === "groq") {
+      const groq = new Groq({ apiKey: this.config.apiKey });
+      const completion = await groq.chat.completions.create({
+        messages: [
+          ...(systemPrompt ? [{ role: "system", content: systemPrompt } as any] : []),
+          { role: "user", content: finalPrompt }
+        ],
+        model: this.config.model || "llama-3.3-70b-versatile",
+        temperature: options?.temperature || 0.7,
+        max_tokens: options?.max_tokens || 500,
+      });
+      return completion.choices[0]?.message?.content || "";
     }
 
     // ============================
