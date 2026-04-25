@@ -10,6 +10,8 @@ interface Message {
 function renderMessage(content: string) {
   // Remove markdown-style CTA text from display
   const cleaned = content
+    .replace(/\[📩 Contact Us\]\(.*?\)/gi, "")
+    .replace(/\[🚀 Book a Consultation\]\(.*?\)/gi, "")
     .replace(/\[📩 Contact Us\]/gi, "")
     .replace(/\[🚀 Book a Consultation\]/gi, "")
     .trim();
@@ -29,23 +31,46 @@ function renderMessage(content: string) {
       )}
 
       {/* Show real clickable buttons */}
-      {wantsButtons && (
-        <div className="flex flex-col gap-2 mt-2">
-          <a
-            href="/contact"
-            className="w-full text-center px-4 py-2 bg-primary-600 text-white rounded-lg shadow hover:bg-primary-700 transition"
-          >
-            📩 Contact Us
-          </a>
+      {wantsButtons && <CTAButtons />}
+    </div>
+  );
+}
 
-          <a
-            href="/consultation"
-            className="w-full text-center px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition"
-          >
-            🚀 Book a Consultation
-          </a>
-        </div>
-      )}
+const industryChips = [
+  { label: '🏭 Manufacturing', message: 'We are in the manufacturing industry' },
+  { label: '🏥 Healthcare', message: 'We are in healthcare / life sciences' },
+  { label: '💰 Finance & BFSI', message: 'We are in banking, finance, or insurance' },
+  { label: '🛒 Retail & E-Commerce', message: 'We are in retail or e-commerce' },
+  { label: '⚡ Energy & Utilities', message: 'We are in energy or utilities' },
+  { label: '🚚 Logistics', message: 'We are in logistics or transportation' },
+];
+
+function CTAButtons() {
+  const [pulsing, setPulsing] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setPulsing(false), 3000);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-2 mt-2 w-full">
+      <button
+        onClick={() => window.open('https://datavex.ai/contact', '_self')}
+        className={`w-full text-center px-4 py-2 bg-primary-600 text-white rounded-lg shadow hover:bg-primary-700 transition ${pulsing ? 'animate-pulse' : ''}`}
+      >
+        📩 Contact Us
+      </button>
+
+      <button
+        onClick={() => window.open('https://datavex.ai/consultation', '_self')}
+        className={`w-full text-center px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition ${pulsing ? 'animate-pulse' : ''}`}
+      >
+        🚀 Book a Consultation
+      </button>
+
+      <p className="text-xs text-gray-400 mt-2 text-center">
+        Tap a button above or we'll follow up within 24 hours.
+      </p>
     </div>
   );
 }
@@ -72,12 +97,7 @@ export default function Chatbot() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || loading) return;
-
-    const userMessage = input.trim();
-    setInput('');
+  const sendMessage = async (userMessage: string) => {
     setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
     setLoading(true);
 
@@ -86,9 +106,8 @@ export default function Chatbot() {
       .filter((m, i) => !(i === 0 && m.role === "assistant"))
       .map(m => ({ role: m.role, content: m.content }));
 
-
       const response = await apiClient.chat(userMessage, history);
-      setMessages((prev) => [...prev, { role: 'assistant', content: response.response }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: response.response || response.message }]);
     } catch (error) {
       console.error('Chat error:', error);
       setMessages((prev) => [
@@ -101,6 +120,15 @@ export default function Chatbot() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || loading) return;
+
+    const userMessage = input.trim();
+    setInput('');
+    await sendMessage(userMessage);
   };
 
   return (
@@ -162,6 +190,20 @@ export default function Chatbot() {
                 </div>
               </div>
             ))}
+
+            {!loading && messages.length === 1 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {industryChips.map((chip, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => sendMessage(chip.message)}
+                    className="text-xs px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-primary-50 hover:text-primary-600 hover:border-primary-300 transition shadow-sm"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            )}
             {loading && (
               <div className="flex justify-start">
                 <div className="bg-gray-100 rounded-lg p-3">
