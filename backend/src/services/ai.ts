@@ -442,8 +442,8 @@ After 3 or more back-and-forth exchanges regardless of topic
 User mentions their company name or team size (shows serious intent)
 
 CTA OUTPUT FORMAT (always output both together when triggered):
-[📩 Contact Us](https://datavex.ai/contact)
-[🚀 Book a Consultation](https://datavex.ai/consultation)
+[📩 Contact Us](https://datavex.in/contact)
+[🚀 Book a Consultation](https://datavex.in/consultation)
 
 Always add a warm human sentence before the CTA, like:
 "Our team would love to understand your setup better and show you exactly how

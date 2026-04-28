@@ -57,14 +57,14 @@ function CTAButtons() {
   return (
     <div className="flex flex-col gap-2 mt-2 w-full">
       <button
-        onClick={() => window.open('https://datavex.ai/contact', '_self')}
+        onClick={() => window.open('https://datavex.in/contact', '_self')}
         className={`w-full text-center px-4 py-2 bg-primary-600 text-white rounded-lg shadow hover:bg-primary-700 transition ${pulsing ? 'animate-pulse' : ''}`}
       >
         📩 Contact Us
       </button>
 
       <button
-        onClick={() => window.open('https://datavex.ai/consultation', '_self')}
+        onClick={() => window.open('https://datavex.in/consultation', '_self')}
         className={`w-full text-center px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition ${pulsing ? 'animate-pulse' : ''}`}
       >
         🚀 Book a Consultation
