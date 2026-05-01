@@ -59,6 +59,7 @@ router.post(
     body('startDate').isDate().withMessage('Valid start date is required'),
     body('endDate').isDate().withMessage('Valid end date is required'),
     body('reason').notEmpty().withMessage('Reason is required'),
+    body('leaveType').notEmpty().withMessage('Leave type is required'),
   ],
   async (req: AuthRequest, res: Response) => {
     const errors = validationResult(req);
@@ -66,7 +67,7 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { startDate, endDate, reason } = req.body;
+    const { startDate, endDate, reason, leaveType } = req.body;
     const userId = req.user?.id;
 
     if (!userId) {
@@ -75,10 +76,10 @@ router.post(
 
     try {
       const result = await pool.query(
-        `INSERT INTO leaves (user_id, start_date, end_date, reason) 
-         VALUES ($1, $2, $3, $4) 
+        `INSERT INTO leaves (user_id, start_date, end_date, reason, leave_type) 
+         VALUES ($1, $2, $3, $4, $5) 
          RETURNING *`,
-        [userId, startDate, endDate, reason]
+        [userId, startDate, endDate, reason, leaveType]
       );
 
       // Fetch 2 admins to notify
@@ -111,6 +112,7 @@ router.post(
  * PUT /api/leaves/:id/status (ADMIN ONLY)
  */
 router.put(
+<<<<<<< Updated upstream
     '/:id/status',
     authenticateToken,
     async (req: AuthRequest, res: Response) => {
@@ -149,7 +151,38 @@ router.put(
             console.error('Error updating leave status:', error);
             res.status(500).json({ error: 'Internal server error' });
         }
+=======
+  '/:id/status',
+  authenticateToken,
+  async (req: AuthRequest, res: Response) => {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can approve/reject leaves' });
+>>>>>>> Stashed changes
     }
+
+    const { id } = req.params;
+    const { status } = req.body; // approved, rejected
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    try {
+      const result = await pool.query(
+        `UPDATE leaves SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
+        [status, id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Leave request not found' });
+      }
+
+      res.json({ message: `Leave request ${status} successfully`, leave: result.rows[0] });
+    } catch (error) {
+      console.error('Error updating leave status:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
 );
 
 export default router;

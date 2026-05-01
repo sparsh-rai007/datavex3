@@ -173,7 +173,7 @@ export default function EmployeeSettingsPage() {
           >
              <div className="bg-indigo-600 p-8 rounded-[2.5rem] text-white shadow-2xl shadow-indigo-600/30">
                 <ShieldCheck size={32} className="mb-6 opacity-40" />
-                <h3 className="text-2xl font-serif italic mb-4">Security Protocol</h3>
+                <h3 className="text-2xl font-serif italic mb-4">Security </h3>
                 <p className="text-indigo-50/70 text-sm leading-relaxed mb-6">
                   Standard architecture rotation requires a secure 6+ character key. Updating your key will terminate all other active session tokens for this record.
                 </p>

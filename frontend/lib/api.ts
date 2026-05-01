@@ -330,7 +330,7 @@ class ApiClient {
     return response.data;
   }
 
-  async submitLeaveRequest(data: { startDate: string; endDate: string; reason: string }) {
+  async submitLeaveRequest(data: { startDate: string; endDate: string; reason: string; leaveType: string }) {
     const response = await this.client.post('/leaves', data);
     return response.data;
   }

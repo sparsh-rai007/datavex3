@@ -26,10 +26,10 @@ const MiniCalendar = ({ startDate, endDate }: { startDate: string, endDate: stri
   const end = new Date(endDate);
   const currentMonth = start.getMonth();
   const currentYear = start.getFullYear();
-  
+
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-  
+
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(start);
 
@@ -52,11 +52,10 @@ const MiniCalendar = ({ startDate, endDate }: { startDate: string, endDate: stri
           return (
             <div
               key={d}
-              className={`aspect-square flex items-center justify-center text-[10px] rounded-full transition-all py-1.5 ${
-                isSelected 
-                  ? 'bg-[#4F46E5] text-white font-bold' 
+              className={`aspect-square flex items-center justify-center text-[10px] rounded-full transition-all py-1.5 ${isSelected
+                  ? 'bg-[#4F46E5] text-white font-bold'
                   : 'text-[#020617] font-medium'
-              }`}
+                }`}
             >
               {d}
             </div>
@@ -84,6 +83,7 @@ export interface LeaveRequest {
   start_date: string;
   end_date: string;
   reason: string;
+  leave_type: string;
   status: 'pending' | 'approved' | 'rejected';
 }
 
@@ -147,8 +147,8 @@ export default function AdminLeavesPage() {
             {viewMode === 'list' ? 'Leave' : 'Absence'} <span className="italic text-[#4F46E5]">{viewMode === 'list' ? 'Requests' : 'Registry'}</span>
           </h1>
           <p className="text-base md:text-[18px] text-[#020617]/40 font-serif italic mt-4 max-w-xl">
-            {viewMode === 'list' 
-              ? 'Review and synchronize personnel departure requests.' 
+            {viewMode === 'list'
+              ? 'Review and synchronize personnel departure requests.'
               : 'Chronological mapping of organizational absence across the timeline.'}
           </p>
         </motion.div>
@@ -194,10 +194,15 @@ export default function AdminLeavesPage() {
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.4 }}
             >
-              <CalendarView leaves={filteredRequests} loading={loading} />
+              <CalendarView
+                leaves={filteredRequests}
+                loading={loading}
+                onStatusUpdate={handleStatusUpdate}
+                processingId={processingId}
+              />
             </motion.div>
           ) : (
-            <motion.main 
+            <motion.main
               key="list-view"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -224,6 +229,7 @@ export default function AdminLeavesPage() {
                       <tr className="bg-[#EEF2FF]/30 border-b border-[#EEF2FF]">
                         <th className="px-10 py-5 text-[10px] font-bold text-[#020617]/40 uppercase tracking-[0.3em]">Employee Name</th>
                         <th className="px-10 py-5 text-[10px] font-bold text-[#020617]/40 uppercase tracking-[0.3em]">Dates</th>
+                        <th className="px-10 py-5 text-[10px] font-bold text-[#020617]/40 uppercase tracking-[0.3em]">Type</th>
                         <th className="px-10 py-5 text-[10px] font-bold text-[#020617]/40 uppercase tracking-[0.3em]">Reason</th>
                         <th className="px-10 py-5 text-[10px] font-bold text-[#020617]/40 uppercase tracking-[0.3em]">Status</th>
                         <th className="px-10 py-5 text-[10px] font-bold text-[#020617]/40 uppercase tracking-[0.3em] text-right">Control</th>
@@ -233,7 +239,7 @@ export default function AdminLeavesPage() {
                       {filteredRequests.map((req) => (
                         <tr key={req.id} className="hover:bg-[#EEF2FF]/5 transition-colors group">
                           <td className="px-10 py-6">
-                            <div 
+                            <div
                               className="flex items-center gap-6 cursor-pointer relative"
                               onMouseEnter={() => setHoveredRequestId(req.id)}
                               onMouseLeave={() => setHoveredRequestId(null)}
@@ -245,7 +251,7 @@ export default function AdminLeavesPage() {
                                 <p className="text-xl font-serif font-medium text-[#020617]">{req.first_name} {req.last_name}</p>
                                 <p className="text-[10px] font-bold text-[#020617]/30 uppercase tracking-[0.1em] mt-1">{req.employee_id} / {req.department.toUpperCase()}</p>
                               </div>
-                              
+
                               <AnimatePresence>
                                 {hoveredRequestId === req.id && (
                                   <motion.div
@@ -271,17 +277,21 @@ export default function AdminLeavesPage() {
                               </p>
                             </div>
                           </td>
+                          <td className="px-10 py-6">
+                            <p className="text-[10px] font-bold text-[#4F46E5] uppercase tracking-[0.1em]">
+                              {req.leave_type}
+                            </p>
+                          </td>
                           <td className="px-10 py-6 max-w-[240px]">
                             <p className="text-sm text-[#020617]/60 font-serif italic leading-[1.5] line-clamp-2">
                               {req.reason}
                             </p>
                           </td>
                           <td className="px-10 py-6">
-                            <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.2em] border ${
-                              req.status === 'approved' ? 'bg-[#EEF2FF] border-[#E0E7FF] text-[#4F46E5]' :
-                              req.status === 'rejected' ? 'bg-[#FFF1F2] border-[#FFE4E6] text-[#F43F5E]' : 
-                              'bg-[#F8F7F4] border-[#F1F1EF] text-[#020617]/30'
-                            }`}>
+                            <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.2em] border ${req.status === 'approved' ? 'bg-[#EEF2FF] border-[#E0E7FF] text-[#4F46E5]' :
+                                req.status === 'rejected' ? 'bg-[#FFF1F2] border-[#FFE4E6] text-[#F43F5E]' :
+                                  'bg-[#F8F7F4] border-[#F1F1EF] text-[#020617]/30'
+                              }`}>
                               {req.status}
                             </span>
                           </td>
