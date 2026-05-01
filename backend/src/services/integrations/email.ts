@@ -138,6 +138,78 @@ Score: ${application.score ?? 'Not scored yet'}
       `,
     });
   }
+
+  async sendLeaveRequestNotification(admins: string[], leaveDetails: any, employeeName: string): Promise<void> {
+    if (!this.enabled || admins.length === 0) return;
+
+    const appUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const adminUrl = `${appUrl}/admin/leaves`;
+    const subject = `📅 New Leave Request: ${employeeName}`;
+    const html = `
+      <h2>New Leave Request</h2>
+      <p><strong>Employee:</strong> ${employeeName}</p>
+      <p><strong>Start Date:</strong> ${leaveDetails.startDate}</p>
+      <p><strong>End Date:</strong> ${leaveDetails.endDate}</p>
+      <p><strong>Reason:</strong> ${leaveDetails.reason}</p>
+      <p>Please review the request in the admin dashboard: <br/>
+      <a href="${adminUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Review Request</a></p>
+    `;
+
+    await this.sendEmail({
+      to: admins,
+      subject,
+      html,
+      text: `
+New leave request from ${employeeName}
+Start Date: ${leaveDetails.startDate}
+End Date: ${leaveDetails.endDate}
+Reason: ${leaveDetails.reason}
+
+Please review the request in the admin dashboard:
+${adminUrl}
+      `,
+    });
+  }
+
+  async sendLeaveStatusUpdateNotification(employeeEmail: string, leaveDetails: any, status: string): Promise<void> {
+    if (!this.enabled) return;
+
+    const appUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const employeeUrl = `${appUrl}/employee/leaves`;
+    const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1);
+    const subject = `📅 Leave Request ${formattedStatus}`;
+    
+    // Fallback to simple date string if Date parsing fails or is invalid
+    const formatDt = (dtStr: string) => {
+      try { return new Date(dtStr).toLocaleDateString(); } catch(e) { return dtStr; }
+    };
+
+    const html = `
+      <h2>Leave Request ${formattedStatus}</h2>
+      <p>Your leave request has been <strong>${status}</strong>.</p>
+      <p><strong>Start Date:</strong> ${formatDt(leaveDetails.start_date)}</p>
+      <p><strong>End Date:</strong> ${formatDt(leaveDetails.end_date)}</p>
+      <p><strong>Reason:</strong> ${leaveDetails.reason}</p>
+      <p>View your leave history here: <br/>
+      <a href="${employeeUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">View Leave Dashboard</a></p>
+    `;
+
+    await this.sendEmail({
+      to: employeeEmail,
+      subject,
+      html,
+      text: `
+Leave Request ${formattedStatus}
+Your leave request has been ${status}.
+Start Date: ${formatDt(leaveDetails.start_date)}
+End Date: ${formatDt(leaveDetails.end_date)}
+Reason: ${leaveDetails.reason}
+
+View your leave history here:
+${employeeUrl}
+      `,
+    });
+  }
 }
 
 export const emailService = new EmailService();

@@ -2,6 +2,7 @@ import express, { Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { pool } from '../db/connection';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { emailService } from '../services/integrations/email';
 
 const router = express.Router();
 
@@ -80,6 +81,20 @@ router.post(
         [userId, startDate, endDate, reason]
       );
 
+      // Fetch 2 admins to notify
+      const adminResult = await pool.query(`SELECT email FROM users WHERE role = 'admin' LIMIT 2`);
+      const adminEmails = adminResult.rows.map(row => row.email);
+
+      // Fetch the employee's name for the email
+      const userResult = await pool.query(`SELECT first_name, last_name FROM users WHERE id = $1`, [userId]);
+      const employeeName = userResult.rows.length > 0 
+        ? `${userResult.rows[0].first_name || ''} ${userResult.rows[0].last_name || ''}`.trim() || 'Employee'
+        : 'Employee';
+
+      // Send the email non-blocking
+      emailService.sendLeaveRequestNotification(adminEmails, { startDate, endDate, reason }, employeeName)
+        .catch(err => console.error('Error sending leave request notification:', err));
+
       res.status(201).json({
         message: 'Leave request submitted successfully',
         leave: result.rows[0]
@@ -120,7 +135,16 @@ router.put(
                 return res.status(404).json({ error: 'Leave request not found' });
             }
 
-            res.json({ message: `Leave request ${status} successfully`, leave: result.rows[0] });
+            const leave = result.rows[0];
+
+            // Fetch the employee's email to notify them
+            const userResult = await pool.query(`SELECT email FROM users WHERE id = $1`, [leave.user_id]);
+            if (userResult.rows.length > 0 && userResult.rows[0].email) {
+                emailService.sendLeaveStatusUpdateNotification(userResult.rows[0].email, leave, status)
+                    .catch(err => console.error('Error sending leave status update notification:', err));
+            }
+
+            res.json({ message: `Leave request ${status} successfully`, leave });
         } catch (error) {
             console.error('Error updating leave status:', error);
             res.status(500).json({ error: 'Internal server error' });
