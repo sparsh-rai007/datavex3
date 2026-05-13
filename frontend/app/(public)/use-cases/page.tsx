@@ -1,9 +1,27 @@
 import PublicWrapper from '../wrapper';
 
-export const metadata = {
-  title: 'Use Cases - DATAVEX.ai',
-  description:
-    'See how businesses use DATAVEX.ai to solve real-world marketing and lead generation challenges.',
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'AI Use Cases for Business | Datavex AI Solutions India',
+  description: 'Real-world AI use cases in finance, marketing, operations, and more. See how Datavex AI delivers measurable business results for companies across India.',
+  keywords: 'AI use cases India, AI for finance, AI for marketing, business AI examples, machine learning use cases, AI ROI India, AI transformation examples',
+  alternates: {
+    canonical: 'https://datavex.ai/use-cases',
+  },
+  openGraph: {
+    title: 'AI Use Cases for Business | Datavex AI Solutions India',
+    description: 'Real-world AI use cases in finance, marketing, operations, and more. See how Datavex AI delivers measurable business results for companies across India.',
+    url: 'https://datavex.ai/use-cases',
+    type: 'website',
+    images: ['https://datavex.ai/assets/og-usecases.jpg'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AI Use Cases for Business | Datavex AI Solutions India',
+    description: 'Real-world AI use cases in finance, marketing, operations, and more. See how Datavex AI delivers measurable business results for companies across India.',
+    images: ['https://datavex.ai/assets/og-usecases.jpg'],
+  },
 };
 
 export default function UseCasesPage() {

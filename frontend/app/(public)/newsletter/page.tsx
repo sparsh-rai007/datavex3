@@ -4,9 +4,28 @@ import PublicWrapper from '../wrapper';
 import { apiClient } from '@/lib/api';
 import NewsletterListClient from '@/components/NewsletterListClient';
 
-export const metadata = {
-  title: 'Insights Synthesis Matrix — DATAVEX.ai',
-  description: 'Synchronize with the latest articles, neural strategy, and architectural updates from the DATAVEX.ai intelligence core.',
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'AI & Tech Newsletter | Datavex AI Insights India',
+  description: 'Subscribe to the Datavex AI newsletter for the latest in AI trends, data science insights, cloud computing news, and digital transformation strategies.',
+  keywords: 'AI newsletter India, data science newsletter, AI trends, tech newsletter Mangalore, Datavex AI updates, digital transformation news',
+  alternates: {
+    canonical: 'https://datavex.ai/newsletter',
+  },
+  openGraph: {
+    title: 'AI & Tech Newsletter | Datavex AI Insights India',
+    description: 'Subscribe to the Datavex AI newsletter for the latest in AI trends, data science insights, cloud computing news, and digital transformation strategies.',
+    url: 'https://datavex.ai/newsletter',
+    type: 'website',
+    images: ['https://datavex.ai/assets/og-newsletter.jpg'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AI & Tech Newsletter | Datavex AI Insights India',
+    description: 'Subscribe to the Datavex AI newsletter for the latest in AI trends, data science insights, cloud computing news, and digital transformation strategies.',
+    images: ['https://datavex.ai/assets/og-newsletter.jpg'],
+  },
 };
 
 export default async function BlogPage() {

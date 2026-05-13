@@ -6,9 +6,28 @@ import PublicWrapper from '../wrapper';
 // generates this page at build time and production shows stale data forever.
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
-  title: 'Blog Archive — DATAVEX.ai',
-  description: 'Access the complete archive of technical articles, briefings, and architectural updates from the DATAVEX core.',
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'AI & Data Science Blog | Datavex AI India',
+  description: 'Expert articles on artificial intelligence, machine learning, cloud infrastructure, and digital transformation from the Datavex AI team in Mangaluru, India.',
+  keywords: 'AI blog India, data science articles, machine learning blog, digital transformation blog, AI insights Mangalore, Datavex AI blog',
+  alternates: {
+    canonical: 'https://datavex.ai/blog',
+  },
+  openGraph: {
+    title: 'AI & Data Science Blog | Datavex AI India',
+    description: 'Expert articles on artificial intelligence, machine learning, cloud infrastructure, and digital transformation from the Datavex AI team in Mangaluru, India.',
+    url: 'https://datavex.ai/blog',
+    type: 'website',
+    images: ['https://datavex.ai/assets/og-blog.jpg'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AI & Data Science Blog | Datavex AI India',
+    description: 'Expert articles on artificial intelligence, machine learning, cloud infrastructure, and digital transformation from the Datavex AI team in Mangaluru, India.',
+    images: ['https://datavex.ai/assets/og-blog.jpg'],
+  },
 };
 
 export default async function BlogPage() {
