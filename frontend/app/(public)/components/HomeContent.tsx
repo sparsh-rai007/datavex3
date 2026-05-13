@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import PublicWrapper from '../wrapper';
 import RecentArticles from './RecentArticles';
+import SolutionsOverview from './SolutionsOverview';
 import CustomFooter from '@/components/CustomFooter';
 
 export default function HomeContent() {
@@ -42,6 +43,8 @@ export default function HomeContent() {
           </div>
         </div>
       </section>
+
+      <SolutionsOverview />
 
       <RecentArticles />
 
