@@ -1,4 +1,5 @@
 import PublicWrapper from "../wrapper";
+import CustomFooter from "@/components/CustomFooter";
 
 import { Metadata } from 'next';
 
@@ -207,6 +208,7 @@ export default function AboutPage() {
 
         </div>
       </div>
+      <CustomFooter />
     </PublicWrapper>
   );
 }

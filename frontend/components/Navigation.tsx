@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
+import logo from '../app/public/datavex_Logo.png';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
@@ -67,8 +69,15 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
 
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-primary-600">
-            DATAVEX.ai
+          <Link href="/" className="flex items-center">
+            <Image 
+              src={logo} 
+              alt="Datavex Logo" 
+              width={200} 
+              height={56} 
+              priority
+              className="h-14 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -111,15 +120,7 @@ export default function Navigation() {
             )}
           </div>
 
-          {/* Right side (Login / User Info) */}
-          <div className="hidden md:flex items-center space-x-4">
-            <Link
-              href="/employee/login"
-              className="px-4 py-2 text-sm font-medium bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-            >
-              Employee Login
-            </Link>
-          </div>          {/* Mobile menu button */}
+          {/* Mobile menu button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 rounded-md text-gray-700 hover:text-primary-600"
@@ -182,15 +183,6 @@ export default function Navigation() {
             )}
           </div>
 
-          <div className="pt-4 space-y-2 border-t">
-            <Link
-              href="/employee/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-base font-medium bg-primary-600 text-white rounded-md text-center"
-            >
-              Employee Login
-            </Link>
-          </div>
         </div>
       )}
     </nav>

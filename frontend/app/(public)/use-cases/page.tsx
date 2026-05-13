@@ -1,4 +1,5 @@
 import PublicWrapper from '../wrapper';
+import CustomFooter from '@/components/CustomFooter';
 
 import { Metadata } from 'next';
 
@@ -165,6 +166,7 @@ export default function UseCasesPage() {
 
         </div>
       </div>
+      <CustomFooter />
     </PublicWrapper>
   );
 }

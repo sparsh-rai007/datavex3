@@ -1,0 +1,165 @@
+import { 
+  Cpu, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  ChevronRight, 
+  Send 
+} from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
+import logo from '../app/public/datavex_Logo.png';
+
+export default function CustomFooter() {
+  return (
+    <footer className="bg-white border-t border-slate-200 w-full mt-auto">
+      {/* Newsletter Section */}
+      
+      {/* Main Footer Content */}
+      <div className="max-w-7xl mx-auto px-4 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+          {/* Branding & Socials */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <Link href="/">
+                <Image 
+                  src={logo} 
+                  alt="Datavex Logo" 
+                  width={200} 
+                  height={56} 
+                  priority
+                  className="h-14 w-auto"
+                />
+              </Link>
+            </div>
+            <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
+              Architecting intelligent infrastructure for the world's most ambitious enterprises through cutting-edge AI research and scalable engineering.
+            </p>
+            <div className="flex gap-4">
+              {/* LinkedIn */}
+              <a href="https://www.linkedin.com/company/datavexai-pvt-ltd/" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:border-primary-500 hover:text-primary-500 transition-all hover:bg-primary-50">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                </svg>
+              </a>
+              {/* Medium */}
+              <a href="https://medium.com/@datavex_ai_pvt_ltd" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:border-primary-500 hover:text-primary-500 transition-all hover:bg-primary-50">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zM20.96 12c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z" />
+                </svg>
+              </a>
+              {/* Instagram */}
+              <a href="https://www.instagram.com/datavex.ai/" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:border-primary-500 hover:text-primary-500 transition-all hover:bg-primary-50">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                </svg>
+              </a>
+              {/* X / Twitter */}
+              <a href="https://x.com/DatavexAI" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:border-primary-500 hover:text-primary-500 transition-all hover:bg-primary-50">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          {/* Solutions Links */}
+          <div>
+            <h4 className="font-display font-bold text-slate-900 mb-6 uppercase tracking-widest text-xs">Solutions</h4>
+            <ul className="space-y-4">
+              {['Machine Learning', 'Data Engineering', 'Full-Stack AI', 'MLOps Enablement', 'Cybersecurity'].map((item) => (
+                <li key={item}>
+                  <Link href="/solutions" className="text-slate-500 hover:text-primary-600 text-sm transition-colors flex items-center gap-2 group">
+                    <ChevronRight className="w-3 h-3 text-slate-300 group-hover:text-primary-500 transition-colors" />
+                    <span>{item}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Company Links */}
+          <div>
+            <h4 className="font-display font-bold text-slate-900 mb-6 uppercase tracking-widest text-xs">Company</h4>
+            <ul className="space-y-4">
+              {[
+                { name: 'About Us', path: '/about' },
+                { name: 'Careers (Hiring)', path: '/careers' },
+                { name: 'Technical Blog', path: '/blog' },
+                { name: 'Case Studies', path: '/use-cases' }
+              ].map((item) => (
+                <li key={item.name}>
+                  <Link href={item.path} className="text-slate-500 hover:text-primary-600 text-sm transition-colors flex items-center gap-2 group">
+                    <ChevronRight className="w-3 h-3 text-slate-300 group-hover:text-primary-500 transition-colors" />
+                    <span>{item.name}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact Info */}
+          <div className="space-y-6">
+            <h4 className="font-display font-bold text-slate-900 mb-6 uppercase tracking-widest text-xs">Contact Us</h4>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-primary-500 shrink-0 mt-0.5" />
+                <a 
+                  href="https://maps.google.com/?q=2nd+Floor,+Lotus+Paradise+Plaza,+Bendorwell,+Bendoor,+Mangaluru,+Karnataka+575002"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-slate-500 hover:text-primary-600 text-sm leading-relaxed transition-colors"
+                >
+                  2nd Floor, Lotus Paradise Plaza<br />
+                  Bendorwell, Bendoor, Mangaluru, Karnataka 575002
+                </a>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <Mail className="w-5 h-5 text-primary-500 shrink-0" />
+                  <a href="mailto:info@datavex.ai" className="text-slate-500 hover:text-primary-600 text-sm transition-colors">
+                    info@datavex.ai
+                  </a>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Mail className="w-5 h-5 text-primary-500 shrink-0 opacity-0" />
+                  <a href="mailto:support@datavex.ai" className="text-slate-500 hover:text-primary-600 text-sm transition-colors">
+                    For support: support@datavex.ai
+                  </a>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-primary-500 shrink-0" />
+                  <a href="tel:+917892520323" className="text-slate-500 hover:text-primary-600 text-sm transition-colors">
+                    +91-78925-20323
+                  </a>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-primary-500 shrink-0 opacity-0" />
+                  <span className="text-slate-500 text-sm">
+                    Available Mon-Sat, 9AM-7PM IST
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="bg-slate-50 py-8 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+            © 2026 Datavex AI India Private Limited. All Rights Reserved.
+          </p>
+          <div className="flex gap-8 text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+            <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link>
+            <Link href="/cookies" className="hover:text-slate-900 transition-colors">Cookie Settings</Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}

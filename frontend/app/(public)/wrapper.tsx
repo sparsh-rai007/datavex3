@@ -3,6 +3,7 @@
 import Navigation from "@/components/Navigation";
 import Chatbot from "@/components/Chatbot";
 import Analytics from "@/components/Analytics";
+import CookieConsent from "@/components/CookieConsent";
 import { usePathname } from "next/navigation";
 
 export default function PublicWrapper({
@@ -26,6 +27,7 @@ export default function PublicWrapper({
       </main>
 
       {!disableChatbot && <Chatbot />}
+      <CookieConsent />
       <Analytics />
     </>
   );

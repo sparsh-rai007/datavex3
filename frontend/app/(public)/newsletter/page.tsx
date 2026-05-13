@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import PublicWrapper from '../wrapper';
 import { apiClient } from '@/lib/api';
 import NewsletterListClient from '@/components/NewsletterListClient';
+import CustomFooter from '@/components/CustomFooter';
 
 import { Metadata } from 'next';
 
@@ -54,6 +55,7 @@ export default async function BlogPage() {
   return (
     <PublicWrapper>
       <NewsletterListClient blogs={blogs} />
+      <CustomFooter />
     </PublicWrapper>
   );
 }

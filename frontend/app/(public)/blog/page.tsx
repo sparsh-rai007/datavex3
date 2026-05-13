@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/api';
 import BlogBrutalistList from '@/components/BlogBrutalistList';
 import PublicWrapper from '../wrapper';
+import CustomFooter from '@/components/CustomFooter';
 
 // Force SSR so blogs are always fetched fresh — without this, Next.js statically
 // generates this page at build time and production shows stale data forever.
@@ -85,6 +86,7 @@ export default async function BlogPage() {
   return (
     <PublicWrapper>
       <BlogBrutalistList blogs={mappedBlogs} />
+      <CustomFooter />
     </PublicWrapper>
   );
 }
