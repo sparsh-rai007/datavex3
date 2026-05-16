@@ -234,7 +234,7 @@ export default function EditNewsletterPage() {
                     {...register('status')}
                     className="w-full bg-slate-50 border border-slate-100 hover:border-indigo-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none cursor-pointer transition-all appearance-none"
                   >
-                    <option value="draft">Draft Protocol</option>
+                    <option value="draft">Draft </option>
                     <option value="published">Release to Archive</option>
                     <option value="sent">Dispatched to Hubs</option>
                   </select>

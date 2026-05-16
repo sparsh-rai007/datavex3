@@ -34,6 +34,14 @@ async function migrateEmployees() {
       );
     `);
     console.log('✅ Leaves table created');
+    
+    // 3.1 Add leave_type to leaves table
+    await client.query(`
+      ALTER TABLE leaves 
+      ADD COLUMN IF NOT EXISTS leave_type VARCHAR(50);
+    `);
+    console.log('✅ Leave type column added to leaves table');
+
 
     // 4. Create index for performance
     await client.query(`

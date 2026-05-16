@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api';
 import PublicWrapper from '../wrapper'; // ✅ Added wrapper import
+import CustomFooter from '@/components/CustomFooter';
 
 export default function CareersPage() {
   const [jobs, setJobs] = useState<any[]>([]);
@@ -104,6 +105,7 @@ export default function CareersPage() {
           )}
         </div>
       </section>
+      <CustomFooter />
     </PublicWrapper>
   );
 }

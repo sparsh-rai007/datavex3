@@ -256,7 +256,7 @@ export default function NewNewsletterPage() {
                 <div className="mt-8 relative max-w-sm z-20">
                   <label className="block text-[10px] font-black text-primary-400 uppercase tracking-widest mb-3 ml-2 flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary-600 animate-pulse" />
-                    Neural Voicing Protocol
+                    Neural Voicing
                   </label>
 
                   <div className="relative">
@@ -500,9 +500,9 @@ export default function NewNewsletterPage() {
             className="px-14 py-6 bg-primary-600 text-white rounded-3xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-slate-900 hover:scale-105 transition-all shadow-[0_20px_40px_-5px_rgba(37,99,235,0.4)] active:scale-95 group flex items-center gap-3 disabled:opacity-50 disabled:scale-100"
           >
             {isSaving ? (
-              <span className="flex items-center gap-2">Protocol Saving <Loader2 size={16} className="animate-spin" /></span>
+              <span className="flex items-center gap-2"> Saving <Loader2 size={16} className="animate-spin" /></span>
             ) : (
-              <span className="flex items-center gap-2">Commit Release <Save size={16} className="group-hover:rotate-45 transition-transform" /></span>
+              <span className="flex items-center gap-2">Commit  <Save size={16} className="group-hover:rotate-45 transition-transform" /></span>
             )}
           </button>
         </div>

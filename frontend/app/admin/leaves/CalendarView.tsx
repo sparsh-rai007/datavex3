@@ -27,7 +27,10 @@ import {
   AlignLeft, 
   Calendar as CalendarIcon, 
   Lock,
-  Clock
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LeaveRequest } from './page';
@@ -35,21 +38,43 @@ import { LeaveRequest } from './page';
 interface CalendarViewProps {
   leaves: LeaveRequest[];
   loading: boolean;
+  onStatusUpdate: (id: string, status: 'approved' | 'rejected') => Promise<void>;
+  processingId: string | null;
 }
 
-export default function CalendarView({ leaves, loading }: CalendarViewProps) {
+export default function CalendarView({ leaves, loading, onStatusUpdate, processingId }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1)); // Default to May 2026 based on mock data
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [activeLeave, setActiveLeave] = useState<{ leave: LeaveRequest, x: number, y: number, width: number } | null>(null);
 
+  const calculateDays = (start: string, end: string) => {
+    const s = new Date(start);
+    const e = new Date(end);
+    const diffTime = Math.abs(e.getTime() - s.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  };
+
+  const currentYear = new Date().getFullYear();
+
   // Extract unique employees from leaves
   const allEmployees = useMemo(() => {
-    const map = new Map<string, { id: string, name: string }>();
+    const map = new Map<string, { id: string, name: string, other: number, sick: number }>();
     leaves.forEach(l => {
       const name = `${l.first_name} ${l.last_name}`;
       if (!map.has(name)) {
-        map.set(name, { id: l.employee_id, name });
+        map.set(name, { id: l.employee_id, name, other: 0, sick: 0 });
+      }
+      
+      const emp = map.get(name)!;
+      const startDate = new Date(l.start_date);
+      if (startDate.getFullYear() === currentYear && l.status === 'approved') {
+        const days = calculateDays(l.start_date, l.end_date);
+        if (l.leave_type === 'Sick Leave') {
+          emp.sick += days;
+        } else {
+          emp.other += days;
+        }
       }
     });
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
@@ -157,12 +182,8 @@ export default function CalendarView({ leaves, loading }: CalendarViewProps) {
               className="fixed z-[120] w-[400px] bg-white rounded-2xl shadow-[0_24px_54px_rgba(0,0,0,0.18)] border border-[#EEF2FF] overflow-hidden"
             >
               <div className="p-4 flex items-center justify-end gap-2 border-b border-[#FBF9F7]">
-                <button className="p-2 hover:bg-[#FBF9F7] rounded-full text-[#020617]/30 transition-colors">
-                  <Trash2 size={16} />
-                </button>
-                <button className="p-2 hover:bg-[#FBF9F7] rounded-full text-[#020617]/30 transition-colors">
-                  <MoreVertical size={16} />
-                </button>
+                
+               
                 <button 
                   onClick={() => setActiveLeave(null)}
                   className="p-2 hover:bg-[#FBF9F7] rounded-full text-[#020617]/30 transition-colors"
@@ -175,6 +196,7 @@ export default function CalendarView({ leaves, loading }: CalendarViewProps) {
                   <div className={`w-4 h-4 rounded-sm mt-1.5 shrink-0 ${
                     activeLeave.leave.status === 'approved' ? 'bg-[#4F46E5]' :
                     activeLeave.leave.status === 'rejected' ? 'bg-[#F43F5E]' :
+                    activeLeave.leave.status === 'pending' ? 'bg-[#D97706]' :
                     'bg-[#020617]/10'
                   }`} />
                   <div>
@@ -189,16 +211,38 @@ export default function CalendarView({ leaves, loading }: CalendarViewProps) {
                 </div>
 
                 <div className="space-y-4 pt-2">
+                  {(() => {
+                    const empStats = allEmployees.find(e => e.name === `${activeLeave.leave.first_name} ${activeLeave.leave.last_name}`);
+                    if (!empStats) return null;
+                    return (
+                      <div className="flex items-center gap-8 py-6 border-y border-[#FBF9F7] my-2">
+                        <div>
+                          <p className="text-[9px] font-bold text-[#020617]/30 uppercase tracking-[0.2em] mb-1.5">Other Leaves</p>
+                          <p className={`text-xl font-serif font-medium ${empStats.other >= 12 ? 'text-rose-500' : 'text-[#4F46E5]'}`}>
+                            {empStats.other.toString().padStart(2, '0')} <span className="text-xs italic text-[#020617]/20">/ 12</span>
+                          </p>
+                        </div>
+                        <div className="w-px h-10 bg-[#FBF9F7]" />
+                        <div>
+                          <p className="text-[9px] font-bold text-[#020617]/30 uppercase tracking-[0.2em] mb-1.5">Sick leave</p>
+                          <p className={`text-xl font-serif font-medium ${empStats.sick >= 5 ? 'text-rose-500' : 'text-[#D97706]'}`}>
+                            {empStats.sick.toString().padStart(2, '0')} <span className="text-xs italic text-[#020617]/20">/ 05</span>
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   <div className="flex items-center gap-5 text-sm text-[#020617]/60">
                     <AlignLeft size={18} className="shrink-0 text-[#020617]/20" />
                     <p className="font-serif italic leading-relaxed">
-                      {activeLeave.leave.reason || "No specified justification protocol."}
+                      {activeLeave.leave.reason || "No specified justification."}
                     </p>
                   </div>
                   
                   <div className="flex items-center gap-5 text-sm text-[#020617]/60">
                     <CalendarIcon size={18} className="shrink-0 text-[#020617]/20" />
-                    <span className="font-serif italic">{activeLeave.leave.department} Protocol</span>
+                    <span className="font-serif italic">{activeLeave.leave.department}</span>
                   </div>
 
                   <div className="flex items-center gap-5 text-sm text-[#020617]/60">
@@ -207,12 +251,34 @@ export default function CalendarView({ leaves, loading }: CalendarViewProps) {
                       Registry ID: {activeLeave.leave.employee_id}
                     </span>
                   </div>
-
-                  <div className="flex items-center gap-5 text-sm text-[#020617]/60">
-                    <Lock size={18} className="shrink-0 text-[#020617]/20" />
-                    <span className="font-serif italic">Organizational Visibility: Internal Matrix</span>
-                  </div>
                 </div>
+
+                {activeLeave.leave.status === 'pending' && (
+                  <div className="mt-8 pt-6 border-t border-[#FBF9F7] flex items-center gap-3">
+                    <button
+                      disabled={!!processingId}
+                      onClick={async () => {
+                        await onStatusUpdate(activeLeave.leave.id, 'approved');
+                        setActiveLeave(null);
+                      }}
+                      className="flex-1 py-3 bg-[#020617] text-white rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-[#4F46E5] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {processingId === activeLeave.leave.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                      Validate Request
+                    </button>
+                    <button
+                      disabled={!!processingId}
+                      onClick={async () => {
+                        await onStatusUpdate(activeLeave.leave.id, 'rejected');
+                        setActiveLeave(null);
+                      }}
+                      className="flex-1 py-3 border border-[#FFE4E6] text-[#F43F5E] rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-[#FFF1F2] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {processingId === activeLeave.leave.id ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
+                      Decline
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </>
@@ -253,9 +319,14 @@ export default function CalendarView({ leaves, loading }: CalendarViewProps) {
                 <span className={`text-[11px] font-medium transition-colors ${selectedEmployees.includes(emp.name) ? 'text-[#020617]' : 'text-[#020617]/30'}`}>
                   {emp.name}
                 </span>
-                <span className="ml-auto text-[8px] font-bold text-[#020617]/10 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
-                  {emp.id}
-                </span>
+                <div className="ml-auto text-right flex flex-col gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                  <span className={`text-[8px] font-black uppercase tracking-tighter ${emp.other >= 12 ? 'text-rose-500' : 'text-indigo-600'}`}>
+                    OTH: {emp.other}/12
+                  </span>
+                  <span className={`text-[8px] font-black uppercase tracking-tighter ${emp.sick >= 5 ? 'text-rose-500' : 'text-amber-600'}`}>
+                    SCK: {emp.sick}/5
+                  </span>
+                </div>
               </label>
             ))}
           </div>
@@ -328,12 +399,13 @@ export default function CalendarView({ leaves, loading }: CalendarViewProps) {
                           text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm truncate cursor-pointer hover:brightness-95 transition-all
                           ${leave.status === 'approved' ? 'bg-[#EEF2FF] text-[#4F46E5] border border-[#E0E7FF]' : 
                             leave.status === 'rejected' ? 'bg-[#FFF1F2] text-[#F43F5E] border border-[#FFE4E6]' : 
+                            leave.status === 'pending' ? 'bg-[#FFFBEB] text-[#D97706] border border-[#FEF3C7]' :
                             'bg-[#F8F7F4] text-[#020617]/50 border border-[#F1F1EF]'}
                         `}
                       >
                         <span className="flex items-center gap-1">
                           {isStart && <div className="w-1 h-1 rounded-full bg-current shrink-0" />}
-                          {leave.first_name[0]}{leave.last_name[0]}
+                          {leave.first_name} {leave.last_name}
                         </span>
                       </motion.div>
                     );
