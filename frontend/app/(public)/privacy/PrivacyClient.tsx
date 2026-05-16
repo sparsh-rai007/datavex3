@@ -81,20 +81,19 @@ export default function PrivacyClient() {
             </p>
           </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 py-16 border-y border-slate-100 mb-16">
-            <section>
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">4. Cookies & Tracking</h3>
-              <p className="text-sm text-slate-500 leading-relaxed">
-                We do not use tracking cookies, advertising trackers, or behavioral analytics. Any session cookies are strictly functional and temporary.
-              </p>
-            </section>
-            <section>
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">5. Data Security</h3>
-              <p className="text-sm text-slate-500 leading-relaxed">
-                Because we do not store personal data through this platform, the risk of data exposure is virtually non-existent. We rely on enterprise-grade hosting security.
-              </p>
-            </section>
-          </div>
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">4. Cookies & Tracking</h2>
+            <p className="leading-relaxed text-slate-600">
+              We do not use tracking cookies, advertising trackers, or behavioral analytics. Any session cookies are strictly functional and temporary.
+            </p>
+          </section>
+
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">5. Data Security</h2>
+            <p className="leading-relaxed text-slate-600">
+              Because we do not store personal data through this platform, the risk of data exposure is virtually non-existent. We rely on enterprise-grade hosting security.
+            </p>
+          </section>
 
           <section className="mb-20">
             <h2 className="text-2xl font-bold text-slate-900 mb-6">6. Children’s Privacy</h2>

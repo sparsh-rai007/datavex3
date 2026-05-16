@@ -61,6 +61,11 @@ export default function Footer() {
                   About Us
                 </Link>
               </li>
+              <li>
+                <Link href="/newsletter" className="hover:text-white transition-colors">
+                  Newsletter
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -79,11 +84,6 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/newsletter" className="hover:text-white transition-colors">
-                  Newsletter
-                </Link>
-              </li>
-              <li>
                 <Link href="/admin/login" className="hover:text-white transition-colors">
                   Admin Portal
                 </Link>
@@ -92,10 +92,15 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-gray-800 text-center text-sm">
-          <p>
+        <div className="mt-8 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center text-sm">
+          <p className="mb-4 md:mb-0">
             &copy; {currentYear} DATAVEX.ai. All rights reserved.
           </p>
+          <div className="flex space-x-6">
+            <Link href="/privacy" className="hover:text-white transition-colors">
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

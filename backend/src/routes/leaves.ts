@@ -112,52 +112,11 @@ router.post(
  * PUT /api/leaves/:id/status (ADMIN ONLY)
  */
 router.put(
-<<<<<<< Updated upstream
-    '/:id/status',
-    authenticateToken,
-    async (req: AuthRequest, res: Response) => {
-        if (req.user?.role !== 'admin') {
-            return res.status(403).json({ error: 'Only admins can approve/reject leaves' });
-        }
-
-        const { id } = req.params;
-        const { status } = req.body; // approved, rejected
-
-        if (!['approved', 'rejected'].includes(status)) {
-            return res.status(400).json({ error: 'Invalid status' });
-        }
-
-        try {
-            const result = await pool.query(
-                `UPDATE leaves SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
-                [status, id]
-            );
-
-            if (result.rows.length === 0) {
-                return res.status(404).json({ error: 'Leave request not found' });
-            }
-
-            const leave = result.rows[0];
-
-            // Fetch the employee's email to notify them
-            const userResult = await pool.query(`SELECT email FROM users WHERE id = $1`, [leave.user_id]);
-            if (userResult.rows.length > 0 && userResult.rows[0].email) {
-                emailService.sendLeaveStatusUpdateNotification(userResult.rows[0].email, leave, status)
-                    .catch(err => console.error('Error sending leave status update notification:', err));
-            }
-
-            res.json({ message: `Leave request ${status} successfully`, leave });
-        } catch (error) {
-            console.error('Error updating leave status:', error);
-            res.status(500).json({ error: 'Internal server error' });
-        }
-=======
   '/:id/status',
   authenticateToken,
   async (req: AuthRequest, res: Response) => {
     if (req.user?.role !== 'admin') {
       return res.status(403).json({ error: 'Only admins can approve/reject leaves' });
->>>>>>> Stashed changes
     }
 
     const { id } = req.params;
@@ -177,7 +136,16 @@ router.put(
         return res.status(404).json({ error: 'Leave request not found' });
       }
 
-      res.json({ message: `Leave request ${status} successfully`, leave: result.rows[0] });
+      const leave = result.rows[0];
+
+      // Fetch the employee's email to notify them
+      const userResult = await pool.query(`SELECT email FROM users WHERE id = $1`, [leave.user_id]);
+      if (userResult.rows.length > 0 && userResult.rows[0].email) {
+        emailService.sendLeaveStatusUpdateNotification(userResult.rows[0].email, leave, status)
+          .catch(err => console.error('Error sending leave status update notification:', err));
+      }
+
+      res.json({ message: `Leave request ${status} successfully`, leave });
     } catch (error) {
       console.error('Error updating leave status:', error);
       res.status(500).json({ error: 'Internal server error' });

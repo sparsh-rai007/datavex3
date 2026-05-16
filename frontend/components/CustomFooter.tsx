@@ -86,7 +86,8 @@ export default function CustomFooter() {
                 { name: 'About Us', path: '/about' },
                 { name: 'Careers (Hiring)', path: '/careers' },
                 { name: 'Technical Blog', path: '/blog' },
-                { name: 'Case Studies', path: '/use-cases' }
+                { name: 'Case Studies', path: '/use-cases' },
+                { name: 'Newsletter', path: '/newsletter' }
               ].map((item) => (
                 <li key={item.name}>
                   <Link href={item.path} className="text-slate-500 hover:text-primary-600 text-sm transition-colors flex items-center gap-2 group">
@@ -156,7 +157,6 @@ export default function CustomFooter() {
           <div className="flex gap-8 text-slate-400 text-[10px] uppercase font-bold tracking-widest">
             <Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link>
-            <Link href="/cookies" className="hover:text-slate-900 transition-colors">Cookie Settings</Link>
           </div>
         </div>
       </div>
