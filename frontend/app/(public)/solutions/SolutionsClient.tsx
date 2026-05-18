@@ -123,21 +123,21 @@ export default function SolutionsClient() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
               whileHover={{ y: -8 }}
-              className="group p-8 rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-2xl hover:shadow-primary-100 transition-all duration-300 flex flex-col w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]"
+              className="group p-8 rounded-3xl border border-slate-200 bg-white shadow-sm hover:shadow-2xl hover:shadow-primary-100 transition-all duration-300 flex flex-col items-center text-center w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]"
             >
               <div>
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${service.color} flex items-center justify-center text-white mb-8 shadow-lg group-hover:scale-110 transition-transform duration-500`}>
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${service.color} flex items-center justify-center text-white mb-8 shadow-lg group-hover:scale-110 transition-transform duration-500 mx-auto`}>
                   <service.icon className="w-7 h-7" />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-4 leading-tight group-hover:text-primary-600 transition-colors">
+                <h3 className="text-2xl font-bold text-slate-900 mb-4 leading-tight group-hover:text-primary-600 transition-colors text-center">
                   {service.title}
                 </h3>
-                <p className="text-slate-600 mb-8 leading-relaxed text-sm">
+                <p className="text-slate-600 mb-8 leading-relaxed text-sm text-center">
                   {service.description}
                 </p>
                 <div className="space-y-4">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Core Capabilities</div>
-                  <ul className="space-y-3">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Core Capabilities</div>
+                  <ul className="space-y-3 flex flex-col items-center">
                     {service.features.map((feature) => (
                       <li key={feature} className="flex items-center gap-3 text-slate-600 group">
                         <div className="w-1.5 h-1.5 rounded-full bg-primary-500 group-hover:scale-150 transition-transform" />

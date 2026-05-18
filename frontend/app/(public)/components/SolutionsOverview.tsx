@@ -65,7 +65,7 @@ export default function SolutionsOverview() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="group p-8 rounded-3xl border border-gray-100 bg-gray-50 hover:bg-white hover:shadow-xl hover:border-primary-100 transition-all duration-300 w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.5rem)] min-w-[300px] max-w-[400px]"
+              className="group p-8 rounded-3xl border border-gray-100 bg-gray-50 hover:bg-white hover:shadow-xl hover:border-primary-100 transition-all duration-300 w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.5rem)] min-w-[300px] max-w-[400px] flex flex-col items-center text-center"
             >
               <div className={`w-12 h-12 ${solution.color} rounded-2xl flex items-center justify-center mb-6 text-white shadow-lg shadow-blue-500/20`}>
                 <solution.icon className="w-6 h-6" />
@@ -81,7 +81,7 @@ export default function SolutionsOverview() {
 
               <Link 
                 href="/solutions" 
-                className="inline-flex items-center gap-2 text-primary-600 font-semibold text-sm hover:gap-3 transition-all"
+                className="inline-flex items-center gap-2 text-primary-600 font-semibold text-sm hover:gap-3 transition-all mt-auto"
               >
                 Learn More <ArrowRight className="w-4 h-4" />
               </Link>
