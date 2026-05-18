@@ -6,6 +6,8 @@ import RecentArticles from './RecentArticles';
 import SolutionsOverview from './SolutionsOverview';
 import CustomFooter from '@/components/CustomFooter';
 import TechnologyStack from './TechnologyStack';
+import HeroImage from '../../public/hero.png';
+
 
 export default function HomeContent() {
   return (
@@ -59,9 +61,9 @@ export default function HomeContent() {
               <div className="relative rounded-3xl p-2 bg-gradient-to-tr from-blue-100 via-indigo-100 to-cyan-100 shadow-2xl w-full max-w-[480px]">
                 <div className="rounded-2xl overflow-hidden bg-slate-50 border border-white/50">
                   <img
-                    src="/hero.png"
+                    src={HeroImage.src}
                     alt="Driving business growth with intelligent systems"
-                    className="w-full h-auto object-cover hover:scale-[1.02] transition-transform duration-700"
+                    className="w-full h-auto object-cover transition-transform duration-700"
                   />
                 </div>
               </div>
