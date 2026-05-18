@@ -52,9 +52,9 @@ export default function SolutionsOverview() {
           <h2 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">
             Intelligent Solutions for the Modern Enterprise
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <h2 className="text-lg text-gray-600 max-w-2xl mx-auto">
             We bridge the gap between research and production with scalable AI infrastructure and domain-specific models.
-          </p>
+          </h2>
         </div>
 
         <div className="flex flex-wrap justify-center gap-8">

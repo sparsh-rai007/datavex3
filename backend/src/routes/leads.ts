@@ -455,16 +455,32 @@ router.post(
         ]
       );
 
-      if (!update.rows.length) {
-        return res.status(404).json({ error: 'Lead not found' });
+      let lead = update.rows[0];
+
+      if (!lead) {
+        // Lead doesn't exist, create a new one automatically
+        const insert = await pool.query(
+          `INSERT INTO leads (email, score, tags, notes, source, status)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           RETURNING *`,
+          [
+            email,
+            finalScore,
+            tags,
+            JSON.stringify(answers),
+            'assessment_direct',
+            'new'
+          ]
+        );
+        lead = insert.rows[0];
       }
 
       // Optional: Sync CRM
-      crmService.syncLead(update.rows[0]).catch(console.error);
+      crmService.syncLead(lead).catch(console.error);
 
       return res.json({
         message: 'Assessment submitted successfully',
-        lead: update.rows[0],
+        lead,
       });
 
     } catch (error) {
