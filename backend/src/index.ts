@@ -146,8 +146,8 @@ const startServer = async () => {
     await connectDB();
     console.log("? Database connected");
 
-    cron.schedule("0 3 * * *", async () => {
-      console.log("[CRON] Starting daily newsletter generation...");
+    cron.schedule("0 3 * * 1,5", async () => {
+      console.log("[CRON] Starting bi-weekly newsletter generation...");
       try {
         await runDailyNewsletter();
         console.log("✅ [CRON] Newsletter published successfully.");
@@ -155,10 +155,10 @@ const startServer = async () => {
         console.error("❌ [CRON] Newsletter generation failed:", error);
       }
     });
-    console.log("Daily newsletter cron scheduled for 03:00 server time");
+    console.log("Newsletter cron scheduled for 03:00 server time on Monday and Friday");
 
-    cron.schedule("0 */12 * * *", async () => {
-      console.log("[CRON] Starting scheduled blog generation...");
+    cron.schedule("0 3 * * 1,5", async () => {
+      console.log("[CRON] Starting bi-weekly blog generation...");
       try {
         await runScheduledBlogGeneration();
         console.log("✅ [CRON] Scheduled blog published successfully.");
@@ -166,7 +166,7 @@ const startServer = async () => {
         console.error("❌ [CRON] Scheduled blog generation failed:", error);
       }
     });
-    console.log("Scheduled blog cron set for every 12 hours (00:00 and 12:00 server time)");
+    console.log("Scheduled blog cron set for 03:00 server time on Monday and Friday");
 
     app.listen(Number(PORT), "0.0.0.0", () => {
       console.log(`?? Backend listening on http://0.0.0.0:${PORT}`);

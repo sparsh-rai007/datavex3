@@ -1,15 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { apiClient } from '@/lib/api';
 
 export default function AssessmentForm() {
   const searchParams = useSearchParams();
-  const email = searchParams.get('email');
-
+  const urlEmail = searchParams.get('email') || '';
+  
+  const [emailVal, setEmailVal] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (urlEmail) {
+      setEmailVal(urlEmail);
+    }
+  }, [urlEmail]);
 
   const [answers, setAnswers] = useState({
     projectStage: '',
@@ -26,11 +33,16 @@ export default function AssessmentForm() {
   };
 
   const handleSubmit = async () => {
+    if (!emailVal || !emailVal.trim() || !emailVal.includes('@')) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
     setLoading(true);
 
     try {
       await apiClient.submitAssessment({
-        email,
+        email: emailVal.trim(),
         answers: {
           ...answers,
           employees: Number(answers.employees),
@@ -39,9 +51,13 @@ export default function AssessmentForm() {
       });
 
       setSubmitted(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Something went wrong. Try again.');
+      if (err.response?.status === 404) {
+        alert('Email not found. Please submit the contact form first, or ensure the email is correct.');
+      } else {
+        alert('Something went wrong. Try again.');
+      }
     }
 
     setLoading(false);
@@ -92,6 +108,25 @@ export default function AssessmentForm() {
 
         {/* FORM CONTENT */}
         <div className="space-y-8">
+
+          {/* Email (Only shown if not provided in URL) */}
+          {!urlEmail && (
+            <div>
+              <label className="block font-semibold text-gray-800 mb-2">
+                Your Email Address *
+              </label>
+              <input
+                type="email"
+                placeholder="you@company.com"
+                className="w-full border border-gray-300 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                value={emailVal}
+                onChange={e => setEmailVal(e.target.value)}
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Please use the same email address you used to register/contact us.
+              </p>
+            </div>
+          )}
 
           {/* 1 */}
           <div>

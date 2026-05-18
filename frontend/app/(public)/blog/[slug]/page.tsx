@@ -169,6 +169,18 @@ export default function BlogDetailPage() {
     return Array.from(uniqueMap.values());
   }, [blog?.content]);
 
+  // Extract banner image from content if featured_image is missing
+  const bannerImage = useMemo(() => {
+    if (blog?.featured_image) return blog.featured_image;
+    if (blog?.content) {
+      const mdMatch = blog.content.match(/!\[.*?\]\((.*?)\)/);
+      if (mdMatch && mdMatch[1]) return mdMatch[1];
+      const htmlMatch = blog.content.match(/<img[^>]+src=["'](.*?)["']/);
+      if (htmlMatch && htmlMatch[1]) return htmlMatch[1];
+    }
+    return null;
+  }, [blog]);
+
   if (loading) {
     return (
       <PublicWrapper>
@@ -279,7 +291,7 @@ export default function BlogDetailPage() {
             </header>
 
             {/* Featured Image */}
-            {blog.featured_image && (
+            {bannerImage && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -288,7 +300,7 @@ export default function BlogDetailPage() {
               >
                 <div className="aspect-[16/9] overflow-hidden rounded-sm shadow-xl shadow-black/5">
                   <img
-                    src={blog.featured_image}
+                    src={bannerImage}
                     alt={blog.title}
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 grayscale group-hover:grayscale-0"
                     referrerPolicy="no-referrer"
