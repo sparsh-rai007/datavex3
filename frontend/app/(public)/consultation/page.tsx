@@ -68,11 +68,13 @@ export default function ConsultationPage() {
                 </div>
               </div>
 
-              <Cal
-                calLink="darshan.suvarna/30min"
-                style={{ width: "100%", minHeight: "650px" }}
-                config={{ layout: "month_view" }}
-              />
+              <div className="w-full overflow-hidden rounded-2xl" style={{ height: "490px" }}>
+                <Cal
+                  calLink="darshan.suvarna/30min"
+                  style={{ width: "100%", height: "570px" }}
+                  config={{ layout: "month_view" }}
+                />
+              </div>
             </motion.div>
           </div>
         </div>
