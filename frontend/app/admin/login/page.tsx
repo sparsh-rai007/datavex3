@@ -124,16 +124,6 @@ export default function LoginPage() {
         </form>
 
 
-        {/* Admin credentials hint — optional */}
-        <div className="mt-4 text-center text-sm text-gray-500">
-          admin@datavex.ai / Admin@123
-        </div>
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>Default credentials:</p>
-          <p className="font-mono text-xs mt-1">
-            admin@datavex.ai / Admin@123
-          </p>
-        </div>
       </div>
     </div>
   );

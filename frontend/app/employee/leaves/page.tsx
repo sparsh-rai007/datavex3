@@ -496,6 +496,7 @@ export default function LeaveAppPage() {
                         <option value="Sick Leave">Sick Leave</option>
                         <option value="Personal">Personal</option>
                         <option value="Maternity/Paternity">Maternity/Paternity</option>
+                        <option value="Work From Home">Work From Home</option>
                         <option value="Other">Other</option>
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-400/50" size={20} />

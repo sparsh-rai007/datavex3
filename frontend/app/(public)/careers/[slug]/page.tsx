@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { apiClient } from '@/lib/api';
 import Link from 'next/link';
 import PublicWrapper from '../../wrapper'; // ✅ ADD THIS
+import NewsletterRenderer from '@/components/NewsletterRenderer'; // ✅ ADD THIS
 
 interface ApplicationForm {
   first_name: string;
@@ -175,12 +176,12 @@ export default function JobDetailPage() {
 
             <div className="prose max-w-none mb-8">
               <h2 className="text-2xl font-semibold mb-4">Description</h2>
-              <div className="whitespace-pre-wrap text-gray-700">{job.description}</div>
+              <NewsletterRenderer content={job.description} />
 
               {job.requirements && (
                 <>
                   <h2 className="text-2xl font-semibold mb-4 mt-8">Requirements</h2>
-                  <div className="whitespace-pre-wrap text-gray-700">{job.requirements}</div>
+                  <NewsletterRenderer content={job.requirements} />
                 </>
               )}
 

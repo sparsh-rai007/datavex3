@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { apiClient } from '@/lib/api';
+import TipTapEditor from '@/components/TipTapEditor';
 
 interface JobForm {
   title: string;
@@ -161,11 +162,25 @@ export default function EditJobPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
-                <textarea {...register('description', { required: true })} rows={8} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+                <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+                  {job && (
+                    <TipTapEditor
+                      content={job.description || ''}
+                      onChange={(content: string) => setValue('description', content)}
+                    />
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Requirements</label>
-                <textarea {...register('requirements')} rows={6} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+                <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+                  {job && (
+                    <TipTapEditor
+                      content={job.requirements || ''}
+                      onChange={(content: string) => setValue('requirements', content)}
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </div>
