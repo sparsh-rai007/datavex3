@@ -11,6 +11,10 @@ import {
   ChevronRight,
   Menu,
   X,
+  Shield,
+  Zap,
+  Cpu,
+  Binary
 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { apiClient } from '@/lib/api';
@@ -59,10 +63,10 @@ const PreviewNodeCard = ({ url, title }: { url: string; title: string }) => {
       {/* Left Text Content */}
       <div className="flex-1 min-w-0 flex flex-col justify-between h-[84px]">
         <div>
-          <h4 className="text-[14px] font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors">
+          <h4 className="text-[13px] font-sans font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors">
             {title}
           </h4>
-          <p className="text-[12px] text-slate-500 line-clamp-2 mt-1 leading-tight">
+          <p className="text-[11px] font-sans text-slate-500 line-clamp-2 mt-1 leading-tight">
             {meta.description}
           </p>
         </div>
@@ -76,7 +80,7 @@ const PreviewNodeCard = ({ url, title }: { url: string; title: string }) => {
               alt=""
             />
           </div>
-          <span className="text-[11px] font-bold text-slate-400 truncate uppercase tracking-widest">
+          <span className="text-[10px] font-bold text-slate-400 truncate uppercase tracking-widest font-sans">
             {hostname}
           </span>
           <div className="ml-auto text-slate-300 opacity-50 group-hover:opacity-100 transition-opacity">
@@ -90,11 +94,11 @@ const PreviewNodeCard = ({ url, title }: { url: string; title: string }) => {
       </div>
 
       {/* Right Image Thumbnail */}
-      <div className="w-[84px] h-[84px] shrink-0 rounded-[14px] bg-slate-50 overflow-hidden border border-slate-100 relative shadow-sm">
+      <div className="w-[84px] h-[84px] shrink-0 rounded-lg bg-slate-50 overflow-hidden border border-slate-100 relative shadow-sm">
         <img
           src={meta.image}
           alt="Preview thumbnail"
-          className="w-full h-full object-cover opacity-100 group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500 group-hover:grayscale-0"
         />
       </div>
     </a>
@@ -116,7 +120,7 @@ export default function BlogDetailPage() {
   // State for recommended blogs
   const [recommendations, setRecommendations] = useState<any[]>([]);
   
-  // NEW: State to track if the sidebar "Show all" button is clicked
+  // State to track if the sidebar "Show all" button is clicked
   const [showAllRefs, setShowAllRefs] = useState(false);
 
   const { scrollYProgress } = useScroll();
@@ -142,7 +146,6 @@ export default function BlogDetailPage() {
           // Fetch recommendations (other blogs)
           try {
             const allBlogs = await apiClient.getPublicBlogs();
-            // Filter current blog and take 3
             const filtered = (allBlogs || [])
               .filter((b: any) => b.slug !== slug)
               .slice(0, 3);
@@ -161,7 +164,7 @@ export default function BlogDetailPage() {
     window.scrollTo(0, 0);
   }, [slug, router]);
 
-  // NEW: Extract references efficiently using useMemo so it doesn't recalculate on scroll
+  // Extract references efficiently using useMemo so it doesn't recalculate on scroll
   const referencesMatch = useMemo(() => {
     if (!blog?.content) return [];
     const matches = Array.from(blog.content.matchAll(/\[(.*?)\]\((https?:\/\/[^\)]+)\)/g));
@@ -184,7 +187,7 @@ export default function BlogDetailPage() {
   if (loading) {
     return (
       <PublicWrapper>
-        <div className="min-h-screen bg-slate-50 font-outfit pt-32 pb-40">
+        <div className="min-h-screen bg-slate-50 pt-32 pb-40">
           <div className="max-w-[700px] mx-auto px-6 lg:px-0">
             {/* Header Skeleton */}
             <div className="animate-pulse space-y-6 mb-16">
@@ -195,25 +198,12 @@ export default function BlogDetailPage() {
               </div>
               <div className="w-full h-16 bg-slate-200 rounded-3xl"></div>
               <div className="w-3/4 h-16 bg-slate-200 rounded-3xl"></div>
-              <div className="flex items-center gap-4 mt-8">
-                <div className="w-12 h-12 bg-slate-200 rounded-full"></div>
-                <div className="space-y-2">
-                  <div className="w-24 h-4 bg-slate-200 rounded-full"></div>
-                  <div className="w-32 h-3 bg-slate-200 rounded-full"></div>
-                </div>
-              </div>
             </div>
 
             {/* Content Skeleton */}
             <div className="animate-pulse space-y-8">
               <div className="w-full h-8 bg-slate-200 rounded-full"></div>
               <div className="w-full h-4 bg-slate-200 rounded-full"></div>
-              <div className="w-5/6 h-4 bg-slate-200 rounded-full"></div>
-              <div className="w-full h-4 bg-slate-200 rounded-full"></div>
-              <div className="w-4/5 h-4 bg-slate-200 rounded-full"></div>
-
-              <div className="w-full h-64 bg-slate-200 rounded-[3rem] mt-10 mb-10"></div>
-
               <div className="w-5/6 h-4 bg-slate-200 rounded-full"></div>
               <div className="w-full h-4 bg-slate-200 rounded-full"></div>
               <div className="w-4/5 h-4 bg-slate-200 rounded-full"></div>
@@ -227,14 +217,19 @@ export default function BlogDetailPage() {
   if (!blog) {
     return (
       <PublicWrapper>
-        <div className="py-40 text-center">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Intelligence Record Not Found</h1>
-          <p className="text-slate-400 font-medium mt-2">The requested architectural synthesis does not exist in our core.</p>
-          <button onClick={() => router.back()} className="mt-8 text-primary-600 font-black uppercase tracking-widest text-[10px] border-b-2 border-primary-100 pb-1 hover:border-primary-600 transition-all">Return to Feed</button>
+        <div className="py-40 text-center relative overflow-hidden bg-slate-50 min-h-[60vh] flex flex-col justify-center items-center">
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Record Not Found</h1>
+          <button
+            onClick={() => router.back()}
+            className="mt-8 px-6 py-3 bg-slate-900 hover:bg-slate-850 active:bg-black text-white font-extrabold rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-slate-950/10"
+          >
+            Return to Feed
+          </button>
         </div>
       </PublicWrapper>
     );
   }
+
   const handleShare = async () => {
     try {
       if (navigator.share) {
@@ -254,37 +249,76 @@ export default function BlogDetailPage() {
 
   return (
     <PublicWrapper>
-      <div className="min-h-screen bg-[#fcfcfc] text-[#111] font-sans selection:bg-primary-600/20">
+      <div className="relative overflow-hidden bg-gradient-to-b from-blue-50/50 via-white to-white min-h-screen font-sans text-slate-850 selection:bg-primary-600/20">
+        
+        {/* Subtle grid background pattern matching the Home Page */}
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-30"></div>
+        
+        {/* Glowing blur effects matching the Home Page */}
+        <div className="absolute top-12 left-1/4 w-96 h-96 bg-cyan-200/40 rounded-full blur-3xl -z-10 animate-pulse duration-[8000ms]"></div>
+        <div className="absolute bottom-12 right-1/4 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl -z-10"></div>
+
         {/* Reading Progress Bar */}
         <motion.div
           className="fixed top-0 left-0 right-0 h-1 bg-primary-600 z-[60] origin-left"
           style={{ scaleX }}
         />
 
-        <main className="pt-24 md:pt-32 pb-40">
-          <article className="max-w-4xl mx-auto px-6">
+        {/* Detail Header / Nav - Redesigned style */}
+        <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <button
+              onClick={() => router.back()}
+              className="group flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors font-extrabold uppercase tracking-wider text-xs cursor-pointer"
+            >
+              <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+              Return to Feed
+            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleShare}
+                className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-400 hover:text-primary-600 transition-colors cursor-pointer"
+                title="Share Article"
+              >
+                <Share2 size={18} />
+              </button>
+              <button
+                className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-400 hover:text-primary-600 transition-colors cursor-pointer"
+                title="Bookmark Article"
+              >
+                <Bookmark size={18} />
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        <main className="max-w-7xl mx-auto px-6 py-20 relative z-10">
+          <article className="max-w-5xl mx-auto">
             {/* Header Section */}
-            <header className="mb-16 md:mb-24 text-center">
+            <header className="mb-16 text-left">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
+                className="space-y-6"
               >
-                <div className="flex items-center justify-center gap-4 mb-8">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary-600">
-                    {blog.category || 'General'}
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary-500 bg-primary-50 border border-primary-100/50 rounded-lg px-2.5 py-1 flex items-center gap-1.5 w-fit">
+                    <Calendar size={12} className="text-primary-500" />
+                    <span>{blog.category || 'General'}</span>
                   </span>
                   <div className="w-1 h-1 rounded-full bg-primary-600/30" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-40">
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
                     {new Date(blog.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
                 </div>
 
-                <h1 className={`font-serif font-medium leading-[1.1] tracking-tight mb-12 ${blog.title && blog.title.length > 60 ? 'text-4xl md:text-5xl lg:text-6xl' : 'text-5xl md:text-7xl lg:text-8xl'}`}>
+                <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 leading-[1.15] tracking-tight mb-8">
                   {blog.title}
                 </h1>
 
-                <p className="text-xl md:text-2xl font-serif italic opacity-60 max-w-2xl mx-auto leading-relaxed">
+                <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-4xl font-normal">
                   {blog.excerpt || (blog.content ? blog.content.substring(0, 150) + '...' : '')}
                 </p>
               </motion.div>
@@ -296,43 +330,41 @@ export default function BlogDetailPage() {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-                className="mb-24 relative group"
+                className="mb-16 relative group"
               >
-                <div className="aspect-[16/9] overflow-hidden rounded-sm shadow-xl shadow-black/5">
+                <div className="aspect-[16/9] overflow-hidden rounded-3xl border border-slate-200/80 shadow-2xl shadow-primary-500/5">
                   <img
                     src={bannerImage}
                     alt={blog.title}
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 grayscale group-hover:grayscale-0"
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-102"
                     referrerPolicy="no-referrer"
                   />
                 </div>
-                <div className="absolute -bottom-6 -right-6 hidden md:block w-32 h-32 border-r border-b border-primary-600/20" />
-                <div className="absolute -top-6 -left-6 hidden md:block w-32 h-32 border-l border-t border-primary-600/20" />
               </motion.div>
             )}
 
             {/* Content Section */}
-            <div className="flex flex-col md:flex-row gap-16 relative">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start relative">
               {/* Sidebar Meta */}
-              <aside className="md:w-48 shrink-0">
-                <div className="sticky top-32 space-y-12">
-                  <div className="flex flex-col gap-4">
-                    <div className="w-12 h-12 rounded-full overflow-hidden grayscale hover:grayscale-0 transition-all duration-500 bg-slate-100">
+              <aside className="lg:col-span-3 shrink-0">
+                <div className="sticky top-32 space-y-8">
+                  <div className="flex items-center gap-4 bg-white/80 border border-slate-200/80 p-4 rounded-2xl shadow-sm">
+                    <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-200 shrink-0">
                       <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${blog.author || 'DATAVEX'}`} alt={blog.author || "Architect"} className="w-full h-full object-cover" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold uppercase tracking-widest">{blog.author || 'System Architect'}</h4>
-                      <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Author</p>
+                      <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-800">{blog.author || 'System Architect'}</h4>
+                      <p className="text-[9px] text-slate-400 uppercase tracking-widest leading-none mt-1">Author</p>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-6 pt-8 border-t border-black/5">
-                    <button onClick={() => router.back()} className="flex items-center gap-3 opacity-40 hover:text-primary-600 hover:opacity-100 transition-colors cursor-pointer group text-left">
-                      <ArrowLeft size={14} />
+                  <div className="flex flex-col gap-3 pt-6 border-t border-slate-200/80 text-left">
+                    <button onClick={() => router.back()} className="flex items-center gap-3 text-slate-500 hover:text-primary-600 transition-colors cursor-pointer group text-left">
+                      <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
                       <span className="text-[10px] font-bold uppercase tracking-widest">Return to Feed</span>
                     </button>
-                    <button onClick={handleShare} className="flex items-center gap-3 opacity-40 hover:text-primary-600 hover:opacity-100 transition-colors cursor-pointer group text-left">
-                      <Share2 size={14} />
+                    <button onClick={handleShare} className="flex items-center gap-3 text-slate-500 hover:text-primary-600 transition-colors cursor-pointer group text-left">
+                      <Share2 size={16} />
                       <span className="text-[10px] font-bold uppercase tracking-widest">Share Article</span>
                     </button>
                   </div>
@@ -340,17 +372,17 @@ export default function BlogDetailPage() {
               </aside>
 
               {/* Main Body Text */}
-              <div className="flex-1 prose prose-lg prose-slate max-w-none">
-                <div className="font-serif text-lg md:text-xl leading-relaxed opacity-80 space-y-8 first-letter:text-7xl first-letter:font-serif first-letter:float-left first-letter:mr-3 first-letter:mt-2 first-letter:text-primary-600">
+              <div className="lg:col-span-9 prose prose-lg prose-slate max-w-none text-left">
+                <div className="font-sans text-slate-700 leading-relaxed space-y-6">
                    <NewsletterRenderer content={blog.content || ''} hideLinks={false} stripReferences={false} />
                 </div>
                 
                 {/* Custom Styled Elements for the Content */}
                 <style dangerouslySetInnerHTML={{ __html: `
-                  .prose h1, .prose h2, .prose h3 { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-style: italic; margin-top: 4rem; margin-bottom: 1.5rem; color: #1a1a1a; }
-                  .prose p { margin-bottom: 2rem; line-height: 1.8; }
-                  .prose blockquote { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.75rem; border-left: 2px solid #5a5a40; padding-left: 2rem; margin: 4rem 0; color: #5a5a40; line-height: 1.4; }
-                  .prose img { border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+                  .prose h1, .prose h2, .prose h3 { font-family: inherit; font-size: 1.875rem; font-weight: 800; margin-top: 3.5rem; margin-bottom: 1.25rem; color: #0f172a; tracking: -0.025em; }
+                  .prose p { margin-bottom: 1.5rem; line-height: 1.75; color: #334155; }
+                  .prose blockquote { font-family: inherit; font-weight: 500; font-size: 1.25rem; border-left: 4px solid #3b82f6; padding-left: 1.5rem; margin: 3rem 0; color: #1e3a8a; line-height: 1.5; }
+                  .prose img { border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
                 `}} />
               </div>
             </div>
@@ -358,15 +390,18 @@ export default function BlogDetailPage() {
 
           {/* Recommendations Section */}
           {recommendations.length > 0 && (
-            <section className="max-w-7xl mx-auto px-6 mt-40 pt-24 border-t border-black/5">
-              <div className="flex items-center justify-between mb-16">
-                <h2 className="text-4xl md:text-5xl font-serif italic">Further Reading</h2>
-                <button onClick={() => router.push('/blog')} className="group flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-primary-600">
-                  View All Articles <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            <section className="max-w-5xl mx-auto mt-32 pt-20 border-t border-slate-200/80">
+              <div className="flex items-center justify-between mb-12">
+                <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Further Reading</h2>
+                <button
+                  onClick={() => router.push('/blog')}
+                  className="group flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary-600 hover:text-primary-700 transition-colors"
+                >
+                  View All Articles <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
                 {recommendations.map((rec, idx) => (
                   <motion.div
                     key={rec.id}
@@ -375,20 +410,22 @@ export default function BlogDetailPage() {
                     viewport={{ once: true }}
                     transition={{ delay: idx * 0.1, duration: 0.6 }}
                     onClick={() => router.push(`/blog/${rec.slug}`)}
-                    className="group cursor-pointer"
+                    className="group cursor-pointer flex flex-col bg-white rounded-3xl border border-slate-200 hover:border-primary-100 hover:shadow-2xl hover:shadow-primary-500/10 hover:-translate-y-1 transition-all duration-300 p-6"
                   >
                     
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-primary-600">{rec.category || 'General'}</span>
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary-500 bg-primary-50 border border-primary-100/50 rounded-lg px-2.5 py-1 flex items-center gap-1.5 w-fit">
+                        <span>{rec.category || 'General'}</span>
+                      </span>
                       <div className="w-1 h-1 rounded-full bg-primary-600/20" />
-                      <span className="text-[9px] font-bold uppercase tracking-widest opacity-30">
-                        {new Date(rec.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">
+                        {new Date(rec.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
                     </div>
-                    <h3 className="text-2xl font-serif font-medium mb-4 group-hover:text-primary-600 transition-colors leading-tight">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-3 group-hover:text-primary-600 transition-colors leading-tight line-clamp-2 text-left">
                       {rec.title}
                     </h3>
-                    <p className="text-sm opacity-50 leading-relaxed line-clamp-2 italic font-serif">
+                    <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 font-normal text-left">
                       {rec.excerpt || (rec.content ? rec.content.substring(0, 100) : '')}
                     </p>
                   </motion.div>
