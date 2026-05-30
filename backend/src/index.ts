@@ -39,6 +39,7 @@ import newsletterRoutes from "./routes/newsletter";
 import newsletterGenerateRoutes from "./routes/newsletter-generate";
 import adminEmployeesRoutes from "./routes/admin-employees";
 import leavesRoutes from "./routes/leaves";
+import productsRoutes from "./routes/products";
 
 dotenv.config();
 
@@ -122,6 +123,7 @@ app.use("/api/blog", blogGenerateRoutes);
 app.use("/api/blog", blogReviewRoutes);
 app.use("/api/newsletters", newsletterRoutes);
 app.use("/api/newsletter", newsletterGenerateRoutes);
+app.use("/api/products", productsRoutes);
 
 app.use("/api/social", socialRoutes);
 

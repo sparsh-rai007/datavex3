@@ -557,6 +557,22 @@ class ApiClient {
     const response = await this.client.post('/leads', data);
     return response.data;
   }
+
+  // Product Visibility endpoints
+  async getDelistedProducts() {
+    const response = await this.client.get('/products/delisted');
+    return response.data;
+  }
+
+  async delistProduct(productId: string) {
+    const response = await this.client.post('/products/delist', { productId });
+    return response.data;
+  }
+
+  async enlistProduct(productId: string) {
+    const response = await this.client.post('/products/list', { productId });
+    return response.data;
+  }
 }
 
 export const apiClient = new ApiClient();

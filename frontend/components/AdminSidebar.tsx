@@ -17,7 +17,8 @@ import {
   LogOut,
   Settings,
   Bell,
-  Mail
+  Mail,
+  Package
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -29,6 +30,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/posts', label: 'Posts', icon: FileText },
   { href: '/admin/leads', label: 'Leads', icon: Users },
   { href: '/admin/jobs', label: 'Jobs', icon: Briefcase },

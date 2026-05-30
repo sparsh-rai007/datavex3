@@ -10,19 +10,19 @@ dotenv.config();
 
 async function migrate() {
   const client = await pool.connect();
-  
+
   try {
     console.log('🔄 Running database migrations...');
-    
+
     // Read schema file
     const schemaPath = join(__dirname, 'schema.sql');
     const schema = readFileSync(schemaPath, 'utf-8');
-    
+
     // Execute schema
-    await pool.query(schema);  
+    await pool.query(schema);
 
 
-    
+
     console.log('✅ Database migrations completed successfully');
 
     // Add AI blog generation columns (idempotent)
@@ -83,14 +83,14 @@ async function migrate() {
     // Create default admin user if it doesn't exist
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@datavex.ai';
     const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@123';
-    
+
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
-    
+
     const checkAdmin = await client.query(
       'SELECT id FROM users WHERE email = $1',
       [adminEmail]
     );
-    
+
     if (checkAdmin.rows.length === 0) {
       await client.query(
         `INSERT INTO users (email, password_hash, first_name, last_name, role, is_active)
@@ -101,10 +101,10 @@ async function migrate() {
     } else {
       console.log('ℹ️  Admin user already exists');
     }
-    
+
     // Run employee specific migrations
     await migrateEmployees();
-    
+
   } catch (error) {
     console.error('❌ Migration failed:', error);
     throw error;

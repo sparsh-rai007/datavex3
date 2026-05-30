@@ -74,8 +74,8 @@ const poolConfig: PoolConfig = {
 if (process.env.DATABASE_URL) {
   poolConfig.connectionString = process.env.DATABASE_URL;
 }
-  // Render PostgreSQL **requires** SSL
-  poolConfig.ssl = isProduction ? {rejectUnauthorized: false} : false;
+// Render PostgreSQL **requires** SSL
+poolConfig.ssl = isProduction ? { rejectUnauthorized: false } : false;
 
 
 // Create PostgreSQL pool
@@ -91,6 +91,16 @@ export const connectDB = async () => {
   try {
     const client = await pool.connect();
     console.log("✅ PostgreSQL connected");
+
+    // Self-healing setup for delisted_products table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS delisted_products (
+        id VARCHAR(255) PRIMARY KEY,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log("✅ Table delisted_products verified/created");
+
     client.release();
   } catch (error) {
     console.error("❌ Database connection error:", error);
