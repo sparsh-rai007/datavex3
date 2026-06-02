@@ -133,6 +133,7 @@ app.use("/api/cal", calRouter);
 
 // Static uploads
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+app.use("/api/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
 // Error handler LAST
 app.use(errorHandler);
