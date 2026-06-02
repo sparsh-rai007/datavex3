@@ -1,24 +1,12 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import * as LucideIcons from 'lucide-react';
 import {
-  Layers,
-  CreditCard,
-  HeartPulse,
-  Compass,
-  Scale,
-  CheckSquare,
-  Mic,
-  Users,
-  Calculator,
-  Anchor,
   X,
   ArrowRight,
-  Sparkles,
   CheckCircle2,
-  Gauge,
   TrendingUp,
-  ArrowUpRight,
   HelpCircle,
   Loader2,
   AlertTriangle
@@ -29,249 +17,54 @@ import PublicWrapper from '../wrapper';
 import CustomFooter from '@/components/CustomFooter';
 import { apiClient } from '@/lib/api';
 
-const products = [
-  {
-    id: 'vexcad',
-    name: 'VexCAD',
-    category: 'Engineering & Design',
-    tagline: '2D to 3D CAD draft conversion engine',
-    description: 'Convert architectural drawings, engineering drafts, and 2D blueprints into production-ready 3D CAD files instantly.',
-    detailedDescription: 'VexCAD is a cutting-edge spatial computing assistant that leverages deep learning to translate 2D vector layouts and structural line drawings into detailed 3D volumetric assets. Engineered for developers, civil architects, and manufacturing plants to compress modeling lifecycles.',
-    metric: '85%',
-    metricLabel: 'Reduction in CAD Modeling Time',
-    icon: Layers,
-    color: 'from-blue-500 via-blue-600 to-indigo-700',
-    iconColor: 'text-blue-600',
-    iconBg: 'bg-blue-50 border-blue-100',
-    glow: 'shadow-blue-500/10 hover:shadow-blue-500/20 border-blue-100',
-    features: [
-      'Multi-format vector ingestion (DWG, DXF, PDF, SVG)',
-      'Automated polygon mesh rendering and topological checks',
-      'Precision scale and volumetric margin adjustments',
-      'One-click exporting to STL, OBJ, STEP, and IGES file types'
-    ],
-    techStack: ['Three.js', 'WebGL', 'C++', 'PyTorch']
-  },
-  {
-    id: 'credivex',
-    name: 'CrediVex',
-    category: 'FinTech & Security',
-    tagline: 'Credit Card Information System',
-    description: 'Comprehensive banking intelligence suite for card transaction audits, credit scoring, and secure ledgering.',
-    detailedDescription: 'CrediVex is an enterprise core credit card information registry and balance tracking system. Providing bank-level encryption alongside transaction audit trails, real-time interest calculation pipelines, and multi-tenant ledger synchronization.',
-    metric: '99.999%',
-    metricLabel: 'Transaction Ledger Accuracy',
-    icon: CreditCard,
-    color: 'from-cyan-500 via-cyan-600 to-blue-700',
-    iconColor: 'text-cyan-600',
-    iconBg: 'bg-cyan-50 border-cyan-100',
-    glow: 'shadow-cyan-500/10 hover:shadow-cyan-500/20 border-cyan-100',
-    features: [
-      'PCI-DSS compliance grade audit trails and vault databases',
-      'Real-time spending pattern mapping and credit scoring analytics',
-      'Dunning alert pipelines & automated dispute reconciliation',
-      'High-throughput banking API connections & batch processors'
-    ],
-    techStack: ['Node.js', 'PostgreSQL', 'Redis', 'Kubernetes']
-  },
-  {
-    id: 'cureconnect',
-    name: 'CureConnect',
-    category: 'Healthcare & Logistics',
-    tagline: 'Medical Tourism Platform',
-    description: 'Global medical matchmaking, secure records translation, travel logistics, and clinic booking hub.',
-    detailedDescription: 'CureConnect acts as a digital bridge between international medical facilities and global patients. The system coordinates treatment quotations, electronic health records (EHR) exchanges, flight and hotel reservations, and post-op rehabilitation routines.',
-    metric: '42%',
-    metricLabel: 'Procedure Cost Deflection',
-    icon: HeartPulse,
-    color: 'from-emerald-500 via-teal-600 to-emerald-700',
-    iconColor: 'text-emerald-600',
-    iconBg: 'bg-emerald-50 border-emerald-100',
-    glow: 'shadow-emerald-500/10 hover:shadow-emerald-500/20 border-emerald-100',
-    features: [
-      'Verified global directories of clinics, hospitals, and surgeons',
-      'HIPAA-compliant encrypted medical history and EHR portals',
-      'Integrated logistics hub for hotel, transport, and flights scheduling',
-      'Real-time translation and multi-currency billing engines'
-    ],
-    techStack: ['Next.js', 'FastAPI', 'HIPAA Cloud API', 'Twilio']
-  },
-  {
-    id: 'mysticroutes',
-    name: 'MysticRoutes',
-    category: 'Tourism & Travel',
-    tagline: 'Spiritual & Sacred Tourism Platform',
-    description: 'Discover, plan, and book seamless spiritual pilgrim circuits, local guide packages, and wellness retreats.',
-    detailedDescription: 'MysticRoutes brings structure, safety, and deep contextual guidance to pilgrim travelers. Meticulously cataloging sacred places of worship, booking temple-managed accommodations, hiring certified guides, and predicting crowd flows.',
-    metric: '15k+',
-    metricLabel: 'Sacred Locations Cataloged',
-    icon: Compass,
-    color: 'from-amber-500 via-amber-600 to-orange-700',
-    iconColor: 'text-amber-600',
-    iconBg: 'bg-amber-50 border-amber-100',
-    glow: 'shadow-amber-500/10 hover:shadow-amber-500/20 border-amber-100',
-    features: [
-      'Customized spiritual itinerary planners with guide assignments',
-      'Temple and ashram booking directories with direct ledger sync',
-      'Real-time safety, queue capacity, and local festival alerts',
-      'Offline maps, language guides, and emergency travel assistance'
-    ],
-    techStack: ['GraphQL', 'PostgreSQL', 'Google Maps API', 'React Native']
-  },
-  {
-    id: 'lexos',
-    name: 'LexOS',
-    category: 'Enterprise & Compliance',
-    tagline: 'Legal OS for Organisations',
-    description: 'Autonomous contract audits, dynamic corporate governance playbooks, and litigation milestone trackers.',
-    detailedDescription: 'LexOS is a comprehensive digital legal framework that empowers operations teams. Automatically scanning corporate paperwork, flagging unfavorable contractual clauses, drafting templates, and establishing clear audit trails for board regulatory reviews.',
-    metric: '94%',
-    metricLabel: 'Reduction in Legal Audits Cost',
-    icon: Scale,
-    color: 'from-slate-700 via-slate-800 to-zinc-900',
-    iconColor: 'text-slate-700',
-    iconBg: 'bg-slate-50 border-slate-200',
-    glow: 'shadow-slate-500/10 hover:shadow-slate-500/20 border-slate-200',
-    features: [
-      'AI semantic parser to detect hidden legal and financial liabilities',
-      'Dynamic corporate policy repository and compliance checking',
-      'Auto-drafting contracts and custom legal clauses from library templates',
-      'Real-time calendar updates for pending court files or corporate filings'
-    ],
-    techStack: ['Llama 3 70B', 'FastAPI', 'Docker', 'Python']
-  },
-  {
-    id: 'taskvera',
-    name: 'TaskVera',
-    category: 'Productivity & SaaS',
-    tagline: 'Project Management Core',
-    description: 'Streamline high-velocity developer sprints, roadmap dependencies, and resource capacity scoring.',
-    detailedDescription: 'TaskVera is an elegant, high-performance sprint management tool tailored for fast-paced developer environments. Built to eliminate status update overhead, offering real-time task mapping, Git-driven boards, and predictive delivery metrics.',
-    metric: '31%',
-    metricLabel: 'Increase in Sprint Velocity',
-    icon: CheckSquare,
-    color: 'from-violet-500 via-violet-600 to-purple-800',
-    iconColor: 'text-violet-600',
-    iconBg: 'bg-violet-50 border-violet-100',
-    glow: 'shadow-violet-500/10 hover:shadow-violet-500/20 border-violet-100',
-    features: [
-      'Interactive drag-and-drop sprint boards with automated subtask linkages',
-      'Git hook integrations linking pull requests straight to workflow nodes',
-      'Auto-generated weekly status memos and capacity estimation engines',
-      'Fast, developer-focused keyboard shortcuts and dark-mode themes'
-    ],
-    techStack: ['React', 'Tailwind CSS', 'WebSockets', 'Express']
-  },
-  {
-    id: 'meetingmind',
-    name: 'MeetingMind',
-    category: 'AI & Collaboration',
-    tagline: 'AI Speech To Text Scribe',
-    description: 'Autonomous multi-speaker transcription, real-time translations, and automated task assignments.',
-    detailedDescription: 'MeetingMind acts as a silent AI workspace assistant. Connecting directly to digital huddles or microphone inputs to generate diarized transcriptions, extract executive task lists, and push meeting logs straight to communication tools.',
-    metric: '98.7%',
-    metricLabel: 'Multi-Speaker Audio Accuracy',
-    icon: Mic,
-    color: 'from-purple-500 via-purple-600 to-pink-700',
-    iconColor: 'text-purple-600',
-    iconBg: 'bg-purple-50 border-purple-100',
-    glow: 'shadow-purple-500/10 hover:shadow-purple-500/20 border-purple-100',
-    features: [
-      'Voice-fingerprinting diarization separating up to 12 distinct speakers',
-      'Semantic keyword taggers & executive brief generator modules',
-      'Automated task pushes to Slack channels and Jira sprint lists',
-      'End-to-end encryption vaults for secure, confidential session storing'
-    ],
-    techStack: ['Whisper API', 'PyTorch', 'AWS S3', 'FastAPI']
-  },
-  {
-    id: 'vexhr',
-    name: 'VexHR',
-    category: 'Enterprise & HRMS',
-    tagline: 'Human Resource Management System',
-    description: 'Manage workforce directories, automated bank deposits, tax calculations, and leaf request flows.',
-    detailedDescription: 'VexHR brings peace of mind to corporate HR departments. It centralizes talent files, computes regional tax deductions, routes leave requests, audit benefit structures, and processes high-scale corporate payroll in a single dashboard.',
-    metric: '0',
-    metricLabel: 'Payroll Processing Overruns',
-    icon: Users,
-    color: 'from-indigo-600 via-indigo-700 to-blue-800',
-    iconColor: 'text-indigo-600',
-    iconBg: 'bg-indigo-50 border-indigo-100',
-    glow: 'shadow-indigo-500/10 hover:shadow-indigo-500/20 border-indigo-100',
-    features: [
-      'Visual organizational chart engines with dynamic reports routing',
-      'Automated regional tax compliance & direct-deposit integrations',
-      'Self-service employee request hubs for payslips and leaves tracking',
-      'Dynamic workforce attendance logs & visual appraisal grids'
-    ],
-    techStack: ['Next.js', 'PostgreSQL', 'BullMQ', 'Node.js']
-  },
-  {
-    id: 'kaasvex',
-    name: 'KaasVex',
-    category: 'FinTech & Finance',
-    tagline: 'Billing & Invoicing Software',
-    description: 'Scale subscription tiers, calculate GST/VAT, handle card retries, and track metrics in one place.',
-    detailedDescription: 'KaasVex is a versatile, high-scale billing processor designed for subscription SaaS platforms and transaction marketplaces. Managing recurring checkouts, complex local tax configurations (like GST/VAT), retry loops, and analytics.',
-    metric: '4.8%',
-    metricLabel: 'Reduction in Subscription Churn',
-    icon: Calculator,
-    color: 'from-rose-500 via-rose-600 to-pink-700',
-    iconColor: 'text-rose-600',
-    iconBg: 'bg-rose-50 border-rose-100',
-    glow: 'shadow-rose-500/10 hover:shadow-rose-500/20 border-rose-100',
-    features: [
-      'Automated multi-currency billing and localized invoice generation',
-      'Pre-built hosted secure checkout templates & overlays',
-      'Smart dunning schedules and retry logic for failed credit card attempts',
-      'Real-time MRR, LTV, and churn metric visualization dashboards'
-    ],
-    techStack: ['React', 'FastAPI', 'Stripe API', 'PostgreSQL']
-  },
-  {
-    id: 'hullsync',
-    name: 'HullSync',
-    category: 'Industrial & Maritime',
-    tagline: 'Ship Building Platform',
-    description: 'Naval engineering workflows, supply chain material schedules, and automated structural simulations.',
-    detailedDescription: 'HullSync is an industry-first naval operations pipeline tool. Integrating shipyard supply registers with real-time stress testing, buoyancy simulations, material procurement schedules, and maritime certification logs.',
-    metric: '12%',
-    metricLabel: 'Average Yard Material Savings',
-    icon: Anchor,
-    color: 'from-teal-500 via-teal-600 to-emerald-700',
-    iconColor: 'text-teal-600',
-    iconBg: 'bg-teal-50 border-teal-100',
-    glow: 'shadow-teal-500/10 hover:shadow-teal-500/20 border-teal-100',
-    features: [
-      'Automated center of gravity and hull structural stress simulations',
-      'Heavy materials supply chain schedule planners & procurement registries',
-      'Pre-integrated bidding portals linking yard requests with steel vendors',
-      'Detailed regulatory blueprints tracking compliance logs for major ship codes'
-    ],
-    techStack: ['Three.js', 'C++', 'WebAssembly', 'Python']
-  }
-];
-
 export default function ProductsClient() {
-  const [selectedProduct, setSelectedProduct] = useState<typeof products[0] | null>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [delistedIds, setDelistedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch visibility settings from backend
+  const visibleProducts = products.filter((p) => !delistedIds.includes(p.id));
+
+  // Fetch visibility settings and products from backend
   useEffect(() => {
-    const fetchVisibility = async () => {
+    const fetchData = async () => {
       try {
-        const response = await apiClient.getDelistedProducts();
-        if (response?.success) {
-          setDelistedIds(response.delisted || []);
+        const [visibilityRes, productsRes] = await Promise.all([
+          apiClient.getDelistedProducts(),
+          apiClient.getProducts()
+        ]);
+        
+        if (visibilityRes?.success) {
+          setDelistedIds(visibilityRes.delisted || []);
+        }
+        
+        if (productsRes?.success) {
+          const mapped = (productsRes.products || []).map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            category: p.category,
+            tagline: p.tagline,
+            description: p.description,
+            detailedDescription: p.detailed_description,
+            metric: p.metric,
+            metricLabel: p.metric_label,
+            icon: p.icon,
+            color: p.color,
+            iconColor: p.icon_color,
+            iconBg: p.icon_bg,
+            glow: p.glow,
+            features: Array.isArray(p.features) ? p.features : JSON.parse(p.features || '[]'),
+            techStack: Array.isArray(p.tech_stack) ? p.tech_stack : JSON.parse(p.tech_stack || '[]'),
+          }));
+          setProducts(mapped);
         }
       } catch (err) {
-        console.error('Failed to load visibility settings:', err);
+        console.error('Failed to load products page data:', err);
       } finally {
         setLoading(false);
       }
     };
-    fetchVisibility();
+    fetchData();
   }, []);
 
   // Monitor URL hash for navigation & auto-opening of modals
@@ -295,7 +88,7 @@ export default function ProductsClient() {
       clearTimeout(timeoutId);
       window.removeEventListener('hashchange', handleHash);
     };
-  }, [delistedIds]);
+  }, [delistedIds, products]);
 
   const closeModal = () => {
     setSelectedProduct(null);
@@ -419,9 +212,9 @@ export default function ProductsClient() {
         {/* 10 Products Grid Section */}
         <section className="max-w-7xl mx-auto px-4 pb-32">
           <div className="flex flex-wrap justify-center gap-8">
-            {products
+            {visibleProducts
               .map((product, i) => {
-                const IconComponent = product.icon;
+                const IconComponent = (LucideIcons as any)[product.icon] || LucideIcons.Package;
                 return (
                   <motion.article
                     id={`product-card-${i}`}
@@ -465,7 +258,7 @@ export default function ProductsClient() {
                       <div className="space-y-4 pt-4 border-t border-slate-100/80">
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Core Capabilities</div>
                         <ul className="space-y-3 flex flex-col items-start w-fit mx-auto">
-                          {product.features.slice(0, 3).map((feature) => (
+                          {product.features.slice(0, 3).map((feature: string) => (
                             <li key={feature} className="flex items-start gap-2.5 text-slate-600 group text-left">
                               <div className="w-1.5 h-1.5 rounded-full bg-primary-500 group-hover:scale-150 transition-transform shrink-0 mt-1.5" />
                               <span className="text-xs">{feature}</span>
@@ -511,7 +304,7 @@ export default function ProductsClient() {
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${selectedProduct.iconBg}`}>
                       {(() => {
-                        const SelectedIcon = selectedProduct.icon;
+                        const SelectedIcon = (LucideIcons as any)[selectedProduct.icon] || LucideIcons.Package;
                         return <SelectedIcon className={`w-6 h-6 ${selectedProduct.iconColor}`} />;
                       })()}
                     </div>
@@ -554,7 +347,7 @@ export default function ProductsClient() {
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {selectedProduct.techStack.map((tech) => (
+                      {selectedProduct.techStack.map((tech: string) => (
                         <span
                           key={tech}
                           className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 shadow-sm"
@@ -572,7 +365,7 @@ export default function ProductsClient() {
                       Key Features & Specifications
                     </h4>
                     <div className="space-y-3">
-                      {selectedProduct.features.map((feature, fIndex) => (
+                      {selectedProduct.features.map((feature: string, fIndex: number) => (
                         <div key={fIndex} className="flex items-start gap-3">
                           <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                           <span className="text-sm text-slate-600 leading-normal">{feature}</span>

@@ -573,6 +573,26 @@ class ApiClient {
     const response = await this.client.post('/products/list', { productId });
     return response.data;
   }
+
+  async getProducts() {
+    const response = await this.client.get('/products');
+    return response.data;
+  }
+
+  async createProduct(data: any) {
+    const response = await this.client.post('/products', data);
+    return response.data;
+  }
+
+  async updateProduct(id: string, data: any) {
+    const response = await this.client.put(`/products/${id}`, data);
+    return response.data;
+  }
+
+  async deleteProduct(id: string) {
+    const response = await this.client.delete(`/products/${id}`);
+    return response.data;
+  }
 }
 
 export const apiClient = new ApiClient();

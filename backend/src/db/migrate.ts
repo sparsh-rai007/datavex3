@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { pool } from './connection';
 import dotenv from 'dotenv';
 import { migrateEmployees } from './migrate-employees';
+import { migrateProducts } from './migrate-products';
 
 dotenv.config();
 
@@ -104,6 +105,9 @@ async function migrate() {
 
     // Run employee specific migrations
     await migrateEmployees();
+
+    // Run product specific migrations
+    await migrateProducts();
 
   } catch (error) {
     console.error('❌ Migration failed:', error);
