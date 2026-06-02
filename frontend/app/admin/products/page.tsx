@@ -987,7 +987,7 @@ export default function AdminProductsPage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="px-5 py-2.5 bg-primary-650 hover:bg-primary-750 text-white font-bold rounded-md text-sm flex items-center gap-2 shadow-md transition-colors cursor-pointer"
+                    className="px-5 py-2.5 bg-primary-650 hover:bg-primary-750 text-black font-bold rounded-md text-sm flex items-center gap-2 shadow-md transition-colors cursor-pointer"
                   >
                     {saving && <Loader2 className="animate-spin w-4 h-4" />}
                     {modalMode === 'create' ? 'Create Product' : 'Save Specifications'}
