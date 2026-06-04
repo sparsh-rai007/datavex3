@@ -517,6 +517,19 @@ class ApiClient {
     return response.data;
   }
 
+  async submitApplication(data: {
+    job_id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone?: string;
+    cover_letter?: string;
+    resume_url: string;
+  }) {
+    const response = await this.client.post('/applications', data);
+    return response.data;
+  }
+
   // AI endpoints
   async getContentSuggestions(data: { content: string; title?: string; type?: string; targetAudience?: string }) {
     const response = await this.client.post('/ai/content/suggest', data);

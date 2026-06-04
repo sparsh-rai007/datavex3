@@ -14,14 +14,15 @@ import {
   Briefcase, 
   MapPin, 
   Calendar, 
-  DollarSign, 
+  IndianRupee,
   UploadCloud, 
   CheckCircle2, 
   FileText, 
   AlertTriangle,
   User,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Link2
 } from 'lucide-react';
 
 interface ApplicationForm {
@@ -30,7 +31,7 @@ interface ApplicationForm {
   email: string;
   phone: string;
   cover_letter: string;
-  resume: FileList;
+  resume_url: string;
 }
 
 export default function JobDetailPage() {
@@ -41,7 +42,7 @@ export default function JobDetailPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [selectedFileName, setSelectedFileName] = useState('');
+
 
   const {
     register,
@@ -74,24 +75,15 @@ export default function JobDetailPage() {
   const onSubmit = async (data: ApplicationForm) => {
     setSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('job_id', job.id);
-      formData.append('first_name', data.first_name);
-      formData.append('last_name', data.last_name);
-      formData.append('email', data.email);
-      formData.append('phone', data.phone);
-      formData.append('cover_letter', data.cover_letter);
-      if (data.resume && data.resume[0]) {
-        formData.append('resume', data.resume[0]);
-      }
-
-      const axios = require('axios');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5003/api';
-      await axios.post(
-        `${apiUrl}/applications`,
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
-      );
+      await apiClient.submitApplication({
+        job_id: job.id,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        phone: data.phone,
+        cover_letter: data.cover_letter,
+        resume_url: data.resume_url,
+      });
 
       setSubmitted(true);
     } catch (error: any) {
@@ -243,7 +235,7 @@ export default function JobDetailPage() {
                 )}
                 {job.salary_range && (
                   <div className="flex items-center gap-2">
-                    <DollarSign className="w-4.5 h-4.5 text-slate-400" />
+                    <IndianRupee className="w-4.5 h-4.5 text-slate-400" />
                     <span className="font-semibold text-slate-800">{job.salary_range}</span>
                   </div>
                 )}
@@ -362,35 +354,33 @@ export default function JobDetailPage() {
                     />
                   </div>
 
-                  {/* Premium Resume Upload Box */}
+                  {/* Premium Resume Link Box */}
                   <div className="space-y-1">
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">
-                      Resume (PDF, DOC, DOCX) *
+                      Resume Link (Google Drive, Dropbox, etc.) *
                     </label>
-                    <div className="relative group border-2 border-dashed border-slate-200 hover:border-primary-500 rounded-2xl p-6 transition-all bg-slate-50/50 hover:bg-white text-center cursor-pointer">
+                    <div className="relative flex items-center">
+                      <Link2 className="absolute left-4 w-5 h-5 text-slate-400" />
                       <input
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        {...register('resume', { required: 'Resume is required' })}
-                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                        onChange={(e) => {
-                          const name = e.target.files?.[0]?.name;
-                          if (name) setSelectedFileName(name);
-                        }}
+                        type="url"
+                        placeholder="https://drive.google.com/file/d/..."
+                        {...register('resume_url', {
+                          required: 'Resume link is required',
+                          pattern: {
+                            value: /^https?:\/\/[^\s]+$/i,
+                            message: 'Please enter a valid URL (starting with http:// or https://)',
+                          },
+                        })}
+                        className="w-full h-11 pl-12 pr-4 border border-slate-200 rounded-xl bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/15 focus:border-primary-500 transition-all text-sm font-medium"
                       />
-                      <UploadCloud className="w-10 h-10 text-slate-400 group-hover:text-primary-600 mx-auto mb-2.5 transition-colors duration-300" />
-                      <p className="text-sm font-bold text-slate-800">
-                        {selectedFileName || 'Select or drop your resume'}
-                      </p>
-                      <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">PDF, DOC, DOCX up to 5MB</p>
                     </div>
-                    {errors.resume && (
+                    {errors.resume_url && (
                       <p className="mt-1 text-xs font-semibold text-rose-600 flex items-center gap-1">
-                        <AlertTriangle className="w-3.5 h-3.5" /> {errors.resume.message}
+                        <AlertTriangle className="w-3.5 h-3.5" /> {errors.resume_url.message}
                       </p>
                     )}
                     <p className="text-[10px] text-slate-400 leading-normal font-medium pt-1.5">
-                      Your resume will be automatically parsed with AI to extract skills and match experience.
+                      Please make sure the link sharing permissions are set to "Anyone with the link can view".
                     </p>
                   </div>
 

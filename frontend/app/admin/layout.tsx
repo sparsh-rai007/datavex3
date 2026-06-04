@@ -94,7 +94,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 </button>
                 
                 {/* Actions Dropdown */}
-                <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-gray-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all py-2 z-50">
+                <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-gray-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all py-2 z-50 before:content-[''] before:absolute before:-top-4 before:left-0 before:right-0 before:h-4">
                   <div className="px-4 py-2 border-b border-gray-50 mb-1">
                     <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Active Operator</p>
                     <p className="text-sm font-bold text-gray-900 truncate">{user?.email}</p>

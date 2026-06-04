@@ -57,7 +57,7 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { job_id, first_name, last_name, email, phone, cover_letter } = req.body;
+      const { job_id, first_name, last_name, email, phone, cover_letter, resume_url } = req.body;
       const resumeFile = req.file;
 
       // Check if job exists and is published
@@ -86,6 +86,8 @@ router.post(
         } catch (parseError) {
           console.error('Resume text extraction error:', parseError);
         }
+      } else if (resume_url) {
+        resumeUrl = resume_url;
       }
 
       // Score the application

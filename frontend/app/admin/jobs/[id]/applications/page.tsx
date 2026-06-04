@@ -200,18 +200,22 @@ export default function JobApplicationsPage() {
               </div>
 
               {selectedApp.resume_url && (
-  <div>
-    <label className="font-semibold">Resume:</label>
-    <a
-      href={`${process.env.NEXT_PUBLIC_API_URL}${selectedApp.resume_url}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-primary-600 hover:underline"
-    >
-      View Resume
-    </a>
-  </div>
-)}
+                <div>
+                  <label className="font-semibold block mb-1">Resume:</label>
+                  <a
+                    href={
+                      selectedApp.resume_url.startsWith('http')
+                        ? selectedApp.resume_url
+                        : `${process.env.NEXT_PUBLIC_API_URL}${selectedApp.resume_url}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-semibold transition-colors"
+                  >
+                    {selectedApp.resume_url.startsWith('http') ? 'View External Resume' : 'View Uploaded Resume'}
+                  </a>
+                </div>
+              )}
 
             </div>
 

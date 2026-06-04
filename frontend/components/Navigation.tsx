@@ -133,7 +133,7 @@ export default function Navigation() {
                     </span>
 
                     {/* Mega Dropdown Panel */}
-                    <div className="absolute top-full -left-48 hidden group-hover:grid grid-cols-3 gap-3 bg-white/95 backdrop-blur-md shadow-2xl border border-gray-100 rounded-2xl p-5 w-[760px] z-50 mt-1 origin-top transition-all duration-300">
+                    <div className="absolute top-full -left-48 hidden group-hover:grid grid-cols-3 gap-3 bg-white/95 backdrop-blur-md shadow-2xl border border-gray-100 rounded-2xl p-5 w-[760px] z-50 mt-1 origin-top transition-all duration-300 before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3">
                       <div className="col-span-3 text-xs font-semibold text-gray-400 uppercase tracking-wider pb-1 border-b border-gray-50 mb-1 text-left">
                         DataVex Product Ecosystem
                       </div>
@@ -177,7 +177,7 @@ export default function Navigation() {
                     </span>
 
                     {/* Dropdown */}
-                    <div className="absolute top-full left-0 hidden group-hover:block bg-white shadow-md rounded-md py-2 w-44 z-50 mt-1 border border-gray-100">
+                    <div className="absolute top-full left-0 hidden group-hover:block bg-white shadow-md rounded-md py-2 w-44 z-50 mt-1 border border-gray-100 before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3">
                       {link.children.map((child) => (
                         <Link
                           key={child.href}
