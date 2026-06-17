@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { 
-  Search, 
-  Loader2, 
-  Package, 
+import {
+  Search,
+  Loader2,
+  Package,
   Eye,
   EyeOff,
   AlertTriangle,
@@ -457,7 +457,7 @@ export default function AdminProductsPage() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] font-sans">
       <main className="max-w-7xl mx-auto px-6 py-12">
-        
+
         {/* Header Block */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 text-left">
           <div>
@@ -489,11 +489,10 @@ export default function AdminProductsPage() {
         {/* Global Page Visibility Toggle */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 text-left">
           <div className="flex items-start gap-4">
-            <div className={`p-3 rounded-2xl border flex items-center justify-center shrink-0 ${
-              !isGlobalDelisted 
-                ? 'bg-emerald-50 text-emerald-600 border-emerald-100/50' 
+            <div className={`p-3 rounded-2xl border flex items-center justify-center shrink-0 ${!isGlobalDelisted
+                ? 'bg-emerald-50 text-emerald-600 border-emerald-100/50'
                 : 'bg-amber-50 text-amber-600 border-amber-100/50'
-            }`}>
+              }`}>
               {!isGlobalDelisted ? <Eye className="w-6 h-6" /> : <EyeOff className="w-6 h-6" />}
             </div>
             <div>
@@ -505,9 +504,8 @@ export default function AdminProductsPage() {
           </div>
 
           <div className="flex items-center gap-4 shrink-0">
-            <span className={`text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 ${
-              !isGlobalDelisted ? 'text-emerald-600' : 'text-slate-400'
-            }`}>
+            <span className={`text-xs font-extrabold uppercase tracking-wider transition-colors duration-200 ${!isGlobalDelisted ? 'text-emerald-600' : 'text-slate-400'
+              }`}>
               {!isGlobalDelisted ? 'Online' : 'Offline'}
             </span>
             <button
@@ -515,18 +513,16 @@ export default function AdminProductsPage() {
               aria-checked={!isGlobalDelisted}
               disabled={togglingGlobal || loading}
               onClick={handleToggleGlobal}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 ${
-                togglingGlobal || loading
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 ${togglingGlobal || loading
                   ? 'bg-slate-200 cursor-not-allowed'
                   : !isGlobalDelisted
                     ? 'bg-emerald-500 hover:bg-emerald-600'
                     : 'bg-slate-300 hover:bg-slate-400'
-              }`}
+                }`}
             >
               <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out flex items-center justify-center ${
-                  !isGlobalDelisted ? 'translate-x-5' : 'translate-x-0'
-                }`}
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out flex items-center justify-center ${!isGlobalDelisted ? 'translate-x-5' : 'translate-x-0'
+                  }`}
               >
                 {togglingGlobal && (
                   <Loader2 className="animate-spin w-2.5 h-2.5 text-slate-400" />
@@ -632,11 +628,10 @@ export default function AdminProductsPage() {
                               <button
                                 disabled={togglingProduct === product.id}
                                 onClick={() => handleToggleProductStatus(product.id)}
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-extrabold uppercase tracking-wide cursor-pointer transition-all ${
-                                  !isProductDelisted
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-extrabold uppercase tracking-wide cursor-pointer transition-all ${!isProductDelisted
                                     ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
                                     : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
-                                }`}
+                                  }`}
                               >
                                 <span className={`w-1.5 h-1.5 rounded-full ${!isProductDelisted ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                                 {togglingProduct === product.id ? 'Saving...' : !isProductDelisted ? 'Active' : 'Offline'}
@@ -725,7 +720,7 @@ export default function AdminProductsPage() {
 
               {/* Modal Body (Scrollable) */}
               <form onSubmit={handleSaveProduct} className="flex-1 overflow-y-auto p-6 space-y-6">
-                
+
                 {errorMsg && (
                   <div className="p-3 bg-rose-50 border border-rose-100 rounded-lg text-rose-700 text-xs font-semibold flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -862,11 +857,10 @@ export default function AdminProductsPage() {
                         key={preset.name}
                         type="button"
                         onClick={() => setFormData({ ...formData, colorPresetIndex: idx })}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer ${
-                          formData.colorPresetIndex === idx
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer ${formData.colorPresetIndex === idx
                             ? 'bg-slate-900 text-white border-slate-900 shadow-sm scale-105'
                             : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
-                        }`}
+                          }`}
                       >
                         <span className={`inline-block w-2.5 h-2.5 rounded-full bg-gradient-to-br ${preset.color}`} />
                         {preset.name}
@@ -884,22 +878,20 @@ export default function AdminProductsPage() {
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, visualType: 'icon' })}
-                      className={`px-4 py-2 rounded-md text-xs font-extrabold uppercase tracking-wide transition-all cursor-pointer ${
-                        formData.visualType === 'icon'
+                      className={`px-4 py-2 rounded-md text-xs font-extrabold uppercase tracking-wide transition-all cursor-pointer ${formData.visualType === 'icon'
                           ? 'bg-white text-slate-950 shadow-sm border border-slate-200/50'
                           : 'text-slate-500 hover:text-slate-950'
-                      }`}
+                        }`}
                     >
                       Lucide Icon
                     </button>
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, visualType: 'logo' })}
-                      className={`px-4 py-2 rounded-md text-xs font-extrabold uppercase tracking-wide transition-all cursor-pointer ${
-                        formData.visualType === 'logo'
+                      className={`px-4 py-2 rounded-md text-xs font-extrabold uppercase tracking-wide transition-all cursor-pointer ${formData.visualType === 'logo'
                           ? 'bg-white text-slate-950 shadow-sm border border-slate-200/50'
                           : 'text-slate-500 hover:text-slate-950'
-                      }`}
+                        }`}
                     >
                       Image Logo
                     </button>
@@ -921,11 +913,10 @@ export default function AdminProductsPage() {
                               key={iconName}
                               type="button"
                               onClick={() => setFormData({ ...formData, icon: iconName })}
-                              className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-                                formData.icon === iconName
+                              className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${formData.icon === iconName
                                   ? 'bg-primary-50 border-primary-500 text-primary-600 ring-2 ring-primary-500/10'
                                   : 'bg-white border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-                              }`}
+                                }`}
                             >
                               <IconComp className="w-5 h-5 shrink-0" />
                               <span className="text-[8px] font-bold tracking-tight text-ellipsis overflow-hidden w-full text-center">
@@ -942,7 +933,7 @@ export default function AdminProductsPage() {
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       Product Logo Details
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {/* Logo Upload Box */}
                       <div className="md:col-span-2 space-y-4">

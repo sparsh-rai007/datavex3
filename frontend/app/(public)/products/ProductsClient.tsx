@@ -42,11 +42,11 @@ export default function ProductsClient() {
           apiClient.getDelistedProducts(),
           apiClient.getProducts()
         ]);
-        
+
         if (visibilityRes?.success) {
           setDelistedIds(visibilityRes.delisted || []);
         }
-        
+
         if (productsRes?.success) {
           const mapped = (productsRes.products || []).map((p: any) => ({
             id: p.id,
@@ -241,8 +241,8 @@ export default function ProductsClient() {
                       <div>
                         {/* Icon or Logo Image */}
                         {product.logoUrl ? (
-                          <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center p-2 mb-8 shadow-md group-hover:scale-110 transition-transform duration-500 mx-auto overflow-hidden">
-                            <img src={getLogoUrl(product.logoUrl)} alt={product.name} className="w-full h-full object-contain" />
+                          <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center mb-8 shadow-md group-hover:scale-110 transition-transform duration-500 mx-auto overflow-hidden">
+                            <img src={getLogoUrl(product.logoUrl)} alt={product.name} className="w-full h-full object-cover scale-105" />
                           </div>
                         ) : (
                           <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${product.color} flex items-center justify-center text-white mb-8 shadow-lg group-hover:scale-110 transition-transform duration-500 mx-auto`}>
@@ -319,8 +319,8 @@ export default function ProductsClient() {
                 <div className={`p-6 border-b border-slate-100 flex items-center justify-between relative`}>
                   <div className="flex items-center gap-4">
                     {selectedProduct.logoUrl ? (
-                      <div className="w-12 h-12 rounded-xl border border-slate-150 bg-white flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-sm">
-                        <img src={getLogoUrl(selectedProduct.logoUrl)} alt={selectedProduct.name} className="w-full h-full object-contain" />
+                      <div className="w-12 h-12 rounded-xl border border-slate-150 bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+                        <img src={getLogoUrl(selectedProduct.logoUrl)} alt={selectedProduct.name} className="w-full h-full object-cover scale-105" />
                       </div>
                     ) : (
                       <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${selectedProduct.iconBg}`}>
