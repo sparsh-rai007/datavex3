@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import bcrypt from 'bcryptjs';
 import { pool } from './connection';
@@ -16,7 +16,10 @@ async function migrate() {
     console.log('🔄 Running database migrations...');
 
     // Read schema file
-    const schemaPath = join(__dirname, 'schema.sql');
+    let schemaPath = join(__dirname, 'schema.sql');
+    if (!existsSync(schemaPath)) {
+      schemaPath = join(process.cwd(), 'src', 'db', 'schema.sql');
+    }
     const schema = readFileSync(schemaPath, 'utf-8');
 
     // Execute schema

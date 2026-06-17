@@ -11,6 +11,7 @@ import cron from "node-cron";
 import { errorHandler } from "./middleware/errorHandler";
 import { rateLimiter } from "./middleware/rateLimiter";
 import { connectDB } from "./db/connection";
+import { migrate } from "./db/migrate";
 import { authenticateToken, requireRole } from "./middleware/auth";
 
 // Routes
@@ -149,6 +150,15 @@ const startServer = async () => {
   try {
     await connectDB();
     console.log("? Database connected");
+
+    // Run database migrations on startup
+    try {
+      console.log("🔄 Running database migrations...");
+      await migrate();
+      console.log("✅ Database migrations completed successfully");
+    } catch (migError) {
+      console.error("❌ Database migration failed on startup:", migError);
+    }
 
     cron.schedule("0 3 * * 1,5", async () => {
       console.log("[CRON] Starting bi-weekly newsletter generation...");
