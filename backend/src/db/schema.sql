@@ -209,6 +209,7 @@ CREATE INDEX IF NOT EXISTS idx_jobs_slug ON jobs(slug);
 CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
 CREATE INDEX IF NOT EXISTS idx_job_applications_job_id ON job_applications(job_id);
 CREATE INDEX IF NOT EXISTS idx_job_applications_status ON job_applications(status);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_job_applications_job_id_lower_email ON job_applications(job_id, LOWER(email));
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_resource ON audit_logs(resource_type, resource_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);

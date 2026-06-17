@@ -512,6 +512,11 @@ class ApiClient {
     return response.data;
   }
 
+  async deleteApplication(id: string) {
+    const response = await this.client.delete(`/applications/${id}`);
+    return response.data;
+  }
+
   async parseResumeForApplication(appId: string, resumeText: string) {
     const response = await this.client.post(`/applications/${appId}/parse-resume`, { resumeText });
     return response.data;

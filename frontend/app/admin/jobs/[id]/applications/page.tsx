@@ -34,6 +34,24 @@ export default function JobApplicationsPage() {
     }
   };
 
+  const handleDeleteApp = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      const res = await apiClient.deleteApplication(id);
+      if (res?.success) {
+        setApplications(prev => prev.filter(app => app.id !== id));
+        setSelectedApp(null);
+      } else {
+        alert('Failed to delete application');
+      }
+    } catch (error) {
+      console.error('Failed to delete application:', error);
+      alert('Failed to delete application');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -106,12 +124,20 @@ export default function JobApplicationsPage() {
                 </td>
 
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                  <button
-                    onClick={() => setSelectedApp(app)}
-                    className="text-primary-600 hover:text-primary-900"
-                  >
-                    View
-                  </button>
+                  <div className="flex justify-end items-center gap-3">
+                    <button
+                      onClick={() => setSelectedApp(app)}
+                      className="text-primary-650 hover:text-primary-750 font-bold"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleDeleteApp(app.id)}
+                      className="text-rose-600 hover:text-rose-800 font-bold"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -130,14 +156,22 @@ export default function JobApplicationsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
 
-            <div className="flex justify-between items-center mb-4">
+             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Application Details</h2>
-              <button
-                onClick={() => setSelectedApp(null)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleDeleteApp(selectedApp.id)}
+                  className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg text-sm transition-all"
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => setSelectedApp(null)}
+                  className="text-gray-500 hover:text-gray-700 text-xl font-semibold"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             <div className="space-y-4">

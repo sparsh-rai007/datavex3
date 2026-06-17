@@ -112,6 +112,25 @@ async function migrate() {
     // Run product specific migrations
     await migrateProducts();
 
+    // Clean up duplicate job applications and create unique index on (job_id, LOWER(email))
+    console.log('🔄 Cleaning up duplicate job applications and establishing unique constraint...');
+    await client.query(`
+      DELETE FROM job_applications
+      WHERE id IN (
+        SELECT id
+        FROM (
+          SELECT id, ROW_NUMBER() OVER (PARTITION BY job_id, LOWER(email) ORDER BY created_at ASC) as row_num
+          FROM job_applications
+        ) t
+        WHERE t.row_num > 1
+      );
+    `);
+    await client.query(`
+      DROP INDEX IF EXISTS idx_job_applications_job_id_email;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_job_applications_job_id_lower_email ON job_applications(job_id, LOWER(email));
+    `);
+    console.log('✅ Unique constraint on job_applications(job_id, LOWER(email)) verified/created');
+
   } catch (error) {
     console.error('❌ Migration failed:', error);
     throw error;

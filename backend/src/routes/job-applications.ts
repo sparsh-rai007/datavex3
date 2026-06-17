@@ -60,6 +60,15 @@ router.post(
       const { job_id, first_name, last_name, email, phone, cover_letter, resume_url } = req.body;
       const resumeFile = req.file;
 
+      // Check if applicant already applied for this job
+      const existingApp = await pool.query(
+        'SELECT id FROM job_applications WHERE job_id = $1 AND LOWER(email) = LOWER($2)',
+        [job_id, email]
+      );
+      if (existingApp.rows.length > 0) {
+        return res.status(400).json({ error: 'You have already applied for this position' });
+      }
+
       // Check if job exists and is published
       const jobCheck = await pool.query('SELECT id, status, title FROM jobs WHERE id = $1', [job_id]);
       if (jobCheck.rows.length === 0) {
@@ -135,6 +144,9 @@ router.post(
       });
     } catch (error: any) {
       console.error('Create application error:', error);
+      if (error.code === '23505') {
+        return res.status(400).json({ error: 'You have already applied for this position' });
+      }
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -285,6 +297,29 @@ router.post(
       res.json({ message: 'Resume parsed successfully', data: parsedData });
     } catch (error) {
       console.error('Parse resume error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+// Delete job application (Protected: Admin, Recruiter)
+router.delete(
+  '/:id',
+  authenticateToken,
+  requireRole('admin', 'recruiter'),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const checkExist = await pool.query('SELECT id FROM job_applications WHERE id = $1', [id]);
+      if (checkExist.rows.length === 0) {
+        return res.status(404).json({ error: 'Application not found' });
+      }
+
+      await pool.query('DELETE FROM job_applications WHERE id = $1', [id]);
+      res.json({ success: true, message: 'Application deleted successfully' });
+    } catch (error) {
+      console.error('Delete application error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
