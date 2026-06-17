@@ -16,7 +16,8 @@ export async function migrateProducts() {
         detailed_description TEXT NOT NULL,
         metric VARCHAR(255) NOT NULL,
         metric_label VARCHAR(255) NOT NULL,
-        icon VARCHAR(100) NOT NULL,
+        icon VARCHAR(100),
+        logo_url VARCHAR(500),
         color VARCHAR(255) NOT NULL,
         icon_color VARCHAR(255),
         icon_bg VARCHAR(255),
@@ -28,6 +29,23 @@ export async function migrateProducts() {
       );
     `);
     console.log('✅ Table "products" verified/created');
+
+    // Ensure icon column is nullable for existing tables, and add logo_url
+    await client.query(`
+      ALTER TABLE products ALTER COLUMN icon DROP NOT NULL;
+    `);
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'products' AND column_name = 'logo_url'
+        ) THEN
+          ALTER TABLE products ADD COLUMN logo_url VARCHAR(500);
+        END IF;
+      END $$;
+    `);
+    console.log('✅ Columns "icon" and "logo_url" ensured');
 
     // 2. Seed default products if table is empty
     const checkCount = await client.query('SELECT COUNT(*) FROM products');

@@ -124,6 +124,7 @@ interface Product {
   metric: string;
   metric_label: string;
   icon: string;
+  logo_url?: string;
   color: string;
   icon_color: string;
   icon_bg: string;
@@ -131,6 +132,15 @@ interface Product {
   features: string[];
   tech_stack: string[];
 }
+
+const getLogoUrl = (url?: string) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+  return `${baseUrl.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
+};
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -156,6 +166,8 @@ export default function AdminProductsPage() {
     metric: '',
     metric_label: '',
     icon: 'Layers',
+    logo_url: '',
+    visualType: 'icon' as 'icon' | 'logo',
     colorPresetIndex: 0,
     features: [] as string[],
     tech_stack: [] as string[]
@@ -165,6 +177,7 @@ export default function AdminProductsPage() {
   const [techInput, setTechInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [saving, setSaving] = useState(false);
+  const [savingLogo, setSavingLogo] = useState(false);
 
   useEffect(() => {
     loadProductsData();
@@ -271,6 +284,8 @@ export default function AdminProductsPage() {
       metric: '',
       metric_label: '',
       icon: 'Layers',
+      logo_url: '',
+      visualType: 'icon',
       colorPresetIndex: 0,
       features: [],
       tech_stack: []
@@ -299,6 +314,8 @@ export default function AdminProductsPage() {
       metric: product.metric,
       metric_label: product.metric_label,
       icon: product.icon || 'Layers',
+      logo_url: product.logo_url || '',
+      visualType: product.logo_url ? 'logo' : 'icon',
       colorPresetIndex: presetIdx,
       features: [...(product.features || [])],
       tech_stack: [...(product.tech_stack || [])]
@@ -363,6 +380,14 @@ export default function AdminProductsPage() {
       setErrorMsg('Tagline description is required.');
       return;
     }
+    if (formData.visualType === 'logo' && !formData.logo_url.trim()) {
+      setErrorMsg('Product Logo image or URL is required.');
+      return;
+    }
+    if (formData.visualType === 'icon' && !formData.icon) {
+      setErrorMsg('Product Icon is required.');
+      return;
+    }
 
     setSaving(true);
     const selectedColorPreset = COLOR_PRESETS[formData.colorPresetIndex];
@@ -375,7 +400,8 @@ export default function AdminProductsPage() {
       detailed_description: formData.detailed_description.trim(),
       metric: formData.metric.trim(),
       metric_label: formData.metric_label.trim(),
-      icon: formData.icon,
+      icon: formData.visualType === 'icon' ? formData.icon : null,
+      logo_url: formData.visualType === 'logo' ? formData.logo_url.trim() : null,
       color: selectedColorPreset.color,
       icon_color: selectedColorPreset.iconColor,
       icon_bg: selectedColorPreset.iconBg,
@@ -570,9 +596,15 @@ export default function AdminProductsPage() {
                           {/* Product Details */}
                           <td className="px-6 py-5">
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-xl border bg-gradient-to-br ${product.color} text-white flex items-center justify-center shrink-0`}>
-                                <IconComp className="w-5 h-5" />
-                              </div>
+                              {product.logo_url ? (
+                                <div className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-sm">
+                                  <img src={getLogoUrl(product.logo_url)} alt={product.name} className="w-full h-full object-contain" />
+                                </div>
+                              ) : (
+                                <div className={`w-10 h-10 rounded-xl border bg-gradient-to-br ${product.color} text-white flex items-center justify-center shrink-0`}>
+                                  <IconComp className="w-5 h-5" />
+                                </div>
+                              )}
                               <div className="flex flex-col text-left">
                                 <div className="flex items-center gap-1.5">
                                   <span className="text-sm font-extrabold text-slate-900 group-hover:text-black transition-colors">
@@ -843,34 +875,157 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
 
-                {/* Icon Selection grid */}
+                {/* Representation Type Toggle */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                    Select Icon
+                    Product Visual Option *
                   </label>
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1">
-                    {ICON_OPTIONS.map((iconName) => {
-                      const IconComp = (LucideIcons as any)[iconName] || LucideIcons.HelpCircle;
-                      return (
-                        <button
-                          key={iconName}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, icon: iconName })}
-                          className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-                            formData.icon === iconName
-                              ? 'bg-primary-50 border-primary-500 text-primary-600 ring-2 ring-primary-500/10'
-                              : 'bg-white border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-                          }`}
-                        >
-                          <IconComp className="w-5 h-5 shrink-0" />
-                          <span className="text-[8px] font-bold tracking-tight text-ellipsis overflow-hidden w-full text-center">
-                            {iconName}
-                          </span>
-                        </button>
-                      );
-                    })}
+                  <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-200 w-fit">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, visualType: 'icon' })}
+                      className={`px-4 py-2 rounded-md text-xs font-extrabold uppercase tracking-wide transition-all cursor-pointer ${
+                        formData.visualType === 'icon'
+                          ? 'bg-white text-slate-950 shadow-sm border border-slate-200/50'
+                          : 'text-slate-500 hover:text-slate-950'
+                      }`}
+                    >
+                      Lucide Icon
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, visualType: 'logo' })}
+                      className={`px-4 py-2 rounded-md text-xs font-extrabold uppercase tracking-wide transition-all cursor-pointer ${
+                        formData.visualType === 'logo'
+                          ? 'bg-white text-slate-950 shadow-sm border border-slate-200/50'
+                          : 'text-slate-500 hover:text-slate-950'
+                      }`}
+                    >
+                      Image Logo
+                    </button>
                   </div>
                 </div>
+
+                {formData.visualType === 'icon' ? (
+                  <div className="space-y-4">
+                    {/* Icon Selection grid */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Select Icon
+                      </label>
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1">
+                        {ICON_OPTIONS.map((iconName) => {
+                          const IconComp = (LucideIcons as any)[iconName] || LucideIcons.HelpCircle;
+                          return (
+                            <button
+                              key={iconName}
+                              type="button"
+                              onClick={() => setFormData({ ...formData, icon: iconName })}
+                              className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                                formData.icon === iconName
+                                  ? 'bg-primary-50 border-primary-500 text-primary-600 ring-2 ring-primary-500/10'
+                                  : 'bg-white border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                              }`}
+                            >
+                              <IconComp className="w-5 h-5 shrink-0" />
+                              <span className="text-[8px] font-bold tracking-tight text-ellipsis overflow-hidden w-full text-center">
+                                {iconName}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4 p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Product Logo Details
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Logo Upload Box */}
+                      <div className="md:col-span-2 space-y-4">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                            Upload Logo Image
+                          </label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              id="logo-file-input"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setSavingLogo(true);
+                                try {
+                                  const res = await apiClient.uploadProductLogo(file);
+                                  if (res?.success && res.logoUrl) {
+                                    setFormData(prev => ({ ...prev, logo_url: res.logoUrl }));
+                                  } else {
+                                    alert(res?.error || 'Failed to upload logo.');
+                                  }
+                                } catch (err) {
+                                  console.error(err);
+                                  alert('Error uploading file. Please try again.');
+                                } finally {
+                                  setSavingLogo(false);
+                                }
+                              }}
+                            />
+                            <label
+                              htmlFor="logo-file-input"
+                              className="px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-extrabold rounded-lg text-xs flex items-center gap-2 cursor-pointer shadow-sm transition-all"
+                            >
+                              {savingLogo ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <PlusCircle className="w-3.5 h-3.5" />
+                              )}
+                              {savingLogo ? 'Uploading...' : 'Choose File'}
+                            </label>
+                            <span className="text-[10px] text-slate-400">
+                              PNG, JPG, SVG or WEBP (Max 2MB)
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block">
+                            OR Paste Logo URL
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="https://example.com/logo.png"
+                            value={formData.logo_url}
+                            onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                            className="h-10 px-3 bg-white border border-slate-200 rounded-md text-sm w-full focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Logo Preview Card */}
+                      <div className="flex flex-col items-center justify-center p-4 bg-white border border-slate-200 rounded-xl">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                          Preview
+                        </span>
+                        <div className="w-20 h-20 rounded-2xl border border-slate-100 bg-white flex items-center justify-center p-2.5 overflow-hidden shadow-sm">
+                          {formData.logo_url ? (
+                            <img
+                              src={getLogoUrl(formData.logo_url)}
+                              alt="Logo Preview"
+                              className="w-full h-full object-contain animate-fadeIn"
+                            />
+                          ) : (
+                            <HelpCircle className="w-8 h-8 text-slate-300" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Core Capabilities (Features) */}
                 <div className="space-y-3">

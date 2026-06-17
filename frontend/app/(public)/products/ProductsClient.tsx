@@ -17,6 +17,15 @@ import PublicWrapper from '../wrapper';
 import CustomFooter from '@/components/CustomFooter';
 import { apiClient } from '@/lib/api';
 
+const getLogoUrl = (url?: string) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+  return `${baseUrl.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
+};
+
 export default function ProductsClient() {
   const [products, setProducts] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
@@ -49,6 +58,7 @@ export default function ProductsClient() {
             metric: p.metric,
             metricLabel: p.metric_label,
             icon: p.icon,
+            logoUrl: p.logo_url,
             color: p.color,
             iconColor: p.icon_color,
             iconBg: p.icon_bg,
@@ -229,10 +239,16 @@ export default function ProductsClient() {
                   >
                     <div className="w-full flex flex-col justify-between h-full">
                       <div>
-                        {/* Icon */}
-                        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${product.color} flex items-center justify-center text-white mb-8 shadow-lg group-hover:scale-110 transition-transform duration-500 mx-auto`}>
-                          <IconComponent className="w-7 h-7" />
-                        </div>
+                        {/* Icon or Logo Image */}
+                        {product.logoUrl ? (
+                          <div className="w-14 h-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center p-2 mb-8 shadow-md group-hover:scale-110 transition-transform duration-500 mx-auto overflow-hidden">
+                            <img src={getLogoUrl(product.logoUrl)} alt={product.name} className="w-full h-full object-contain" />
+                          </div>
+                        ) : (
+                          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${product.color} flex items-center justify-center text-white mb-8 shadow-lg group-hover:scale-110 transition-transform duration-500 mx-auto`}>
+                            <IconComponent className="w-7 h-7" />
+                          </div>
+                        )}
 
                         {/* Category Label */}
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center block mb-1">
@@ -302,12 +318,18 @@ export default function ProductsClient() {
                 {/* Modal Header */}
                 <div className={`p-6 border-b border-slate-100 flex items-center justify-between relative`}>
                   <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${selectedProduct.iconBg}`}>
-                      {(() => {
-                        const SelectedIcon = (LucideIcons as any)[selectedProduct.icon] || LucideIcons.Package;
-                        return <SelectedIcon className={`w-6 h-6 ${selectedProduct.iconColor}`} />;
-                      })()}
-                    </div>
+                    {selectedProduct.logoUrl ? (
+                      <div className="w-12 h-12 rounded-xl border border-slate-150 bg-white flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-sm">
+                        <img src={getLogoUrl(selectedProduct.logoUrl)} alt={selectedProduct.name} className="w-full h-full object-contain" />
+                      </div>
+                    ) : (
+                      <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${selectedProduct.iconBg}`}>
+                        {(() => {
+                          const SelectedIcon = (LucideIcons as any)[selectedProduct.icon] || LucideIcons.Package;
+                          return <SelectedIcon className={`w-6 h-6 ${selectedProduct.iconColor}`} />;
+                        })()}
+                      </div>
+                    )}
                     <div>
                       <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
                         {selectedProduct.category}

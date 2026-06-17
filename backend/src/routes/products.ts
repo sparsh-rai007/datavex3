@@ -1,6 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { pool } from '../db/connection';
 import { authenticateToken, requireRole } from '../middleware/auth';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 const router = Router();
 
@@ -64,6 +67,63 @@ router.post('/list', authenticateToken, async (req: Request, res: Response) => {
   }
 });
 
+// Configure multer for logo uploads
+const storage = multer.diskStorage({
+  destination: (_req, file, cb) => {
+    const dir = 'uploads/logos/';
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, uniqueName + ext);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedTypes.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images (.png, .jpg, .jpeg, .gif, .svg, .webp) are allowed.'));
+    }
+  }
+});
+
+// POST /api/products/upload-logo - Protected: Admin
+router.post(
+  '/upload-logo',
+  authenticateToken,
+  requireRole('admin'),
+  (req: Request, res: Response, next: any) => {
+    upload.single('logo')(req, res, (err: any) => {
+      if (err) {
+        return res.status(400).json({ success: false, error: err.message });
+      }
+      next();
+    });
+  },
+  async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: 'No file uploaded' });
+      }
+      const logoUrl = `/uploads/logos/${req.file.filename}`;
+      res.json({ success: true, logoUrl });
+    } catch (error: any) {
+      console.error('Logo upload error:', error);
+      res.status(500).json({ success: false, error: 'Failed to upload logo' });
+    }
+  }
+);
+
 // POST /api/products - Create a new product (Protected: Admin)
 router.post('/', authenticateToken, requireRole('admin'), async (req: Request, res: Response) => {
   const {
@@ -76,6 +136,7 @@ router.post('/', authenticateToken, requireRole('admin'), async (req: Request, r
     metric,
     metric_label,
     icon,
+    logo_url,
     color,
     icon_color,
     icon_bg,
@@ -84,7 +145,7 @@ router.post('/', authenticateToken, requireRole('admin'), async (req: Request, r
     tech_stack
   } = req.body;
 
-  if (!id || !name || !category || !tagline || !description || !detailed_description || !metric || !metric_label || !icon || !color) {
+  if (!id || !name || !category || !tagline || !description || !detailed_description || !metric || !metric_label || (!icon && !logo_url) || !color) {
     return res.status(400).json({ success: false, error: 'Missing required product fields' });
   }
 
@@ -97,8 +158,8 @@ router.post('/', authenticateToken, requireRole('admin'), async (req: Request, r
     const query = `
       INSERT INTO products (
         id, name, category, tagline, description, detailed_description,
-        metric, metric_label, icon, color, icon_color, icon_bg, glow, features, tech_stack
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        metric, metric_label, icon, logo_url, color, icon_color, icon_bg, glow, features, tech_stack
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING *
     `;
 
@@ -111,7 +172,8 @@ router.post('/', authenticateToken, requireRole('admin'), async (req: Request, r
       detailed_description,
       metric,
       metric_label,
-      icon,
+      icon || null,
+      logo_url || null,
       color,
       icon_color || null,
       icon_bg || null,
@@ -140,6 +202,7 @@ router.put('/:id', authenticateToken, requireRole('admin'), async (req: Request,
     metric,
     metric_label,
     icon,
+    logo_url,
     color,
     icon_color,
     icon_bg,
@@ -148,7 +211,7 @@ router.put('/:id', authenticateToken, requireRole('admin'), async (req: Request,
     tech_stack
   } = req.body;
 
-  if (!name || !category || !tagline || !description || !detailed_description || !metric || !metric_label || !icon || !color) {
+  if (!name || !category || !tagline || !description || !detailed_description || !metric || !metric_label || (!icon && !logo_url) || !color) {
     return res.status(400).json({ success: false, error: 'Missing required product fields' });
   }
 
@@ -161,9 +224,9 @@ router.put('/:id', authenticateToken, requireRole('admin'), async (req: Request,
     const query = `
       UPDATE products
       SET name = $1, category = $2, tagline = $3, description = $4, detailed_description = $5,
-          metric = $6, metric_label = $7, icon = $8, color = $9, icon_color = $10, icon_bg = $11,
-          glow = $12, features = $13, tech_stack = $14, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $15
+          metric = $6, metric_label = $7, icon = $8, logo_url = $9, color = $10, icon_color = $11, icon_bg = $12,
+          glow = $13, features = $14, tech_stack = $15, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $16
       RETURNING *
     `;
 
@@ -175,7 +238,8 @@ router.put('/:id', authenticateToken, requireRole('admin'), async (req: Request,
       detailed_description,
       metric,
       metric_label,
-      icon,
+      icon || null,
+      logo_url || null,
       color,
       icon_color || null,
       icon_bg || null,

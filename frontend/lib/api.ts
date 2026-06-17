@@ -606,6 +606,17 @@ class ApiClient {
     const response = await this.client.delete(`/products/${id}`);
     return response.data;
   }
+
+  async uploadProductLogo(file: File) {
+    const formData = new FormData();
+    formData.append('logo', file);
+    const response = await this.client.post('/products/upload-logo', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  }
 }
 
 export const apiClient = new ApiClient();
