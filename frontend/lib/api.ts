@@ -637,6 +637,47 @@ class ApiClient {
     });
     return response.data;
   }
+
+  // --- Blog Engagement Methods ---
+
+  async recordBlogView(slug: string): Promise<void> {
+    try {
+      await this.client.post(`/blogs/public/${slug}/view`);
+    } catch (e) {
+      console.error('Failed to record view', e);
+    }
+  }
+
+  async toggleBlogLike(slug: string): Promise<{ success: boolean; liked: boolean }> {
+    try {
+      const res = await this.client.post(`/blogs/public/${slug}/like`);
+      return res.data;
+    } catch (e) {
+      console.error('Failed to toggle like', e);
+      return { success: false, liked: false };
+    }
+  }
+
+  async getBlogEngagement(slug: string): Promise<{ views: number; likes: number; hasLiked: boolean }> {
+    try {
+      const res = await this.client.get(`/blogs/public/${slug}/engagement`);
+      return res.data;
+    } catch (e) {
+      console.error('Failed to get engagement', e);
+      return { views: 0, likes: 0, hasLiked: false };
+    }
+  }
+
+  async getBlogEngagementBulk(slugs: string[]): Promise<Record<string, { views: number; likes: number }>> {
+    if (slugs.length === 0) return {};
+    try {
+      const res = await this.client.get(`/blogs/public/engagement/bulk?slugs=${slugs.join(',')}`);
+      return res.data;
+    } catch (e) {
+      console.error('Failed to get bulk engagement', e);
+      return {};
+    }
+  }
 }
 
 export const apiClient = new ApiClient();

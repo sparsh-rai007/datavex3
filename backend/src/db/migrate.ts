@@ -57,6 +57,26 @@ async function migrate() {
     `);
     console.log('✅ Blog generation columns ensured');
 
+    // Add blog engagement tables
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS blog_views (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        blog_id UUID NOT NULL REFERENCES blogs(id) ON DELETE CASCADE,
+        visitor_hash VARCHAR(64) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(blog_id, visitor_hash)
+      );
+
+      CREATE TABLE IF NOT EXISTS blog_likes (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        blog_id UUID NOT NULL REFERENCES blogs(id) ON DELETE CASCADE,
+        visitor_hash VARCHAR(64) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(blog_id, visitor_hash)
+      );
+    `);
+    console.log('✅ Blog engagement tables ensured');
+
     await pool.query(`
       CREATE TABLE IF NOT EXISTS newsletters (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -14,9 +14,12 @@ import {
   User,
   Mail,
   ArrowUpRight,
-  Calendar
+  Calendar,
+  Heart,
+  Eye
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/api';
 
 interface BlogPost {
   id: string;
@@ -38,6 +41,18 @@ export default function BlogBrutalistList({ blogs }: { blogs: BlogPost[] }) {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [engagements, setEngagements] = useState<Record<string, { views: number; likes: number }>>({});
+
+  React.useEffect(() => {
+    async function loadEngagements() {
+      const slugs = blogs.map(b => b.slug);
+      if (slugs.length > 0) {
+        const stats = await apiClient.getBlogEngagementBulk(slugs);
+        setEngagements(stats);
+      }
+    }
+    loadEngagements();
+  }, [blogs]);
 
   const filteredBlogs = blogs.filter(post => {
     return post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -143,6 +158,16 @@ export default function BlogBrutalistList({ blogs }: { blogs: BlogPost[] }) {
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">By</span>
                     <span className="text-xs font-extrabold uppercase tracking-wider text-slate-800">{featuredPost.author_name || 'System Architect'}</span>
+                    
+                    {engagements[featuredPost.slug] && (
+                      <>
+                        <span className="mx-2 text-slate-200">|</span>
+                        <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          <span className="flex items-center gap-1"><Eye size={12} /> {engagements[featuredPost.slug].views}</span>
+                          <span className="flex items-center gap-1"><Heart size={12} /> {engagements[featuredPost.slug].likes}</span>
+                        </div>
+                      </>
+                    )}
                   </div>
                   <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-primary-600 group-hover:bg-primary-600 group-hover:text-white group-hover:border-primary-600 transition-all shadow-sm">
                     <ArrowUpRight size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -197,6 +222,16 @@ export default function BlogBrutalistList({ blogs }: { blogs: BlogPost[] }) {
                     <div className="flex items-center gap-3 pt-2">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Authored by</span>
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-800">{post.author_name || 'System Architect'}</span>
+                      
+                      {engagements[post.slug] && (
+                        <>
+                          <span className="mx-1 text-slate-200">|</span>
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <span className="flex items-center gap-1"><Eye size={10} /> {engagements[post.slug].views}</span>
+                            <span className="flex items-center gap-1"><Heart size={10} /> {engagements[post.slug].likes}</span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 

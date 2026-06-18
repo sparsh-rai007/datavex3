@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Edit2, Trash2, Plus, Search, Loader2, ExternalLink } from 'lucide-react';
+import { Edit2, Trash2, Plus, Search, Loader2, ExternalLink, Eye, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '@/lib/api';
 
 export default function AdminBlogsPage() {
   const [blogs, setBlogs] = useState<any[]>([]);
+  const [engagements, setEngagements] = useState<Record<string, { views: number; likes: number }>>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -19,7 +20,14 @@ export default function AdminBlogsPage() {
     setLoading(true);
     try {
       const data = await apiClient.getBlogs();
-      setBlogs(data.blogs || []);
+      const loadedBlogs = data.blogs || [];
+      setBlogs(loadedBlogs);
+
+      if (loadedBlogs.length > 0) {
+        const slugs = loadedBlogs.map((b: any) => b.slug);
+        const stats = await apiClient.getBlogEngagementBulk(slugs);
+        setEngagements(stats);
+      }
     } catch (error) {
       console.error('Failed to load blogs:', error);
     } finally {
@@ -89,6 +97,7 @@ export default function AdminBlogsPage() {
                     <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Title & Slug</th>
                     <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Date</th>
                     <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Status</th>
+                    <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500 text-center">Engagement</th>
                     <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -127,6 +136,18 @@ export default function AdminBlogsPage() {
                               }`} />
                             <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
                               {blog.status}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="flex items-center justify-center gap-4 text-xs font-medium text-slate-500">
+                            <span className="flex items-center gap-1.5" title="Views">
+                              <Eye size={14} className="text-slate-400" />
+                              {engagements[blog.slug]?.views || 0}
+                            </span>
+                            <span className="flex items-center gap-1.5" title="Likes">
+                              <Heart size={14} className="text-slate-400" />
+                              {engagements[blog.slug]?.likes || 0}
                             </span>
                           </div>
                         </td>

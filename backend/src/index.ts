@@ -41,6 +41,7 @@ import newsletterGenerateRoutes from "./routes/newsletter-generate";
 import adminEmployeesRoutes from "./routes/admin-employees";
 import leavesRoutes from "./routes/leaves";
 import productsRoutes from "./routes/products";
+import blogEngagementRoutes from "./routes/blog-engagement";
 import uploadRoutes from "./routes/upload";
 
 dotenv.config();
@@ -121,6 +122,7 @@ app.use("/api/leaves", leavesRoutes);
 app.use("/api/bookings", bookingsRouter);
 app.use("/api/admin/bookings", adminBookingsRoute);
 
+app.use("/api/blogs", blogEngagementRoutes); // Mount before the standard blogs route so /public/... paths don't conflict if they have similar patterns
 app.use("/api/blogs", blogRoutes);
 app.use("/api/blog", blogGenerateRoutes);
 app.use("/api/blog", blogReviewRoutes);

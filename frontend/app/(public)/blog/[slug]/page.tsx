@@ -14,7 +14,9 @@ import {
   Shield,
   Zap,
   Cpu,
-  Binary
+  Binary,
+  Heart,
+  Eye
 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { apiClient } from '@/lib/api';
@@ -123,6 +125,9 @@ export default function BlogDetailPage() {
   // State to track if the sidebar "Show all" button is clicked
   const [showAllRefs, setShowAllRefs] = useState(false);
 
+  // Engagement state
+  const [engagement, setEngagement] = useState({ views: 0, likes: 0, hasLiked: false });
+
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -143,6 +148,11 @@ export default function BlogDetailPage() {
           }
           setBlog(data);
           
+          // Record view and fetch engagement
+          await apiClient.recordBlogView(slug);
+          const engagementData = await apiClient.getBlogEngagement(slug);
+          setEngagement(engagementData);
+
           // Fetch recommendations (other blogs)
           try {
             const allBlogs = await apiClient.getPublicBlogs();
@@ -163,6 +173,27 @@ export default function BlogDetailPage() {
     loadBlog();
     window.scrollTo(0, 0);
   }, [slug, router]);
+
+  const handleLike = async () => {
+    // Optimistic update
+    const previousState = { ...engagement };
+    setEngagement(prev => ({
+      ...prev,
+      hasLiked: !prev.hasLiked,
+      likes: prev.hasLiked ? prev.likes - 1 : prev.likes + 1
+    }));
+
+    try {
+      const result = await apiClient.toggleBlogLike(slug);
+      if (!result.success) {
+        // Revert on failure
+        setEngagement(previousState);
+      }
+    } catch (err) {
+      console.error('Failed to toggle like:', err);
+      setEngagement(previousState);
+    }
+  };
 
   // Extract references efficiently using useMemo so it doesn't recalculate on scroll
   const referencesMatch = useMemo(() => {
@@ -249,7 +280,7 @@ export default function BlogDetailPage() {
 
   return (
     <PublicWrapper>
-      <div className="relative overflow-hidden bg-gradient-to-b from-blue-50/50 via-white to-white min-h-screen font-sans text-slate-850 selection:bg-primary-600/20">
+      <div className="relative overflow-x-clip bg-gradient-to-b from-blue-50/50 via-white to-white min-h-screen font-sans text-slate-850 selection:bg-primary-600/20">
         
         {/* Subtle grid background pattern matching the Home Page */}
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-30"></div>
@@ -312,6 +343,11 @@ export default function BlogDetailPage() {
                   <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
                     {new Date(blog.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
+                  <div className="w-1 h-1 rounded-full bg-primary-600/30" />
+                  <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-slate-400">
+                    <Eye size={14} className="text-slate-400" />
+                    {engagement.views} {engagement.views === 1 ? 'View' : 'Views'}
+                  </span>
                 </div>
 
                 <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 leading-[1.15] tracking-tight mb-8">
@@ -344,7 +380,7 @@ export default function BlogDetailPage() {
             )}
 
             {/* Content Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start relative">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 relative">
               {/* Sidebar Meta */}
               <aside className="lg:col-span-3 shrink-0">
                 <div className="sticky top-32 space-y-8">
@@ -366,6 +402,12 @@ export default function BlogDetailPage() {
                     <button onClick={handleShare} className="flex items-center gap-3 text-slate-500 hover:text-primary-600 transition-colors cursor-pointer group text-left">
                       <Share2 size={16} />
                       <span className="text-[10px] font-bold uppercase tracking-widest">Share Article</span>
+                    </button>
+                    <button onClick={handleLike} className={`flex items-center gap-3 transition-colors cursor-pointer group text-left ${engagement.hasLiked ? 'text-rose-500' : 'text-slate-500 hover:text-rose-500'}`}>
+                      <Heart size={16} className={engagement.hasLiked ? 'fill-current' : ''} />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">
+                        {engagement.likes} {engagement.likes === 1 ? 'Like' : 'Likes'}
+                      </span>
                     </button>
                   </div>
                 </div>
