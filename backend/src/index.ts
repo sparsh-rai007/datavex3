@@ -164,27 +164,8 @@ const startServer = async () => {
       console.error("❌ Database migration failed on startup:", migError);
     }
 
-    cron.schedule("0 3 * * 1,5", async () => {
-      console.log("[CRON] Starting bi-weekly newsletter generation...");
-      try {
-        await runDailyNewsletter();
-        console.log("✅ [CRON] Newsletter published successfully.");
-      } catch (error) {
-        console.error("❌ [CRON] Newsletter generation failed:", error);
-      }
-    });
-    console.log("Newsletter cron scheduled for 03:00 server time on Monday and Friday");
-
-    cron.schedule("0 3 * * 1,5", async () => {
-      console.log("[CRON] Starting bi-weekly blog generation...");
-      try {
-        await runScheduledBlogGeneration();
-        console.log("✅ [CRON] Scheduled blog published successfully.");
-      } catch (error) {
-        console.error("❌ [CRON] Scheduled blog generation failed:", error);
-      }
-    });
-    console.log("Scheduled blog cron set for 03:00 server time on Monday and Friday");
+    // Automatic cron schedules for blog and newsletter generation have been disabled as per request.
+    // Articles will be uploaded manually from now on.
 
     app.listen(Number(PORT), "0.0.0.0", () => {
       console.log(`?? Backend listening on http://0.0.0.0:${PORT}`);
