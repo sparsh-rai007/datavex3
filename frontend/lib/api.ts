@@ -622,6 +622,21 @@ class ApiClient {
     });
     return response.data;
   }
+
+  /**
+   * Upload an image to Cloudinary via the backend.
+   * Returns { url: "https://res.cloudinary.com/..." }
+   */
+  async uploadImage(file: File): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append('image', file);
+    const response = await this.client.post('/upload/image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  }
 }
 
 export const apiClient = new ApiClient();

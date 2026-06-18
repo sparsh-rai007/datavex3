@@ -10,7 +10,7 @@ function cleanMarkdown(rawText: string, stripReferences: boolean) {
   if (!rawText) return '';
   let cleaned = rawText.trim()
     .replace(/<\/?p>/g, '')
-    .replace(/\[\s*\]\s*\(/g, '[')
+    .replace(/(?<!!)\[\s*\]\s*\(/g, '[')
     .replace(/```[ \t]+([^`\n]+)/g, '```\n\n$1')
     .replace(/([^\n])```(?!\w)/g, '$1\n```\n\n');
 

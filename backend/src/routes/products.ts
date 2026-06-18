@@ -3,7 +3,6 @@ import { pool } from '../db/connection';
 import { authenticateToken, requireRole } from '../middleware/auth';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
 
 const router = Router();
 
@@ -67,24 +66,11 @@ router.post('/list', authenticateToken, async (req: Request, res: Response) => {
   }
 });
 
-// Configure multer for logo uploads
-const storage = multer.diskStorage({
-  destination: (_req, file, cb) => {
-    const dir = 'uploads/logos/';
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueName + ext);
-  }
-});
+// Configure multer with memory storage for Cloudinary uploads
+import { uploadToCloudinary } from '../services/cloudinary';
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
   fileFilter: (_req, file, cb) => {
     const allowedTypes = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'];
@@ -98,6 +84,7 @@ const upload = multer({
 });
 
 // POST /api/products/upload-logo - Protected: Admin
+// Uploads to Cloudinary. Existing logos at /uploads/logos/ remain served by Express static middleware.
 router.post(
   '/upload-logo',
   authenticateToken,
@@ -115,7 +102,7 @@ router.post(
       if (!req.file) {
         return res.status(400).json({ success: false, error: 'No file uploaded' });
       }
-      const logoUrl = `/uploads/logos/${req.file.filename}`;
+      const logoUrl = await uploadToCloudinary(req.file.buffer, 'datavex/logos');
       res.json({ success: true, logoUrl });
     } catch (error: any) {
       console.error('Logo upload error:', error);

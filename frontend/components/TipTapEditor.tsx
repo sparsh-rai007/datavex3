@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useState, useCallback, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import { BubbleMenu, FloatingMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
@@ -34,15 +34,18 @@ import {
 import { apiClient } from '@/lib/api';
 
 // ─── Shared small toolbar button ───
-const ToolbarBtn = ({ onClick, active, icon: Icon, label, size = 15 }: any) => (
+const ToolbarBtn = ({ onClick, active, icon: Icon, label, size = 15, disabled = false }: any) => (
   <button
     type="button"
-    onMouseDown={(e) => { e.preventDefault(); onClick(); }}
-    className={`p-1.5 rounded-lg transition-all duration-150 flex items-center justify-center ${active
-      ? 'bg-white text-slate-900 shadow-sm'
-      : 'text-slate-500 hover:bg-white/80 hover:text-slate-800'
+    onMouseDown={(e) => { e.preventDefault(); if (!disabled) onClick(); }}
+    className={`p-1.5 rounded-lg transition-all duration-150 flex items-center justify-center ${disabled
+      ? 'text-slate-300 cursor-not-allowed'
+      : active
+        ? 'bg-white text-slate-900 shadow-sm'
+        : 'text-slate-500 hover:bg-white/80 hover:text-slate-800'
       }`}
     title={label}
+    disabled={disabled}
   >
     <Icon size={size} strokeWidth={active ? 2.5 : 2} />
   </button>
@@ -67,6 +70,10 @@ const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [showAiInput, setShowAiInput] = useState(false);
   const [isGutterOpen, setIsGutterOpen] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
+
+  // Hidden file input ref for image upload
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const detectedUrls = detectUrls(aiInstruction);
   const hasUrl = detectedUrls.length > 0;
@@ -128,6 +135,35 @@ const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
     }
     cmd();
   };
+
+  // ─── Image upload handler ───
+  const handleImageUpload = useCallback(async (file: File) => {
+    if (!editor || !file) return;
+
+    setIsImageUploading(true);
+    try {
+      const { url } = await apiClient.uploadImage(file);
+      editor.chain().focus().setImage({ src: url }).run();
+    } catch (err: any) {
+      console.error('Image upload failed:', err);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setIsImageUploading(false);
+    }
+  }, [editor]);
+
+  const onImageFileSelected = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+    // Reset the input so the same file can be re-selected
+    e.target.value = '';
+  }, [handleImageUpload]);
+
+  const triggerImagePicker = useCallback(() => {
+    imageInputRef.current?.click();
+  }, []);
 
   const handleAiEdit = useCallback(async () => {
     if (!editor || !aiInstruction.trim()) return;
@@ -193,13 +229,11 @@ const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
       {!compact && (
         <>
           <ToolbarBtn
-            onClick={() => wrapWith(() => {
-              const url = prompt("Enter image source URL:");
-              if (url) editor?.chain().focus().setImage({ src: url }).run();
-            })}
+            onClick={() => wrapWith(() => triggerImagePicker())}
             active={false}
-            icon={ImageIcon}
-            label="Image"
+            icon={isImageUploading ? Loader2 : ImageIcon}
+            label={isImageUploading ? "Uploading..." : "Upload Image"}
+            disabled={isImageUploading}
           />
           <ToolbarBtn onClick={() => wrapWith(() => editor?.chain().focus().setHorizontalRule().run())} active={false} icon={Minus} label="Horizontal Rule" />
           <Sep />
@@ -211,6 +245,32 @@ const TipTapMarkdownEditor = forwardRef(({ content, onChange }: any, ref) => {
 
   return (
     <div className="relative group">
+      {/* Hidden file input for image uploads */}
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/jpg,image/gif,image/svg+xml,image/webp"
+        onChange={onImageFileSelected}
+        className="hidden"
+      />
+
+      {/* ═══ Image upload overlay ═══ */}
+      <AnimatePresence>
+        {isImageUploading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-30 bg-white/80 backdrop-blur-sm flex items-center justify-center"
+          >
+            <div className="flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-full shadow-xl">
+              <Loader2 size={16} className="animate-spin" />
+              <span className="text-xs font-bold uppercase tracking-widest">Uploading to Cloud...</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ═══ FIXED TOP TOOLBAR — always reachable ═══ */}
       <div className="sticky top-0 z-20 bg-slate-50/95 backdrop-blur-xl border-b border-slate-200/60 px-4 py-2 flex gap-1 flex-wrap items-center">
         <FormatButtons />
