@@ -57,8 +57,7 @@ export default async function BlogPage() {
     let finalExcerpt = blog.excerpt || '';
     
     if (!finalExcerpt && plainText) {
-      const cleaned = plainText.replace(/!\[.*?\]\(.*?\)/g, '').replace(/https?:\/\/[^\s]+/g, '').trim();
-      finalExcerpt = cleaned.substring(0, 180) + (cleaned.length > 180 ? '...' : '');
+      finalExcerpt = plainText.substring(0, 180) + (plainText.length > 180 ? '...' : '');
     }
     
     if (!finalExcerpt && hasExternalUrl) {

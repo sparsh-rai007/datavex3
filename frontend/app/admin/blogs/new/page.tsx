@@ -63,7 +63,6 @@ export default function NewBlogPage() {
       title: '',
       slug: '',
       excerpt: '',
-      featured_image: '',
       status: 'draft',
       meta_title: '',
       meta_description: '',
@@ -289,30 +288,6 @@ export default function NewBlogPage() {
                     className="w-full bg-slate-50 border border-slate-100 rounded-lg p-4 text-sm font-medium text-slate-600 focus:ring-1 focus:ring-slate-900 outline-none transition-all resize-none leading-relaxed"
                   />
                   <p className="text-[10px] text-slate-400 mt-2 ml-1 italic font-medium">This will be shown on the blog list. If left blank, it will be automatically generated from the content.</p>
-                </div>
-
-                {/* Featured Image */}
-                <div className="px-8 pb-8 pt-0 border-b border-slate-100">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 block">Featured Image URL</label>
-                    <span className="text-[9px] text-slate-300 font-bold uppercase tracking-widest">Optional</span>
-                  </div>
-                  <input
-                    {...register('featured_image')}
-                    className="w-full h-10 bg-slate-50 border border-slate-100 rounded-md px-4 text-sm font-medium text-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all"
-                    placeholder="https://example.com/image.jpg"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-2 ml-1 italic font-medium">URL for the blog thumbnail shown on the listing page.</p>
-                  {watch('featured_image') && (
-                    <div className="mt-3 aspect-[16/9] max-w-sm overflow-hidden rounded-xl border border-slate-200">
-                      <img
-                        src={watch('featured_image')}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
-                    </div>
-                  )}
                 </div>
 
                 <div className="min-h-[600px]">
