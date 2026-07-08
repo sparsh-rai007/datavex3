@@ -151,7 +151,7 @@ export default function BlogBrutalistList({ blogs }: { blogs: BlogPost[] }) {
                 </h2>
 
                 <p className="text-slate-600 text-base leading-relaxed line-clamp-3">
-                  {featuredPost.excerpt}
+                  {(featuredPost.excerpt || '').replace(/!\[.*?\]\(.*?\)/g, '')}
                 </p>
 
                 <div className="flex items-center justify-between pt-6 border-t border-slate-100">
@@ -216,7 +216,7 @@ export default function BlogBrutalistList({ blogs }: { blogs: BlogPost[] }) {
                     </h3>
 
                     <p className="text-slate-600 text-sm leading-relaxed max-w-2xl line-clamp-2 font-normal">
-                      {post.excerpt}
+                      {(post.excerpt || '').replace(/!\[.*?\]\(.*?\)/g, '')}
                     </p>
 
                     <div className="flex items-center gap-3 pt-2">
