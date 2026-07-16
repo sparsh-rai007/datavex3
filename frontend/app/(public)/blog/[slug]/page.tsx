@@ -23,6 +23,7 @@ import { apiClient } from '@/lib/api';
 import PublicWrapper from '../../wrapper';
 import NewsletterRenderer from '@/components/NewsletterRenderer';
 import RelatedReferences from '@/components/RelatedReferences';
+import { formatMarkdownBold } from '@/lib/markdown';
 
 // ---------------------------------------------------------------------------
 // Preview Node Card Component (Fetches real website metadata)
@@ -355,7 +356,7 @@ export default function BlogDetailPage() {
                 </h1>
 
                 <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-4xl font-normal">
-                  {blog.excerpt || (blog.content ? blog.content.replace(/!\[.*?\]\(.*?\)/g, '').substring(0, 150) + '...' : '')}
+                  {formatMarkdownBold(blog.excerpt || (blog.content ? blog.content.replace(/!\[.*?\]\(.*?\)/g, '').substring(0, 150) + '...' : ''))}
                 </p>
               </motion.div>
             </header>
@@ -468,7 +469,7 @@ export default function BlogDetailPage() {
                       {rec.title}
                     </h3>
                     <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 font-normal text-left">
-                      {rec.excerpt || (rec.content ? rec.content.replace(/!\[.*?\]\(.*?\)/g, '').substring(0, 100) : '')}
+                      {formatMarkdownBold(rec.excerpt || (rec.content ? rec.content.replace(/!\[.*?\]\(.*?\)/g, '').substring(0, 100) : ''))}
                     </p>
                   </motion.div>
                 ))}
