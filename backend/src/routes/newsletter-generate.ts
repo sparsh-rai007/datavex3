@@ -2,16 +2,41 @@ import express, { Response } from "express";
 import { authenticateToken, requireRole, AuthRequest } from "../middleware/auth";
 import { pool } from "../db/connection";
 import {
-  runDailyNewsletter,
+  runWeeklyNewsletter,
   cronStatus,
   hasRecentCronError,
-} from "../services/dailyNewsletterService";
+} from "../services/weeklyNewsletterService";
 
 const router = express.Router();
 
 /**
+ * POST /api/newsletter/generate-weekly
+ * Manual trigger for the weekly newsletter pipeline.
+ */
+router.post(
+  "/generate-weekly",
+  authenticateToken,
+  requireRole("admin", "editor"),
+  async (_req: AuthRequest, res: Response) => {
+    try {
+      const draft = await runWeeklyNewsletter();
+
+      return res.status(201).json({
+        message: "Weekly newsletter generated successfully",
+        newsletter: draft,
+      });
+    } catch (error: any) {
+      console.error("Newsletter generate-weekly error:", error.message);
+      return res.status(500).json({
+        error: error.message || "Failed to generate weekly newsletter content",
+      });
+    }
+  }
+);
+
+/**
  * POST /api/newsletter/generate-daily
- * Manual trigger for the daily newsletter pipeline.
+ * Manual trigger for the newsletter pipeline (compatibility alias).
  */
 router.post(
   "/generate-daily",
@@ -19,7 +44,7 @@ router.post(
   requireRole("admin", "editor"),
   async (_req: AuthRequest, res: Response) => {
     try {
-      const draft = await runDailyNewsletter();
+      const draft = await runWeeklyNewsletter();
 
       return res.status(201).json({
         message: "Newsletter generated successfully",
@@ -36,7 +61,7 @@ router.post(
 
 /**
  * POST /api/newsletter/force-run
- * Alias for generate-daily — the frontend calls this first.
+ * Alias for manual weekly generation trigger.
  */
 router.post(
   "/force-run",
@@ -44,7 +69,7 @@ router.post(
   requireRole("admin", "editor"),
   async (_req: AuthRequest, res: Response) => {
     try {
-      const draft = await runDailyNewsletter();
+      const draft = await runWeeklyNewsletter();
 
       return res.status(201).json({
         message: "Newsletter force-generated successfully",

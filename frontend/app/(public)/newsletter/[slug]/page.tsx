@@ -142,7 +142,7 @@ export default function NewsletterDetailPage() {
                   id: String(n.id),
                   slug: String(n.id),
                   title: n.title || "Untitled Newsletter",
-                  excerpt: plain.slice(0, 180) || "Daily technical newsletter briefing.",
+                  excerpt: plain.slice(0, 180) || "Weekly technical newsletter briefing.",
                   created_at: n.created_at,
                 };
               })

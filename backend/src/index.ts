@@ -34,7 +34,7 @@ import blogReviewRoutes from "./routes/blog-review";
 import socialRoutes from "./routes/social";
 import calRouter from "./routes/cal";
 import calWebhookRoute from "./routes/cal-webhook";
-import { runDailyNewsletter } from "./services/dailyNewsletterService";
+import { runWeeklyNewsletter } from "./services/weeklyNewsletterService";
 import { runScheduledBlogGeneration } from "./services/dailyBlogService";
 import newsletterRoutes from "./routes/newsletter";
 import newsletterGenerateRoutes from "./routes/newsletter-generate";
@@ -164,8 +164,16 @@ const startServer = async () => {
       console.error("❌ Database migration failed on startup:", migError);
     }
 
-    // Automatic cron schedules for blog and newsletter generation have been disabled as per request.
-    // Articles will be uploaded manually from now on.
+    // Automatic cron schedule for weekly newsletter generation.
+    cron.schedule("0 9 * * 1", async () => {
+      console.log("🔄 Starting scheduled weekly newsletter generation...");
+      try {
+        await runWeeklyNewsletter();
+        console.log("✅ Weekly newsletter generated successfully!");
+      } catch (err) {
+        console.error("❌ Failed to generate weekly newsletter:", err);
+      }
+    });
 
     app.listen(Number(PORT), "0.0.0.0", () => {
       console.log(`?? Backend listening on http://0.0.0.0:${PORT}`);

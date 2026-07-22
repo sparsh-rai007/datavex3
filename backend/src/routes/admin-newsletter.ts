@@ -1,11 +1,11 @@
 import express from "express";
 import { authenticateToken, requireRole } from "../middleware/auth";
 import { pool } from "../db/connection";
-import { runDailyNewsletter } from "../services/dailyNewsletterService";
+import { runWeeklyNewsletter } from "../services/weeklyNewsletterService";
 
 const router = express.Router();
 
-// Fetch most recent newsletter from today (draft or published)
+// Fetch most recent weekly newsletter (draft or published)
 router.get(
   "/today",
   authenticateToken,
@@ -15,7 +15,7 @@ router.get(
       const result = await pool.query(
         `SELECT *
          FROM newsletters
-         WHERE created_at >= CURRENT_DATE
+         WHERE created_at >= NOW() - INTERVAL '7 days'
          ORDER BY
            CASE WHEN status = 'draft' THEN 0 ELSE 1 END,
            created_at DESC
@@ -26,25 +26,25 @@ router.get(
         draft: result.rows[0] || null,
       });
     } catch (error: any) {
-      console.error("Failed to fetch today's newsletter draft:", error);
+      console.error("Failed to fetch this week's newsletter draft:", error);
       return res.status(500).json({
-        error: error.message || "Failed to fetch today's newsletter draft",
+        error: error.message || "Failed to fetch this week's newsletter draft",
       });
     }
   }
 );
 
-// Manual trigger for automated daily newsletter pipeline
+// Manual trigger for automated weekly newsletter pipeline
 router.post(
   "/trigger",
   authenticateToken,
   requireRole("admin"),
   async (_req, res) => {
     try {
-      const draft = await runDailyNewsletter();
+      const draft = await runWeeklyNewsletter();
 
       return res.status(201).json({
-        message: "Daily newsletter generated successfully",
+        message: "Weekly newsletter generated successfully",
         mode: "automatic",
         newsletter: {
           id: draft.id,
@@ -56,7 +56,7 @@ router.post(
     } catch (error: any) {
       console.error("Manual newsletter trigger failed:", error);
       return res.status(500).json({
-        error: error.message || "Failed to generate daily newsletter",
+        error: error.message || "Failed to generate weekly newsletter",
       });
     }
   }

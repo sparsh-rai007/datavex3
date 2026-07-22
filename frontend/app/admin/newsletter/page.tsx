@@ -29,7 +29,7 @@ export default function AdminNewsletterPage() {
   };
 
   const handleRegenerate = async () => {
-    if (!window.confirm("Trigger today's automation? This will create or update today's draft.")) return;
+    if (!window.confirm("Trigger weekly automation? This will create or update the weekly draft.")) return;
     setIsGenerating(true);
     try {
       await apiClient.regenerateTodayNewsletter();
@@ -55,7 +55,7 @@ export default function AdminNewsletterPage() {
                Newsletter Archive
                {isGenerating && <Loader2 className="animate-spin text-indigo-600" size={20} />}
             </h2>
-            <p className="text-sm text-slate-500 mt-1 font-medium">Manage daily briefings and automation cycles.</p>
+            <p className="text-sm text-slate-500 mt-1 font-medium">Manage weekly briefings and automation cycles.</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -75,7 +75,7 @@ export default function AdminNewsletterPage() {
               className="h-10 px-4 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 disabled:opacity-50"
             >
               <RefreshCw size={14} className={isGenerating ? 'animate-spin' : ''} />
-              Trigger Today
+              Trigger Weekly
             </button>
           </div>
         </div>

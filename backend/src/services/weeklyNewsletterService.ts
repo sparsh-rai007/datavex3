@@ -10,7 +10,7 @@ export const cronStatus = {
 };
 
 let lastErrorTimestamp: Date | null = null;
-const RECENT_ERROR_WINDOW_MS = 24 * 60 * 60 * 1000;
+const RECENT_ERROR_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 days window for weekly errors
 
 export function hasRecentCronError(): boolean {
   if (!cronStatus.lastError || !lastErrorTimestamp) {
@@ -22,7 +22,7 @@ export function hasRecentCronError(): boolean {
 const NEWSLETTER_SYSTEM_PROMPT =
   "You are an expert technical writer. Write a cohesive, deep-dive technical newsletter about a single trending topic, using the provided source articles as context. Do NOT just summarize the articles. Synthesize the information into a single, comprehensive blog post. Start with a strong hook. Apply our strict 'Anti-Robot' tone rules. End each main section with a blockquote reference: > Source: [Title](URL).";
 
-export async function runDailyNewsletter() {
+export async function runWeeklyNewsletter() {
   cronStatus.isRunning = true;
   try {
     const { formattedText, headlines } = await fetchTrendingHeadlines();
@@ -60,7 +60,15 @@ export async function runDailyNewsletter() {
   }
 }
 
-// Backward-compatible export for existing routes.
+// Backward-compatible exports for existing routes.
+export async function generateWeeklyNewsletter(_options?: { keyword?: string }) {
+  return runWeeklyNewsletter();
+}
+
+export async function runDailyNewsletter() {
+  return runWeeklyNewsletter();
+}
+
 export async function generateDailyNewsletter(_options?: { keyword?: string }) {
-  return runDailyNewsletter();
+  return runWeeklyNewsletter();
 }

@@ -73,14 +73,14 @@ router.get(
       const result = await pool.query(
         `SELECT *
          FROM newsletters
-         WHERE created_at >= CURRENT_DATE
+         WHERE created_at >= NOW() - INTERVAL '7 days'
          ORDER BY created_at DESC
          LIMIT 1`
       );
 
       return res.json({ draft: result.rows[0] || null });
     } catch (error) {
-      console.error("Get today's newsletter error:", error);
+      console.error("Get this week's newsletter error:", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   }
