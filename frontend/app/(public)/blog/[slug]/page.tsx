@@ -204,6 +204,9 @@ export default function BlogDetailPage() {
     return Array.from(uniqueMap.values());
   }, [blog?.content]);
 
+  // Escape special regex characters in a string
+  const escapeRegex = (s: string) => s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
   // Extract banner image from content if featured_image is missing
   const bannerImage = useMemo(() => {
     if (blog?.featured_image) return blog.featured_image;
@@ -215,6 +218,15 @@ export default function BlogDetailPage() {
     }
     return null;
   }, [blog]);
+
+  // Strip the banner image from content so it doesn't appear twice
+  const cleanedContent = useMemo(() => {
+    if (!blog?.content || !bannerImage) return blog?.content || '';
+    const escapedUrl = escapeRegex(bannerImage);
+    return blog.content
+      .replace(new RegExp(`!\\[[^\\]]*\\]\\(\\s*${escapedUrl}\\s*\\)`), '')
+      .replace(new RegExp(`<img[^>]*src=["']${escapedUrl}["'][^>]*>`, 'i'), '');
+  }, [blog?.content, bannerImage]);
 
   if (loading) {
     return (
@@ -417,7 +429,7 @@ export default function BlogDetailPage() {
               {/* Main Body Text */}
               <div className="lg:col-span-9 prose prose-lg prose-slate max-w-none text-left">
                 <div className="font-sans text-slate-700 leading-relaxed space-y-6">
-                   <NewsletterRenderer content={blog.content || ''} hideLinks={false} stripReferences={false} />
+                   <NewsletterRenderer content={cleanedContent} hideLinks={false} stripReferences={false} />
                 </div>
                 
                 {/* Custom Styled Elements for the Content */}
